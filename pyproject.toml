@@ -1,0 +1,18 @@
+[tool.poetry]
+name = "mw_url_shortener"
+version = "0.0.1"
+description = "A URL shortener API webserver"
+authors = ["Matthew Willcockson <matthew@willcockson.family>"]
+
+[tool.poetry.dependencies]
+python = ">=3.7.3,<3.9.0"
+fastapi = {version = "^0.61.2", extras = ["all"]}
+pony = "^0.7.13"
+pydantic = "^1.7.2"
+
+[tool.poetry.dev-dependencies]
+pytest = "^5.2"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
