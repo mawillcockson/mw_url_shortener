@@ -43,6 +43,13 @@ $ mw_url_shortener add 'https://example.com/another-page' awesome
 short-link: /awesome
 ```
 
+#### Unauthenticated local access
+
+I picture the local version doing the same thing as the remote version, but using "`127.0.0.1`" for the URL instead.
+
+It could also directly use the database calls from 
+In order to have the interaction above, 
+
 ### Multiple keys shortcut
 
 Any way that they're entered, there should be a mechanism to give multiple short links for one link. For example:
@@ -145,6 +152,35 @@ For example:
 - `example.com/key` and `example.org/key` would resolve to different URIs
 
 It might be better to use this scheme all the time, and the config option determines whether the host name should be used to differentiate requests.
+
+### Expiring Redirects
+
+A cool feature to add would be expiring redirects. Two major ways I can think of expiring them:
+
+1. By number of uses
+2. By time
+
+The first one would be very easy to implement: A counter associated with the entry is incremented, and once it equals or exceeds a limit, the entire redirect is deleted.
+
+The second one would be a bit more difficult:
+
+I would not want any polling, so one technique I've heard of would be to start a scheduler
+
+### Export and Import of Configuration and Data
+
+### Image hosting
+
+An unexpected feature is image hosting: if the image is encoded in a "`data:`" URI, it will be returne in the redirect, and the browser appears to simply disply the image as expected.
+
+For example:
+
+```
+data:image/gif;base64,R0lGODlhEAAQAMQAAORHHOVSKudfOulrSOp3WOyDZu6QdvCchPGolfO0o/XBs/fNwfjZ0frl3/zy7////wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACH5BAkAABAALAAAAAAQABAAAAVVICSOZGlCQAosJ6mu7fiyZeKqNKToQGDsM8hBADgUXoGAiqhSvp5QAnQKGIgUhwFUYLCVDFCrKUE1lBavAViFIDlTImbKC5Gm2hB0SlBCBMQiB0UjIQA7
+```
+
+Will work just fine when returned by the application. This could be made easier by the application providing an API to receive these images, limited in file size by the server, and then will encode them and store them as the redirect URI.
+
+That way, something like `example.com/i/fekjnfkjn.jpg` would return an image directly.
 
 ## Random character generator
 

@@ -17,6 +17,8 @@ passlib = {version = "^1.7.4", extras = ["bcrypt"]}
 questionary = "^1.8.1"
 decli = "^0.5.2"
 importlib-metadata = {version = "^2.1.0", python = "<3.8"} # NOTE:FUTURE tox depends on <3.0.0
+async-exit-stack = "^1.0.1"
+async_generator = "^1.10"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"

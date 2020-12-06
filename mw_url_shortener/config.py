@@ -4,6 +4,7 @@ Primarily uses https://github.com/tmbo/questionary
 from questionary import Separator, prompt
 from enum import Enum
 from typing import List
+from pathlib import Path
 
 
 class CreateDatabase(str, Enum):
@@ -18,40 +19,41 @@ class CreateDatabase(str, Enum):
         return str.__str__(self)
 
 
-questions = [
+first_time_questions = [
     {
-        "type": "select",
-        "name": "create_database",
         "message": "No database found",
-        "choices": list(CreateDatabase)
     },
     {
-        "type": "text",
-        "name": "next_question",
-        "message": "Name this library?",
-        # Validate if the first question was answered with yes or no
-        "when": lambda x: x["conditional_step"],
-        # Only accept questionary as answer
-        "validate": lambda val: val == "questionary",
+        "message": "Database location",
     },
     {
-        "type": "select",
-        "name": "second_question",
-        "message": "Select item",
+        "message": "The database already has a user\nAdd user?",
         "choices": [
-            "item1",
-            "item2",
-            Separator(),
-            "other",
+            "yes",
+            "no, I'll add one manually to the SQLite database",
+            "no, one already exists",
         ],
     },
     {
-        "type": "text",
-        "name": "second_question",
-        "message": "Insert free text",
-        "when": lambda x: x["second_question"] == "other",
+        "message": "Generate systemd files?",
+        "choices": [
+            "user",
+            "system",
+            "no",
+        ],
+    },
+    {
+        "message": """Would you like to put the API behind a hard-to-guess key?
+For example:
+
+https://example.com/tgHQiG9o0T/v1/users
+
+Without the key:
+
+https://example.com/v1/users""",
+    },
+    {
+        "message": "Allow unauthenticated local access?",
     },
 ]
 
-if __name__ == "__main__":
-    prompt(questions)
