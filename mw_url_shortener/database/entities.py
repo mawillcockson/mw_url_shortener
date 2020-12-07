@@ -1,10 +1,13 @@
-from pony.orm import Database, PrimaryKey, Required, db_session, commit, select
-from ..server.authentication import HashedPassword
+print(f"imported mw_url_shortener.database.entities as {__name__}")
+from pony.orm import Database, PrimaryKey, Required
+from . import db
+from .. import Uri, Key, Username, HashedPassword
+
 
 class RedirectEntity(db.Entity):
-    key = PrimaryKey(str)
-    url = Required(str)
+    key = PrimaryKey(Key)
+    url = Required(Uri)
 
 class UserEntity(db.Entity):
-    username = PrimaryKey(str)
+    username = PrimaryKey(Username)
     hashed_password = Required(HashedPassword)

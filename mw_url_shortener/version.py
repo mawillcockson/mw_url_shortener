@@ -1,3 +1,4 @@
+print(f"imported mw_url_shortener.version as {__name__}")
 from . import __version__
 
 

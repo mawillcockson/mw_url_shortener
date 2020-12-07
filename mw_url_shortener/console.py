@@ -1,10 +1,11 @@
+print(f"imported mw_url_shortener.console as {__name__}")
 """
 The main cli frontend for the program
 
 Primarily uses: https://github.com/Woile/decli
 """
 from decli import cli
-from . import server, client, config, version
+from . import config, version
 from typing import Callable
 import sys
 

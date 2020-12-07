@@ -1,25 +1,14 @@
+print(f"imported mw_url_shortener.api.authentication as {__name__}")
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from passlib.context import CryptContext
-from typing import NewType
 from ..database.interface import get_user
 from ..database.models import UserModel
+from .. import HashedPassword, Username
 
 
 security = HTTPBasic()
 password_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
-
-# DONE:NOTE:IMPLEMENTATION Should these be pydantic models instead?
-# This would allow the password hashes to be validated, but passlib already
-# checks this when they're used.
-# A model can't be used for the PlainPassword since the password can be
-# anything, including something that looks exactly like a password hash
-# DONE:
-# Type checking should be sufficient for making sure a PlainPassword never ends
-# up in the wrong spot
-HashedPassword = NewType("HashedPassword", str)
-PlainPassword = NewType("PlainPassword", str)
 
 
 def verify_password(plain_password: PlainPassword, hashed_password: HashedPassword) -> bool:

@@ -1,3 +1,4 @@
+print(f"imported mw_url_shortener.__main__ as {__name__}")
 """
 This is the file that python runs when this package is run as a module:
 https://docs.python.org/3.6/using/cmdline.html#cmdoption-m

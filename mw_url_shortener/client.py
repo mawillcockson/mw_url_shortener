@@ -1,3 +1,4 @@
+print(f"imported mw_url_shortener.client as {__name__}")
 """
 The client for interacting with a running, remote server
 

@@ -1,3 +1,4 @@
+print(f"imported mw_url_shortener.config as {__name__}")
 """
 Primarily uses https://github.com/tmbo/questionary
 """

@@ -1,3 +1,4 @@
+print(f"imported mw_url_shortener.random_chars as {__name__}")
 """
 Module for generating random characters of a particular length
 """
@@ -22,16 +23,20 @@ def make_unsafe_random_characters() -> Callable[[int], str]:
 
     chars = char_gen()
 
-    def rand_chars(num: int) -> str:
-        "produces a string of length num of random characters"
+    def unsafe(num: int) -> str:
+        """
+        produces a string of length num of random characters
+        
+        this function is not cryptographically safe
+        """
         return "".join(islice(chars, abs(int(num))))
 
-    return rand_chars
+    return unsafe
 
 
-unsafe_rand_chars = make_unsafe_random_characters()
+unsafe_random_chars = make_unsafe_random_characters()
 
 
-def safe_rand_chars(num_bytes: int) -> str:
+def safe_random_chars(num_bytes: int) -> str:
     "Generates a random, url-safe string of specified length"
     return secrets.token_hex(nbytes=num_bytes)

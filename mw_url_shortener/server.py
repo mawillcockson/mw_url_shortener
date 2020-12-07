@@ -1,3 +1,4 @@
+print(f"imported mw_url_shortener.server as {__name__}")
 """
 Primarily uses https://fastapi.tiangolo.com/tutorial/
 """
@@ -7,20 +8,38 @@ from pydantic import BaseModel
 import secrets
 from typing import Optional, Dict, List
 from starlette.responses import RedirectResponse, Response
-from .random_chars import unsafe_rand_chars
+from .random_chars import unsafe_random_chars
 from getpass import getpass
 from pathlib import Path
-from . import api
+
+from fastapi import APIRouter, Depends
+from .api.authentication import authorize
+from .api import users, redirects
+
+router = APIRouter()
 
 
-API_KEY = unsafe_rand_chars(10)
+router.include_router(
+        users.router,
+        prefix="/users",
+        tags=["users"],
+        dependencies=[Depends(authorize)],
+)
+router.include_router(
+        redirects.router,
+        prefix="/redirects",
+        tags=["redirects"],
+        dependencies=[Depends(authorize)],
+)
+
+API_KEY = unsafe_random_chars(10)
 
 
 app = FastAPI()
 
 
 app.include_router(
-        api.router,
+        router,
         prefix=API_KEY,
         dependencies=[Depends(authentication.authenticate)],
 )

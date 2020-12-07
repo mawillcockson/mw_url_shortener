@@ -1,3 +1,4 @@
+print(f"imported mw_url_shortener.api.users as {__name__}")
 """
 Manages the users portion of the API
 """
