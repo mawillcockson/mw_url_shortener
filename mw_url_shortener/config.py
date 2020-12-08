@@ -6,9 +6,11 @@ from questionary import Separator, prompt
 from enum import Enum
 from typing import List, Optional, Union, Callable, NewType
 from pathlib import Path
-from pydantic import BaseSettings
+from pydantic import BaseSettings, Field
 from argparse import Namespace
 from pathlib import Path
+from .random_chars import unsafe_random_chars
+from . import Key
 
 
 class CreateDatabase(str, Enum):
@@ -61,7 +63,7 @@ https://example.com/v1/users""",
     },
 ]
 
-EnvFile = NewType("EnvFile", Union[Path, str, None])
+EnvFile = Union[Path, str, None]
 
 class CommonSettings(BaseSettings):
     """
@@ -78,9 +80,20 @@ class CommonSettings(BaseSettings):
     https://github.com/theskumar/python-dotenv#usages
     """
     func: Callable[[Namespace], None]
-    env_file = EnvFile
-    key_length: int = 10
+    env_file: EnvFile
+    key_length: int = 3
+    api_key: Key = "api"
+    # NOTE:BUG The following rules should be eforced:
+    # Does this value have to start with '/'?
+    # Can it end with a '/'?
+    # What characters are allowed?
+    # Does the library to percent-encoding?
+    root_path: str = "/"
 
     class Config:
         env_prefix = "url_shortener_"
         orm_mode = True
+
+
+class ServerSettings(CommonSettings):
+    reload: bool = False

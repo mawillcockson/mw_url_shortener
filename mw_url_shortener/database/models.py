@@ -11,7 +11,7 @@ def key_factory() -> Key:
 
 
 class Redirect(BaseModel):
-    key: Key = Field(default_factory=key_factory, min_length=1)
+    key: Key = Field(default_factory=key_factory)
     # NOTE:BUG should use pydantic.AnyUrl, or modify it to include data URIs
     # https://pydantic-docs.helpmanual.io/usage/types/#urls
     uri: Uri

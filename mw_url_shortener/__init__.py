@@ -28,5 +28,5 @@ Uri = NewType("Uri", constr(min_length=1))
 # NOTE:TYPES I want to enforce constraints and validation (e.g. min_length),
 # and have a default factory using .random_chars.unsafe_random_chars:
 # https://pydantic-docs.helpmanual.io/usage/types/#custom-data-types
-Key = str
+Key = NewType("Key", constr(min_length=1))
 Username = NewType("Username", str)

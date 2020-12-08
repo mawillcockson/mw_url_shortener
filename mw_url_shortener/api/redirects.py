@@ -8,24 +8,24 @@ from ..database.models import Redirect
 from ..database.entities import RedirectEntity
 
 
-router = APIRouter()
+router_v1 = APIRouter()
 
 
-@router.post("/", response_model=Redirect)
+@router_v1.post("/", response_model=Redirect)
 async def create(new_redirect: Redirect = Body(...)) -> RedirectEntity:
     return add_redirect(redirect=new_redirect)
 
 
-@router.get("/")
+@router_v1.get("/")
 async def read() -> None:
     raise NotImplementedError()
 
 
-@router.patch("/")
+@router_v1.patch("/")
 async def update() -> None:
     raise NotImplementedError()
 
 
-@router.delete("/")
+@router_v1.delete("/")
 async def delete() -> None:
     raise NotImplementedError()

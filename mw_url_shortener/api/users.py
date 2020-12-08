@@ -5,24 +5,24 @@ Manages the users portion of the API
 from fastapi import APIRouter
 
 
-router = APIRouter()
+router_v1 = APIRouter()
 
 
-@router.post("/")
+@router_v1.post("/")
 async def create() -> None:
     raise NotImplementedError()
 
 
-@router.get("/")
+@router_v1.get("/")
 async def read() -> None:
     raise NotImplementedError()
 
 
-@router.patch("/")
+@router_v1.patch("/")
 async def update() -> None:
     raise NotImplementedError()
 
 
-@router.delete("/")
+@router_v1.delete("/")
 async def delete() -> None:
     raise NotImplementedError()
