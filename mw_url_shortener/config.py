@@ -4,7 +4,10 @@ Primarily uses https://github.com/tmbo/questionary
 """
 from questionary import Separator, prompt
 from enum import Enum
-from typing import List
+from typing import List, Optional, Union, Callable, NewType
+from pathlib import Path
+from pydantic import BaseSettings
+from argparse import Namespace
 from pathlib import Path
 
 
@@ -58,3 +61,26 @@ https://example.com/v1/users""",
     },
 ]
 
+EnvFile = NewType("EnvFile", Union[Path, str, None])
+
+class CommonSettings(BaseSettings):
+    """
+    All of the settings for the application
+
+    The defaults are laid out in this class
+
+    When instantiating, the command-line arguments are passed
+
+    Additionally, environment variables can be set, prefixed with "URL_SHORTENER_",
+    or they can be written in a .env file, which is passed as a config file.
+
+    The .env file uses the python-dotenv syntax:
+    https://github.com/theskumar/python-dotenv#usages
+    """
+    func: Callable[[Namespace], None]
+    env_file = EnvFile
+    key_length: int = 10
+
+    class Config:
+        env_prefix = "url_shortener_"
+        orm_mode = True

@@ -14,7 +14,7 @@ class Redirect(BaseModel):
     key: Key = Field(default_factory=key_factory, min_length=1)
     # NOTE:BUG should use pydantic.AnyUrl, or modify it to include data URIs
     # https://pydantic-docs.helpmanual.io/usage/types/#urls
-    uri: Uri = Field(..., min_length=1)
+    uri: Uri
 
     class Config:
         orm_mode = True

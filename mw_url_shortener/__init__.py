@@ -1,6 +1,7 @@
 print(f"imported mw_url_shortener.__init__ as {__name__}")
 import sys
 from typing import NewType
+from pydantic import constr
 
 # From:
 # https://github.com/mawillcockson/eggord/blob/ea7e56ce173561a550a08b67a9dafdaec149ff17/eggord/__init__.py
@@ -22,6 +23,10 @@ __version__ = str(metadata_version(__name__))
 # up in the wrong spot
 HashedPassword = NewType("HashedPassword", str)
 PlainPassword = NewType("PlainPassword", str)
-Uri = NewType("Uri", str)
-Key = NewType("Key", str)
+# NOTE:IMPLEMENTATION Could have more defined types
+Uri = NewType("Uri", constr(min_length=1))
+# NOTE:TYPES I want to enforce constraints and validation (e.g. min_length),
+# and have a default factory using .random_chars.unsafe_random_chars:
+# https://pydantic-docs.helpmanual.io/usage/types/#custom-data-types
+Key = str
 Username = NewType("Username", str)

@@ -3,8 +3,8 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from passlib.context import CryptContext
 from ..database.interface import get_user
-from ..database.models import UserModel
-from .. import HashedPassword, Username
+from ..database.models import User
+from .. import HashedPassword, Username, PlainPassword
 
 
 security = HTTPBasic()
@@ -33,7 +33,7 @@ def hash_password(plain_password: PlainPassword) -> HashedPassword:
 # DONE:
 # The passlib module's CryptContext automatically creates salts and adds them
 # to the password hash as needed
-def authorize(credentials: HTTPBasicCredentials = Depends(security)) -> UserModel:
+def authorize(credentials: HTTPBasicCredentials = Depends(security)) -> User:
     """
     A function that can be used as FastAPI dependency to ensure use of an API
     endpoint is authenticaed

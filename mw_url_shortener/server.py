@@ -4,7 +4,7 @@ Primarily uses https://fastapi.tiangolo.com/tutorial/
 """
 import uvicorn
 from fastapi import Depends, FastAPI, HTTPException, status, Body
-from pydantic import BaseModel
+from pydantic import BaseModel, BaseSettings
 import secrets
 from typing import Optional, Dict, List
 from starlette.responses import RedirectResponse, Response
@@ -15,6 +15,7 @@ from pathlib import Path
 from fastapi import APIRouter, Depends
 from .api.authentication import authorize
 from .api import users, redirects
+from .config import CommonSettings
 
 router = APIRouter()
 
@@ -23,13 +24,11 @@ router.include_router(
         users.router,
         prefix="/users",
         tags=["users"],
-        dependencies=[Depends(authorize)],
 )
 router.include_router(
         redirects.router,
         prefix="/redirects",
         tags=["redirects"],
-        dependencies=[Depends(authorize)],
 )
 
 API_KEY = unsafe_random_chars(10)
@@ -40,14 +39,18 @@ app = FastAPI()
 
 app.include_router(
         router,
-        prefix=API_KEY,
-        dependencies=[Depends(authentication.authenticate)],
+        prefix=f"/{API_KEY}",
+        dependencies=[Depends(authorize)],
 )
 
 
 @app.get("/{key:path}")
 async def redirect(key: str):
     return get_redirect(key=key)
+
+
+class Settings(CommonSettings):
+    reload: bool = False
 
 
 def run(reload: bool = False) -> None:
