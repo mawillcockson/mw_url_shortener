@@ -63,7 +63,7 @@ https://example.com/v1/users""",
     },
 ]
 
-EnvFile = Union[Path, str, None]
+OptionalSPath = Union[Path, str, None]
 
 class CommonSettings(BaseSettings):
     """
@@ -80,7 +80,7 @@ class CommonSettings(BaseSettings):
     https://github.com/theskumar/python-dotenv#usages
     """
     func: Callable[[Namespace], None]
-    env_file: EnvFile
+    env_file: OptionalSPath = None
     key_length: int = 3
     api_key: Key = "api"
     # NOTE:BUG The following rules should be eforced:
@@ -88,7 +88,8 @@ class CommonSettings(BaseSettings):
     # Can it end with a '/'?
     # What characters are allowed?
     # Does the library to percent-encoding?
-    root_path: str = "/"
+    root_path: Optional[str] = None
+    database_file: OptionalSPath = None
 
     class Config:
         env_prefix = "url_shortener_"

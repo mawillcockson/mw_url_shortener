@@ -20,6 +20,7 @@ importlib-metadata = {version = "^2.1.0", python = "<3.8"} # NOTE:FUTURE tox dep
 async-exit-stack = "^1.0.1"
 async_generator = "^1.10"
 python-dotenv = "^0.15.0"
+apistar = "^0.7.2"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"

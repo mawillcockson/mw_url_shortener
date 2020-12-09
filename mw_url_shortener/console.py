@@ -30,6 +30,7 @@ class OpenableFileMeta(type):
 
         try:
             file = path.open(mode="rb")
+            file.read(0)
         except OSError as err:
             raise ArgumentValidationError(f"cannot open '{path}'")
         finally:
@@ -63,10 +64,21 @@ def server_run(args: Namespace) -> None:
     import uvicorn
     from . import server
     from .api.main import api_app_v1
+    from .database.interface import setup_db, get_db
+    # NOTE:BUG have to import this or entities won't be added to module
+    # database object
+    from .database import entities
     if args.env_file:
         settings = ServerSettings(_env_file=args.env_file, **vars(args))
     else:
         settings = ServerSettings.from_orm(args)
+
+    if not settings.database_file:
+        sys.exit("No database file specified; please make one with the setup subcommand")
+
+    # NOTE:BUG create_tables should be False, if use of the setup command needs
+    # to be forced
+    setup_db(db=get_db(), filename=settings.database_file, create_tables=True)
 
     print(f"\nsettings:\n{settings}\n")
     server.app.state.settings = settings
@@ -75,11 +87,16 @@ def server_run(args: Namespace) -> None:
     # Do I need to manage updates to that state in both places?
     #server.api_app_v1.state.settings = settings
     server.app.mount(f"/{settings.api_key}", api_app_v1)
+    server.app.include_router(server.app_router)
 
     # NOTE:IMPROVEMENT This needs to be updated to programmatically find the
     # appropriate name of the module and function to run, istead of hardcoding
     # it to mw_url_shortener.server:app
-    uvicorn.run("mw_url_shortener.server:app", reload=settings.reload, root_path=f"/{settings.root_path}")
+    if not settings.root_path:
+        uvicorn.run("mw_url_shortener.server:app", reload=settings.reload, root_path="")
+    else:
+        uvicorn.run("mw_url_shortener.server:app", reload=settings.reload, root_path=settings.root_path)
+
 
 
 interface_spec = {
@@ -96,8 +113,14 @@ interface_spec = {
         {
             "name": ["-c", "--env-file"],
             "type": OpenableFile,
-            "default": None,
+            "default": argparse.SUPPRESS,
             "help": "config file in python-dotenv format",
+        },
+        {
+            "name": ["--database-file"],
+            "type": OpenableFile,
+            "default": argparse.SUPPRESS,
+            "help": "a database file; to make one, see the setup subcommand",
         },
     ],
     "subcommands": {
@@ -131,11 +154,15 @@ interface_spec = {
             },
             {
                 "name": "client",
-                "func": raise_not_implemented_gen("No client command")
+                "func": raise_not_implemented_gen("No client command"),
             },
             {
                 "name": "config",
-                "func": raise_not_implemented_gen("No config command")
+                "func": raise_not_implemented_gen("No config command"),
+            },
+            {
+                "name": "setup",
+                "func": raise_not_implemented_gen("No setup command"),
             },
         ],
     },

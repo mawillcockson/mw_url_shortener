@@ -1,6 +1,6 @@
 print(f"imported mw_url_shortener.database.interface as {__name__}")
 from pony.orm import db_session, Database
-from . import db
+from . import db as module_db
 from .entities import RedirectEntity, UserEntity
 from .models import Redirect, User
 from pathlib import Path
@@ -8,9 +8,15 @@ from typing import Union, Optional
 from .. import Key, Uri, Username, HashedPassword
 from sqlite3 import DatabaseError
 from pony.orm.dbapiprovider import DBException
+from fastapi import Depends
 
 
 SPath = Union[str, Path]
+
+
+def get_db() -> Database:
+    "Returns the module's db object"
+    return module_db
 
 
 def valid_database_file(filename: SPath) -> bool:
@@ -24,8 +30,9 @@ def valid_database_file(filename: SPath) -> bool:
         temp_db.bind(provider="sqlite", filename=str(path), create_db=False)
         # From:
         # https://stackoverflow.com/a/21146372
-        schema_version = temp_db.execute("pragma schema_version;").fetchone()[0]
-        quick_check = temp_db.execute("pragma quick_check;").fetchone()[0]
+        with db_session:
+            schema_version = temp_db.execute("pragma schema_version;").fetchone()[0]
+            quick_check = temp_db.execute("pragma quick_check;").fetchone()[0]
     # NOTE:FEATURE::DATABASE update with exceptions from other database drivers
     except (DatabaseError, DBException) as err:
         return False
@@ -56,7 +63,7 @@ def create_database_file(filename: SPath) -> None:
 # If so, how would the entities in entities.py be declared without a
 # Database() object?
 # NOTE:FEATURE::DATABASE Currently, only a SQLite database is supported
-def set_database_file_and_connect(filename: SPath) -> Database:
+def set_database_file_and_connect(db: Database, filename: SPath) -> Database:
     """
     Connects pony's database engine to a physical file on disk
     """
@@ -73,7 +80,7 @@ def set_database_file_and_connect(filename: SPath) -> Database:
     return db
 
 
-def generate_mapping(create_tables: bool = True) -> Database:
+def generate_mapping(db: Database, create_tables: bool = True) -> Database:
     """
     Maps the declared entities to tables in the database, creating them if necessary
 
@@ -83,9 +90,18 @@ def generate_mapping(create_tables: bool = True) -> Database:
     return db
 
 
+def setup_db(db: Database, filename: SPath, create_tables: bool = True) -> Database:
+    """
+    convencience function combining set_database_file_and_connect and
+    generate_mapping
+    """
+    set_database_file_and_connect(db=db, filename=filename)
+    return generate_mapping(db=db, create_tables=create_tables)
+
+
 def get_redirect(key: Key) -> Redirect:
     with db_session:
-        redirect = RedirectInDB.get(key=key)
+        redirect = RedirectEntity.get(key=key)
         if redirect is None:
             raise KeyError("redirect key not found")
 
@@ -103,7 +119,7 @@ def add_redirect(redirect: Redirect) -> Redirect:
 def get_user(username: str) -> Optional[User]:
     "Looks up user in the database, and builds a User model"
     with db_session:
-        user = UserInDB.get(username=username)
+        user = UserEntity.get(username=username)
         if not user:
             return None
 
