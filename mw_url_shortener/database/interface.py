@@ -84,15 +84,10 @@ def generate_mapping(create_tables: bool = True) -> Database:
 
 
 def get_redirect(key: Key) -> Redirect:
-    missing_redirect = HTTPException(
-        status_code=status.HTTP_404_NOT_FOUND,
-        detail="No redirect found",
-    )
-
     with db_session:
         redirect = RedirectInDB.get(key=key)
         if redirect is None:
-            raise missing_redirect
+            raise KeyError("redirect key not found")
 
         return Redirect.from_orm(redirect)
 

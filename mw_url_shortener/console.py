@@ -62,6 +62,7 @@ def server_run(args: Namespace) -> None:
     # run, to keep load times down
     import uvicorn
     from . import server
+    from .api.main import api_app_v1
     if args.env_file:
         settings = ServerSettings(_env_file=args.env_file, **vars(args))
     else:
@@ -73,7 +74,7 @@ def server_run(args: Namespace) -> None:
     # Are the settings states shared to mounted apps?
     # Do I need to manage updates to that state in both places?
     #server.api_app_v1.state.settings = settings
-    server.app.mount(f"/{settings.api_key}", server.api_app_v1)
+    server.app.mount(f"/{settings.api_key}", api_app_v1)
 
     # NOTE:IMPROVEMENT This needs to be updated to programmatically find the
     # appropriate name of the module and function to run, istead of hardcoding
