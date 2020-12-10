@@ -11,6 +11,7 @@ from argparse import Namespace
 from pathlib import Path
 from .random_chars import unsafe_random_chars
 from . import Key
+from .utils import orjson_dumps, orjson_loads
 
 
 class CreateDatabase(str, Enum):
@@ -65,6 +66,7 @@ https://example.com/v1/users""",
 
 OptionalSPath = Union[Path, str, None]
 
+
 class CommonSettings(BaseSettings):
     """
     All of the settings for the application
@@ -79,7 +81,9 @@ class CommonSettings(BaseSettings):
     The .env file uses the python-dotenv syntax:
     https://github.com/theskumar/python-dotenv#usages
     """
-    func: Callable[[Namespace], None]
+    # NOTE:NIT It feels like a cheat to have the func and env_file here, though
+    # it does make it easier to parse things
+    #func: Callable[[Namespace], None]
     env_file: OptionalSPath = None
     key_length: int = 3
     api_key: Key = "api"
@@ -94,6 +98,11 @@ class CommonSettings(BaseSettings):
     class Config:
         env_prefix = "url_shortener_"
         orm_mode = True
+        # NOTE: Supposed to help speed up JSON encoding and decoding
+        # from:
+        # https://pydantic-docs.helpmanual.io/usage/exporting_models/#custom-json-deserialisation
+        json_loads = orjson_loads
+        json_dumps = orjson_dumps
 
 
 class ServerSettings(CommonSettings):

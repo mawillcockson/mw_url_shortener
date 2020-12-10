@@ -2,6 +2,7 @@ print(f"imported mw_url_shortener.database.models as {__name__}")
 from pydantic import BaseModel, Field, AnyUrl
 from .. import HashedPassword, Username, Key, Uri
 from ..random_chars import unsafe_random_chars
+from ..utils import orjson_dumps, orjson_loads
 
 
 def key_factory() -> Key:
@@ -18,6 +19,11 @@ class Redirect(BaseModel):
 
     class Config:
         orm_mode = True
+        # NOTE: Supposed to help speed up JSON encoding and decoding
+        # from:
+        # https://pydantic-docs.helpmanual.io/usage/exporting_models/#custom-json-deserialisation
+        json_loads = orjson_loads
+        json_dumps = orjson_dumps
 
 
 class User(BaseModel):
@@ -26,3 +32,5 @@ class User(BaseModel):
 
     class Config:
         orm_mode = True
+        json_loads = orjson_loads
+        json_dumps = orjson_dumps

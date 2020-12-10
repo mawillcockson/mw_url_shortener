@@ -12,10 +12,10 @@ from . import Key
 ResponseOrException = Union[Response, HTTPException]
 
 
-app = FastAPI()
+app_router = APIRouter()
 
 
-@app.get("/{key:path}")
+@app_router.get("/{key:path}")
 def redirect(key: Key) -> ResponseOrException:
     "returns a 30x redirect or 4xx error based on the given key"
     try:
@@ -28,3 +28,5 @@ def redirect(key: Key) -> ResponseOrException:
     
     return RedirectResponse(url=redirect.url)
 
+
+app = FastAPI()

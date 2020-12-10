@@ -1,7 +1,6 @@
 print(f"imported mw_url_shortener.database.interface as {__name__}")
 from pony.orm import db_session, Database
-from . import db as module_db
-from .entities import RedirectEntity, UserEntity
+from . import get_db
 from .models import Redirect, User
 from pathlib import Path
 from typing import Union, Optional
@@ -12,11 +11,6 @@ from fastapi import Depends
 
 
 SPath = Union[str, Path]
-
-
-def get_db() -> Database:
-    "Returns the module's db object"
-    return module_db
 
 
 def valid_database_file(filename: SPath) -> bool:
@@ -99,27 +93,27 @@ def setup_db(db: Database, filename: SPath, create_tables: bool = True) -> Datab
     return generate_mapping(db=db, create_tables=create_tables)
 
 
-def get_redirect(key: Key) -> Redirect:
+def get_redirect(key: Key, db: Database = Depends(get_db)) -> Redirect:
     with db_session:
-        redirect = RedirectEntity.get(key=key)
+        redirect = db.RedirectEntity.get(key=key)
         if redirect is None:
             raise KeyError("redirect key not found")
 
         return Redirect.from_orm(redirect)
 
 
-def add_redirect(redirect: Redirect) -> Redirect:
+def add_redirect(redirect: Redirect, db: Database = Depends(get_db)) -> Redirect:
     "add a Redirect to the database, and verify that it's represented correctly"
     with db_session:
-        new_redirect = Redirect.from_orm(RedirectEntity(key=redirect.key, url=redirect.url))
+        new_redirect = Redirect.from_orm(db.RedirectEntity(key=redirect.key, url=redirect.url))
     assert redirect == new_redirect, "Database mutated data"
     return new_redirect
 
 
-def get_user(username: str) -> Optional[User]:
+def get_user(username: str, db: Database = Depends(get_db)) -> Optional[User]:
     "Looks up user in the database, and builds a User model"
     with db_session:
-        user = UserEntity.get(username=username)
+        user = db.UserEntity.get(username=username)
         if not user:
             return None
 
