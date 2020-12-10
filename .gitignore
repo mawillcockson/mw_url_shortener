@@ -1,5 +1,7 @@
 # Project files
 *.sqlitedb
+*.env
+commit_message.txt
 
 # Editors
 .vscode/
