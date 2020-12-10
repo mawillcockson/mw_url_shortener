@@ -1,8 +1,7 @@
 print(f"imported mw_url_shortener.database.models as {__name__}")
 from pydantic import BaseModel, Field, AnyUrl
-from .. import HashedPassword, Username, Key, Uri
-from ..random_chars import unsafe_random_chars
-from ..utils import orjson_dumps, orjson_loads
+from ..types import HashedPassword, Username, Key, Uri
+from ..utils import orjson_dumps, orjson_loads, unsafe_random_chars
 
 
 def key_factory() -> Key:

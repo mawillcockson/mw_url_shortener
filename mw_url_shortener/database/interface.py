@@ -4,13 +4,10 @@ from . import get_db
 from .models import Redirect, User
 from pathlib import Path
 from typing import Union, Optional
-from .. import Key, Uri, Username, HashedPassword
+from ..types import Key, Uri, Username, HashedPassword, SPath
 from sqlite3 import DatabaseError
 from pony.orm.dbapiprovider import DBException
 from fastapi import Depends
-
-
-SPath = Union[str, Path]
 
 
 def valid_database_file(filename: SPath) -> bool:

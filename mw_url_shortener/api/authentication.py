@@ -4,7 +4,7 @@ from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from passlib.context import CryptContext
 from ..database.interface import get_user
 from ..database.models import User
-from .. import HashedPassword, Username, PlainPassword
+from ..types import HashedPassword, Username, PlainPassword
 
 
 security = HTTPBasic()
