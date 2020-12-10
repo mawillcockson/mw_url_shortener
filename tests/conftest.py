@@ -7,7 +7,7 @@ from mw_url_shortener.database.interface import setup_db
 from mw_url_shortener.config import CommonSettings
 from pony.orm import Database
 from argparse import Namespace
-from mw_url_shortener.random_chars import unsafe_random_chars
+from mw_url_shortener.utils import unsafe_random_chars
 from pathlib import Path
 
 

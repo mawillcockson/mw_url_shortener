@@ -12,7 +12,7 @@ import sys
 import argparse
 from argparse import ArgumentTypeError, Namespace
 from pathlib import Path
-from .random_chars import unsafe_random_chars
+from .utils import unsafe_random_chars
 
 
 class ArgumentValidationError(ArgumentTypeError, TypeError):

@@ -9,9 +9,8 @@ from pathlib import Path
 from pydantic import BaseSettings, Field
 from argparse import Namespace
 from pathlib import Path
-from .random_chars import unsafe_random_chars
-from . import Key
-from .utils import orjson_dumps, orjson_loads
+from .types import Key, OptionalSPath
+from .utils import orjson_dumps, orjson_loads, unsafe_random_chars
 
 
 class CreateDatabase(str, Enum):
@@ -63,8 +62,6 @@ https://example.com/v1/users""",
         "message": "Allow unauthenticated local access?",
     },
 ]
-
-OptionalSPath = Union[Path, str, None]
 
 
 class CommonSettings(BaseSettings):
