@@ -10,7 +10,7 @@ def key_factory() -> Key:
     # return Key(unsafe_random_chars(KEY_LENGTH))
 
 
-class Redirect(BaseModel):
+class RedirectModel(BaseModel):
     key: Key = Field(default_factory=key_factory)
     # NOTE:BUG should use pydantic.AnyUrl, or modify it to include data URIs
     # https://pydantic-docs.helpmanual.io/usage/types/#urls
@@ -25,7 +25,7 @@ class Redirect(BaseModel):
         json_dumps = orjson_dumps
 
 
-class User(BaseModel):
+class UserModel(BaseModel):
     username: Username
     hashed_password: HashedPassword
 

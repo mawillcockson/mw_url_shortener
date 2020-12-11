@@ -1,13 +1,21 @@
 print(f"imported mw_url_shortener.database.interface as {__name__}")
 from pony.orm import db_session, Database
 from . import get_db
-from .models import Redirect, User
+from .models import RedirectModel, UserModel
 from pathlib import Path
-from typing import Union, Optional
+from typing import Union, Optional, List
 from ..types import Key, Uri, Username, HashedPassword, SPath
 from sqlite3 import DatabaseError
 from pony.orm.dbapiprovider import DBException
 from fastapi import Depends
+
+
+class DatabaseError(Exception):
+    pass
+
+
+class UserNotFoundError(DatabaseError):
+    pass
 
 
 def valid_database_file(filename: SPath) -> bool:
@@ -90,28 +98,77 @@ def setup_db(db: Database, filename: SPath, create_tables: bool = True) -> Datab
     return generate_mapping(db=db, create_tables=create_tables)
 
 
-def get_redirect(key: Key, db: Database = Depends(get_db)) -> Redirect:
+def get_redirect(key: Key, db: Database = Depends(get_db)) -> RedirectModel:
     with db_session:
         redirect = db.RedirectEntity.get(key=key)
         if redirect is None:
             raise KeyError("redirect key not found")
 
-        return Redirect.from_orm(redirect)
+        return RedirectModel.from_orm(redirect)
 
 
-def add_redirect(redirect: Redirect, db: Database = Depends(get_db)) -> Redirect:
-    "add a Redirect to the database, and verify that it's represented correctly"
+def add_redirect(redirect: RedirectModel, db: Database = Depends(get_db)) -> RedirectModel:
+    "add a redirect to the database, and verify that it's represented correctly"
     with db_session:
-        new_redirect = Redirect.from_orm(db.RedirectEntity(key=redirect.key, url=redirect.url))
+        new_redirect = RedirectModel.from_orm(db.RedirectEntity(key=redirect.key, url=redirect.url))
     assert redirect == new_redirect, "Database mutated data"
     return new_redirect
 
 
-def get_user(username: str, db: Database = Depends(get_db)) -> Optional[User]:
+def get_user(username: Username, db: Database = Depends(get_db)) -> UserModel:
     "Looks up user in the database, and builds a User model"
     with db_session:
         user = db.UserEntity.get(username=username)
         if not user:
-            return None
+            raise UserNotFoundError(f"no user found with username '{username}'")
 
-    return User(username=user.username, hashed_password=user.hashed_password)
+        return UserModel.from_orm(user)
+
+
+def create_user(user: UserModel, db: Database = Depends(get_db)) -> UserModel:
+    "adds a user to the database"
+    user.validate()
+    try:
+        get_user(db=db, username=user.username)
+    except UserNotFoundError as err:
+        pass
+    else:
+        raise UserAlreadyExistsError(f"a user with username '{user.username}' already exists")
+    with db_session:
+        return UserModel.from_orm(db.UserEntity(username=user.username, hashed_password=user.hashed_password))
+
+
+def list_users(db: Database = Depends(get_db)) -> List[UserModel]:
+    """
+    returns a list of all the current users in the database
+
+    the list may be empty
+    """
+    with db_session:
+        return list(UserModel.from_orm(user) for user in db.UserEntity.select())
+
+
+def delete_user(user: UserModel, db: Database = Depends(get_db)) -> None:
+    "deletes a user"
+    user.validate()
+    with db_session:
+        user_entity = db.UserEntity.get(username=user.username)
+        if not user_entity:
+            raise UserNotFoundError(f"no user found with username '{username}'")
+
+        user_entity.delete()
+
+
+def update_user(username: Username, new_user: UserModel, db: Database = Depends(get_db)) -> UserModel:
+    "updates a user in the database using the new user data"
+    new_user.validate()
+    with db_session:
+        old_user_entity = db.UserEntity.get(username=user.username)
+   
+        if old_user_entity.username != user.username:
+            create_user(db=db, user=new_user)
+            old_user_entity.delete()
+        else:
+            old_user_entity.hashed_password = new_user.hashed_password
+
+        return UserModel.from_orm(db.UserEntity.get(username=new_user.username))

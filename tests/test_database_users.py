@@ -2,16 +2,28 @@ from mw_url_shortener.database import user
 from mw_url_shortener.database.errors import UserNotFoundError
 from mw_url_shortener.types import HashedPassword
 import pytest
+from pony.orm import Database
 
 
-def create_user(database: Database, example_user: user.UserModel) -> None:
+def test_create_user(database: Database, example_user: user.Model) -> None:
     "can a user be added and read back"
     created_user = user.create(db=database, user=example_user)
     returned_user = user.get(db=database, username=created_user.username)
     assert returned_user == created_user
 
 
-def update_user(database: Database, example_user: user.UserModel, example_hashed_password: HashedPassword) -> None:
+# NOTE:BUG I want to be able to request multiple example users
+# pytest currently does not have a builtin way to call a fixture multiple time,
+# but # NOTE:FUTURE on that:
+# https://github.com/pytest-dev/pytest/issues/2703
+# Currently, I'm creating a new user by manually requesting more components for
+# a new user
+def test_create_duplicate_user(database: Database, example_user: user.Model, example_hashed_password: HashedPassword) -> None:
+    "is an error raised if a username is already taken"
+    raise NotImplementedError
+
+
+def test_update_user(database: Database, example_user: user.Model, example_hashed_password: HashedPassword) -> None:
     "can an existing user be modified"
     assert example_user.hashed_password != example_hashed_password, "hashed_password does not change; user properties must change during update"
     # NOTE:IMPLEMENTATION::USERS In the future, I may want to use something other than
@@ -34,17 +46,37 @@ def update_user(database: Database, example_user: user.UserModel, example_hashed
     returned_updated_user = user.get(db=database, username=created_user.username)
     assert returned_updated_user == updated_user
 
+# NOTE:BUG I want to be able to request multiple example users
+# pytest currently does not have a builtin way to call a fixture multiple time,
+# but # NOTE:FUTURE on that:
+# https://github.com/pytest-dev/pytest/issues/2703
+# Currently, I'm creating a new user by manually requesting more components for
+# a new user
+def test_update_deleted_user(database: Database, example_user: user.Model, example_hashed_password: HashedPassword) -> None:
+    """
+    is an error raised when an update is performed on a user that doesn't exist
+    """
+    raise NotImplementedError
 
-def delete_user(database: Database, example_user: user.UserModel) -> None:
+
+def test_delete_user(database: Database, example_user: user.Model) -> None:
     """
     if a user is deleted, are the removed from the list of users,
     and is an error raised when a unique id is used to retriece it
     """
     created_user = user.create(db=database, user=example_user)
     user.delete(db=database, username=returned_user.username)
-    users = user.list()
+    users = user.list(db=database)
     for u in users:
         assert u != created_user
     with pytest.raises(UserNotFoundError) as err:
         user.get(db=database, username=created_user.username)
     assert f"no user found with username '{created_user.username}'" in str(err.value)
+
+
+def test_delete_nonexistent_user(database: Database, example_user: user.Model) -> None:
+    """
+    is an error raised when a deletion is performed on a user that doesn't
+    exist
+    """
+    raise NotImplementedError
