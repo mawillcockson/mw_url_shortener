@@ -8,18 +8,7 @@ from ..types import Key, Uri, Username, HashedPassword, SPath
 from sqlite3 import DatabaseError
 from pony.orm.dbapiprovider import DBException
 from fastapi import Depends
-
-
-class DatabaseError(Exception):
-    pass
-
-
-class UserNotFoundError(DatabaseError):
-    pass
-
-
-class UserAlreadyExistsError(DatabaseError):
-    pass
+from .errors import DatabaseError, UserNotFoundError, UserAlreadyExistsError
 
 
 def valid_database_file(filename: SPath) -> bool:
