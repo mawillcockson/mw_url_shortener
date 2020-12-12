@@ -123,7 +123,7 @@ def unsafe_random_string(num: int) -> str:
     """
     generates a string of random unicode characters
     """
-    error_message = "random_string only takes positive integer values"
+    error_message = "unsafe_random_string only takes positive integer values"
     try:
         length = int(num)
     except (TypeError, ValueError) as err:
