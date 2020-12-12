@@ -11,6 +11,7 @@ from pathlib import Path
 from mw_url_shortener.database import user
 from random import randint
 from mw_url_shortener.types import Username, HashedPassword
+import faker # faker fixture required for tests
 
 
 @pytest.fixture
@@ -31,3 +32,13 @@ def correct_settings(tmp_path: Path, database: Database) -> CommonSettings:
             root_path=unsafe_random_chars(6),
             database_file=database.provider.pool.filename,
     )
+
+
+fake = faker.Faker()
+fake.add_provider(faker.providers.misc)
+
+
+@pytest.fixture
+def random_json(faker):
+    "uses faker fixture to generate random json"
+    return fake.json()
