@@ -37,4 +37,33 @@ fake.add_provider(faker.providers.internet)
 def random_json() -> str:
     "uses faker fixture to generate random json"
     return str(fake.json())
+
+
+def random_uri() -> Uri:
+    "uses faker to generate random URIs"
+    return Uri(fake.uri())
+
+
+def random_key() -> Key:
+    """
+    uses faker to generate unique random keys
+
+    from:
+    https://faker.readthedocs.io/en/stable/providers/faker.providers.misc.html#faker.providers.misc.Provider.password
+    """
+    # NOTE:BUG Doesn't go below 3 characters in length
+    # Need to make a new_redirect_key function
+    return Key(
+        fake.unique.password(
+            length=randint(3, 10),
+            special_chars=False,
+            digits=True,
+            upper_case=True,
+            lower_case=True,
         )
+    )
+
+
+def random_redirect() -> redirect.Model:
+    "uses faker to generate a random redirect model"
+    return redirect.Model(key=random_key(), uri=random_uri())

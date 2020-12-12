@@ -1,14 +1,16 @@
 print(f"imported mw_url_shortener.database.interface as {__name__}")
-from pony.orm import db_session, Database
-from . import get_db
-from .models import RedirectModel, UserModel
 from pathlib import Path
-from typing import Union, Optional, List
-from ..types import Key, Uri, Username, HashedPassword, SPath
 from sqlite3 import DatabaseError
-from pony.orm.dbapiprovider import DBException
+from typing import List, Optional, Union
+
 from fastapi import Depends
-from .errors import DatabaseError, UserNotFoundError, UserAlreadyExistsError
+from pony.orm import Database, db_session
+from pony.orm.dbapiprovider import DBException
+
+from ..types import HashedPassword, Key, SPath, Uri, Username
+from . import get_db
+from .errors import DatabaseError, UserAlreadyExistsError, UserNotFoundError
+from .models import RedirectModel, UserModel
 
 
 def valid_database_file(filename: SPath) -> bool:
@@ -94,18 +96,34 @@ def setup_db(db: Database, filename: SPath, create_tables: bool = True) -> Datab
 def get_redirect(key: Key, db: Database = Depends(get_db)) -> RedirectModel:
     with db_session:
         redirect = db.RedirectEntity.get(key=key)
-        if redirect is None:
+        if not redirect:
             raise KeyError("redirect key not found")
 
         return RedirectModel.from_orm(redirect)
 
 
-def add_redirect(redirect: RedirectModel, db: Database = Depends(get_db)) -> RedirectModel:
+def create_redirect(
+    redirect: RedirectModel, db: Database = Depends(get_db)
+) -> RedirectModel:
     "add a redirect to the database, and verify that it's represented correctly"
     with db_session:
-        new_redirect = RedirectModel.from_orm(db.RedirectEntity(key=redirect.key, url=redirect.url))
+        new_redirect = RedirectModel.from_orm(
+            db.RedirectEntity(key=redirect.key, uri=redirect.uri)
+        )
     assert redirect == new_redirect, "Database mutated data"
     return new_redirect
+
+
+def update_redirect():
+    raise NotImplementedError
+def delete_redirect():
+    raise NotImplementedError
+def get_redirect():
+    raise NotImplementedError
+def list_redirects():
+    raise NotImplementedError
+def new_redirect_key():
+    raise NotImplementedError
 
 
 def get_user(username: Username, db: Database = Depends(get_db)) -> UserModel:
@@ -125,9 +143,13 @@ def create_user(user: UserModel, db: Database = Depends(get_db)) -> UserModel:
     except UserNotFoundError as err:
         pass
     else:
-        raise UserAlreadyExistsError(f"a user with username '{user.username}' already exists")
+        raise UserAlreadyExistsError(
+            f"a user with username '{user.username}' already exists"
+        )
     with db_session:
-        return UserModel.from_orm(db.UserEntity(username=user.username, hashed_password=user.hashed_password))
+        return UserModel.from_orm(
+            db.UserEntity(username=user.username, hashed_password=user.hashed_password)
+        )
 
 
 def list_users(db: Database = Depends(get_db)) -> List[UserModel]:
@@ -150,14 +172,16 @@ def delete_user(user: UserModel, db: Database = Depends(get_db)) -> None:
         user_entity.delete()
 
 
-def update_user(username: Username, updated_user: UserModel, db: Database = Depends(get_db)) -> UserModel:
+def update_user(
+    username: Username, updated_user: UserModel, db: Database = Depends(get_db)
+) -> UserModel:
     "updates a user in the database using the new user data"
     with db_session:
         old_user_entity = db.UserEntity.get(username=updated_user.username)
 
         if not old_user_entity:
             raise UserNotFoundError(f"no user found with username '{username}'")
-   
+
         if old_user_entity.username != updated_user.username:
             create_user(db=db, user=updated_user)
             old_user_entity.delete()

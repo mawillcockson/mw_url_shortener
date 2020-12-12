@@ -20,3 +20,7 @@ class UserAlreadyExistsError(DatabaseError):
 
 class BadConfigError(DatabaseError):
     pass
+
+
+class RedirectNotFoundError(DatabaseError):
+    pass

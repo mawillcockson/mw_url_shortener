@@ -7,7 +7,7 @@ def get_db() -> Database:
 
     class RedirectEntity(db.Entity):
         key = PrimaryKey(str)
-        url = Required(str)
+        uri = Required(str)
 
     class UserEntity(db.Entity):
         username = PrimaryKey(str)
