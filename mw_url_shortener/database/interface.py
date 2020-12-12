@@ -18,6 +18,10 @@ class UserNotFoundError(DatabaseError):
     pass
 
 
+class UserAlreadyExistsError(DatabaseError):
+    pass
+
+
 def valid_database_file(filename: SPath) -> bool:
     "Opens a connection to a database file, and runs a quick database check"
     path = Path(filename).resolve()
@@ -127,7 +131,6 @@ def get_user(username: Username, db: Database = Depends(get_db)) -> UserModel:
 
 def create_user(user: UserModel, db: Database = Depends(get_db)) -> UserModel:
     "adds a user to the database"
-    user.validate()
     try:
         get_user(db=db, username=user.username)
     except UserNotFoundError as err:
@@ -150,25 +153,26 @@ def list_users(db: Database = Depends(get_db)) -> List[UserModel]:
 
 def delete_user(user: UserModel, db: Database = Depends(get_db)) -> None:
     "deletes a user"
-    user.validate()
     with db_session:
         user_entity = db.UserEntity.get(username=user.username)
         if not user_entity:
-            raise UserNotFoundError(f"no user found with username '{username}'")
+            raise UserNotFoundError(f"no user found with username '{user.username}'")
 
         user_entity.delete()
 
 
-def update_user(username: Username, new_user: UserModel, db: Database = Depends(get_db)) -> UserModel:
+def update_user(username: Username, updated_user: UserModel, db: Database = Depends(get_db)) -> UserModel:
     "updates a user in the database using the new user data"
-    new_user.validate()
     with db_session:
-        old_user_entity = db.UserEntity.get(username=user.username)
+        old_user_entity = db.UserEntity.get(username=updated_user.username)
+
+        if not old_user_entity:
+            raise UserNotFoundError(f"no user found with username '{username}'")
    
-        if old_user_entity.username != user.username:
-            create_user(db=db, user=new_user)
+        if old_user_entity.username != updated_user.username:
+            create_user(db=db, user=updated_user)
             old_user_entity.delete()
         else:
-            old_user_entity.hashed_password = new_user.hashed_password
+            old_user_entity.hashed_password = updated_user.hashed_password
 
-        return UserModel.from_orm(db.UserEntity.get(username=new_user.username))
+        return UserModel.from_orm(db.UserEntity.get(username=updated_user.username))

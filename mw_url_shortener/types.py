@@ -25,7 +25,7 @@ Uri = NewType("Uri", constr(min_length=1))
 # and have a default factory using .utils.unsafe_random_chars:
 # https://pydantic-docs.helpmanual.io/usage/types/#custom-data-types
 Key = NewType("Key", constr(min_length=1))
-Username = NewType("Username", str)
+Username = NewType("Username", constr(min_length=1))
 
 SPath = Union[str, Path]
 OptionalSPath = Union[Path, str, None]

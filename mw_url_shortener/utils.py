@@ -5,22 +5,27 @@ module of utility functions
 all of these functions can be loaded independently of the rest of this library,
 except for the types
 """
-import orjson
 import random
+import re
 import secrets
 import string
+import sys
 from itertools import islice
 from typing import Callable, Iterable
-import random
-import string
-from mw_url_shortener.types import Username, HashedPassword
-from typing import Iterable
-import re
-import sys
+
+import orjson
 from passlib.context import CryptContext
 
+from mw_url_shortener.types import HashedPassword, Username
 
-__all__ = ["orjson_dumps", "orjson_loads", "unsafe_random_chars", "safe_random_chars", "random_username", "unsafe_random_hashed_password"]
+__all__ = [
+    "orjson_dumps",
+    "orjson_loads",
+    "unsafe_random_chars",
+    "safe_random_chars",
+    "random_username",
+    "unsafe_random_hashed_password",
+]
 
 
 def orjson_dumps(v, *, default):
@@ -53,7 +58,7 @@ def make_unsafe_random_characters() -> Callable[[int], str]:
     def unsafe(num: int) -> str:
         """
         produces a url-safe string of length num of random characters
-        
+
         this function is not cryptographically safe
         """
         error_message = "unsafe_random_chars only takes positive integer values"
@@ -87,11 +92,36 @@ def safe_random_chars(num_bytes: int) -> str:
     return secrets.token_hex(nbytes=length)
 
 
+def unsafe_word_characters_generator() -> Iterable[str]:
+    """
+    returns an infinte generator of unicode word characters
+    """
+    word_characters_re = re.compile(r"^[\w]+$")
+
+    def character_gen() -> Iterable[str]:
+        "iterates over range of unicode characters, filtering out unprintable ones"
+        while True:
+            character = chr(random.randint(0, sys.maxunicode))
+            if not word_characters_re.match(character):
+                continue
+            if len(repr(character)) != 3:
+                # the repr of a character should be the character,
+                # and the two quotation marks:
+                # repr("a")    -> 'a'
+                # repr("\x00") -> '\x00'
+                continue
+
+            yield character
+
+    return character_gen()
+
+
+unsafe_word_characters = unsafe_word_characters_generator()
+
+
 def unsafe_random_string(num: int) -> str:
     """
     generates a string of random unicode characters
-
-    this is unlikely to be printable
     """
     error_message = "random_string only takes positive integer values"
     try:
@@ -102,12 +132,13 @@ def unsafe_random_string(num: int) -> str:
     if length < 1:
         raise ValueError(error_message)
 
-    return "".join([chr(random.randint(0, sys.maxunicode)) for x in range(num)])
+    return "".join(islice(unsafe_word_characters, length))
 
 
 def random_username(num: int) -> Username:
     "Generates a random username"
     return Username(unsafe_random_string(num))
+
 
 # NOTE:DUP This needs to mirror the password context in authentication.py
 # It can't be imported, both because this module should be standalone, and
@@ -121,7 +152,9 @@ def unsafe_random_hashed_password() -> HashedPassword:
 
     the input is not from a cryptographically random source
     """
-    return HashedPassword(password_context.hash(unsafe_random_string(random.randint(1, 100))))
+    return HashedPassword(
+        password_context.hash(unsafe_random_string(random.randint(1, 100)))
+    )
 
 
 def printable_characters_generator() -> Iterable[str]:
@@ -131,15 +164,17 @@ def printable_characters_generator() -> Iterable[str]:
     this is very computationally slow, so as to avoid excessive memory use
     """
     non_whitespace_re = re.compile(r"^[\S]+$")
-    all_unicode_characters = (chr(o) for o in range(sys.maxunicode + 1))
-    
+    all_unicode_characters = (
+        chr(o) for o in range(sys.maxunicode + 1)
+    )  # +1 so that the end is included
+
     def character_gen() -> Iterable[str]:
         "iterates over range of unicode characters, filtering out unprintable ones"
         # NOTE:BUG This doesn't do what it claims to
         # It does not filter out all unicode control characters
         # A better approach may be a list of range(start, end+1) of the unwanted
         # parts of unicode
-        for character in all_unicode_characters: # +1 so that the end is included
+        for character in all_unicode_characters:
             if not non_whitespace_re.match(character):
                 continue
             if len(repr(character)) != 3:

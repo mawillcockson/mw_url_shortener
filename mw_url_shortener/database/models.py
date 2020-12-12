@@ -23,6 +23,7 @@ class RedirectModel(BaseModel):
         # https://pydantic-docs.helpmanual.io/usage/exporting_models/#custom-json-deserialisation
         json_loads = orjson_loads
         json_dumps = orjson_dumps
+        allow_mutation = False
 
 
 class UserModel(BaseModel):
@@ -33,3 +34,4 @@ class UserModel(BaseModel):
         orm_mode = True
         json_loads = orjson_loads
         json_dumps = orjson_dumps
+        allow_mutation = False

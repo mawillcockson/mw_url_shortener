@@ -1,31 +1,54 @@
+"""
+tests the user part of the database interface
+"""
 from mw_url_shortener.database import user
-from mw_url_shortener.database.errors import UserNotFoundError
+from mw_url_shortener.database.errors import UserNotFoundError, UserAlreadyExistsError, DatabaseError
 from mw_url_shortener.types import HashedPassword
 import pytest
 from pony.orm import Database
+from .utils import random_user, random_hashed_password, random_username
 
 
-def test_create_user(database: Database, example_user: user.Model) -> None:
+def test_create_user(database: Database) -> None:
     "can a user be added and read back"
+    example_user: user.Model = random_user()
+
     created_user = user.create(db=database, user=example_user)
     returned_user = user.get(db=database, username=created_user.username)
     assert returned_user == created_user
 
 
-# NOTE:BUG I want to be able to request multiple example users
+# DONE:NOTE:BUG I want to be able to request multiple example users
 # pytest currently does not have a builtin way to call a fixture multiple time,
-# but # NOTE:FUTURE on that:
+# but # DONE:NOTE:FUTURE on that:
 # https://github.com/pytest-dev/pytest/issues/2703
 # Currently, I'm creating a new user by manually requesting more components for
 # a new user
-def test_create_duplicate_user(database: Database, example_user: user.Model, example_hashed_password: HashedPassword) -> None:
+# DONE:
+# Created tests.utils.py to assist with generating test data
+# This was necessary anyways, since unfortunately, the function-scoped pytest
+# fixtures are kept throught the whole run of a single test_ function. This
+# means that the assertion that the hashed passwords are different was
+# consistently failing.
+def test_create_duplicate_user(database: Database) -> None:
     "is an error raised if a username is already taken"
-    raise NotImplementedError
+    example_user: user.Model = random_user()
+    example_hashed_password: HashedPassword = random_hashed_password()
+    assert example_user.hashed_password != example_hashed_password, "passwords need to be different"
+
+    created_user = user.create(db=database, user=example_user)
+    duplicate_user = created_user.copy(update={"hashed_password": example_hashed_password})
+    with pytest.raises(UserAlreadyExistsError) as err:
+        user.create(db=database, user=duplicate_user)
+    assert f"a user with username '{duplicate_user.username}' already exists" in str(err.value)
 
 
-def test_update_user(database: Database, example_user: user.Model, example_hashed_password: HashedPassword) -> None:
+def test_update_user(database: Database) -> None:
     "can an existing user be modified"
-    assert example_user.hashed_password != example_hashed_password, "hashed_password does not change; user properties must change during update"
+    example_user: user.Model = random_user()
+    example_hashed_password: HashedPassword = random_hashed_password()
+    assert example_user.hashed_password != example_hashed_password, "passwords need to be different"
+
     # NOTE:IMPLEMENTATION::USERS In the future, I may want to use something other than
     # the username of a user as the uniquely primary key in the database.
     # This would allow changing the username.
@@ -46,26 +69,16 @@ def test_update_user(database: Database, example_user: user.Model, example_hashe
     returned_updated_user = user.get(db=database, username=created_user.username)
     assert returned_updated_user == updated_user
 
-# NOTE:BUG I want to be able to request multiple example users
-# pytest currently does not have a builtin way to call a fixture multiple time,
-# but # NOTE:FUTURE on that:
-# https://github.com/pytest-dev/pytest/issues/2703
-# Currently, I'm creating a new user by manually requesting more components for
-# a new user
-def test_update_deleted_user(database: Database, example_user: user.Model, example_hashed_password: HashedPassword) -> None:
-    """
-    is an error raised when an update is performed on a user that doesn't exist
-    """
-    raise NotImplementedError
 
-
-def test_delete_user(database: Database, example_user: user.Model) -> None:
+def test_delete_user(database: Database) -> None:
     """
     if a user is deleted, are the removed from the list of users,
     and is an error raised when a unique id is used to retriece it
     """
+    example_user: user.Model = random_user()
+
     created_user = user.create(db=database, user=example_user)
-    user.delete(db=database, username=returned_user.username)
+    user.delete(db=database, user=created_user)
     users = user.list(db=database)
     for u in users:
         assert u != created_user
@@ -74,9 +87,55 @@ def test_delete_user(database: Database, example_user: user.Model) -> None:
     assert f"no user found with username '{created_user.username}'" in str(err.value)
 
 
-def test_delete_nonexistent_user(database: Database, example_user: user.Model) -> None:
+def test_delete_nonexistent_user(database: Database) -> None:
     """
     is an error raised when a deletion is performed on a user that doesn't
     exist
+    """
+    example_user: user.Model = random_user()
+    
+    with pytest.raises(UserNotFoundError) as err:
+        user.delete(db=database, user=example_user)
+    assert f"no user found with username '{example_user.username}'" in str(err.value)
+
+
+def test_user_duplicate_deletion(database: Database) -> None:
+    "is an error raised when a user is deleted a second time"
+    example_user: user.Model = random_user()
+    
+    created_user = user.create(db=database, user=example_user)
+    user.delete(db=database, user=created_user)
+    with pytest.raises(UserNotFoundError) as err:
+        user.delete(db=database, user=example_user)
+    assert f"no user found with username '{example_user.username}'" in str(err.value)
+
+
+def test_update_deleted_user(database: Database) -> None:
+    """
+    is an error raised when an update is performed on a user that doesn't exist
+    """
+    example_user: user.Model = random_user()
+    example_hashed_password: HashedPassword = random_hashed_password()
+    assert example_user.hashed_password != example_hashed_password, "passwords need to be different"
+
+    created_user = user.create(db=database, user=example_user)
+    user.delete(db=database, user=created_user)
+    updated_user = created_user.copy(update={"hashed_password": example_hashed_password})
+    with pytest.raises(UserNotFoundError) as err:
+        user.update(db=database, username=updated_user.username, updated_user=updated_user)
+    assert f"no user found with username '{updated_user.username}'" in str(err.value)
+
+
+@pytest.mark.xfail(raises=NotImplementedError)
+def test_delete_user_by_username() -> None:
+    "can a user be deleted by username"
+    raise NotImplementedError
+
+
+@pytest.mark.xfail(raises=NotImplementedError)
+def test_delete_nonmatching_user() -> None:
+    """
+    is an error raised if a deletion is requested for a user model that doesn't
+    match what's in the database
     """
     raise NotImplementedError

@@ -31,24 +31,3 @@ def correct_settings(tmp_path: Path, database: Database) -> CommonSettings:
             root_path=unsafe_random_chars(6),
             database_file=database.provider.pool.filename,
     )
-
-
-@pytest.fixture
-def example_username() -> Username:
-    "creates an example username"
-    return random_username(randint(1,10))
-
-
-@pytest.fixture
-def example_hashed_password() -> HashedPassword:
-    "creates an example hashed password"
-    return unsafe_random_hashed_password()
-
-
-@pytest.fixture
-def example_user(example_username: Username, example_hashed_password: HashedPassword) -> user.Model:
-    "creates a fictitious user that doesn't exist in the database"
-    return user.Model(
-            username=example_username,
-            hashed_password=example_hashed_password,
-        )
