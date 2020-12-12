@@ -43,6 +43,12 @@ def test_create_duplicate_user(database: Database) -> None:
     assert f"a user with username '{duplicate_user.username}' already exists" in str(err.value)
 
 
+@pytest.mark.xfail
+def test_create_duplicate_password(database: Database) -> None:
+    "can a user be created with a password that's the same as another user"
+    raise NotImplementedError
+
+
 def test_update_user(database: Database) -> None:
     "can an existing user be modified"
     example_user: user.Model = random_user()
@@ -72,16 +78,16 @@ def test_update_user(database: Database) -> None:
 
 def test_delete_user(database: Database) -> None:
     """
-    if a user is deleted, are the removed from the list of users,
-    and is an error raised when a unique id is used to retriece it
+    if a user is deleted, are they removed from the list of users,
+    and is an error raised when a unique id is used to retrieve it
     """
     example_user: user.Model = random_user()
 
     created_user = user.create(db=database, user=example_user)
     user.delete(db=database, user=created_user)
     users = user.list(db=database)
-    for u in users:
-        assert u != created_user
+    for usr in users:
+        assert usr != created_user
     with pytest.raises(UserNotFoundError) as err:
         user.get(db=database, username=created_user.username)
     assert f"no user found with username '{created_user.username}'" in str(err.value)
@@ -126,13 +132,13 @@ def test_update_deleted_user(database: Database) -> None:
     assert f"no user found with username '{updated_user.username}'" in str(err.value)
 
 
-@pytest.mark.xfail(raises=NotImplementedError)
+@pytest.mark.xfail
 def test_delete_user_by_username() -> None:
     "can a user be deleted by username"
     raise NotImplementedError
 
 
-@pytest.mark.xfail(raises=NotImplementedError)
+@pytest.mark.xfail
 def test_delete_nonmatching_user() -> None:
     """
     is an error raised if a deletion is requested for a user model that doesn't
