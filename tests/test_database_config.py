@@ -3,6 +3,8 @@ from pony.orm import Database, db_session
 from mw_url_shortener.database.config import get_config, save_config
 from mw_url_shortener.settings import CommonSettings
 from mw_url_shortener.database.errors import BadConfigError
+import pydantic
+from .utils import random_json
 
 
 def test_save_config(database: Database, correct_settings: CommonSettings) -> None:
@@ -13,10 +15,19 @@ def test_save_config(database: Database, correct_settings: CommonSettings) -> No
 
 
 @pytest.mark.xfail
-def test_load_bad_config(database: Database, random_json: str) -> None:
+def test_load_bad_config(database: Database) -> None:
     "is an error thrown if a bad config is read from the database"
+    example_bad_json: str = random_json()
+    # Prove the example_bad_json is not a valid configuration structure
+    try:
+        CommonSettings.parse_raw(example_bad_json)
+    except pydantic.ValidationError as validation_error:
+        pass
+    else:
+        assert not validation_error
+
     with db_session:
-        database.ConfigEntity(version="current", json=random_json())
+        database.ConfigEntity(version="current", json=example_bad_json)
         database.commit()
 
     with pytest.raises(BadConfigError) as err:
@@ -25,8 +36,17 @@ def test_load_bad_config(database: Database, random_json: str) -> None:
 
 
 @pytest.mark.xfail
-def test_save_bad_config(database: Database, random_json: str) -> None:
+def test_save_bad_config(database: Database) -> None:
     "is an error thrown when a bad config is saved"
+    example_bad_json: str = random_json()
+    # Prove the example_bad_json is not a valid configuration structure
+    try:
+        CommonSettings.parse_raw(example_bad_json)
+    except pydantic.ValidationError as validation_error:
+        pass
+    else:
+        assert not validation_error
+
     with pytest.raises(BadConfigError) as err:
-        save_config(db=database, settings=random_json)
+        save_config(db=database, settings=example_bad_json)
     assert "bad configuration data" in str(err.value)
