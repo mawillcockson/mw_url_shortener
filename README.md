@@ -13,8 +13,8 @@ python -m pipx install mw_url_shortener
 ```
 
 While it's not recommended, do note that when installing with `pip`, if
-`pip` is not new enough, an error will be thrown when install `orjson`.
-To avoid this, and install the package, upgrade `pip` first:
+`pip` is not new enough, an error will be thrown when installing
+`orjson`. To avoid this, first upgrade `pip`:
 
 ```sh
 python -m pip install --user --upgrade pip setuptool wheel
