@@ -1,9 +1,11 @@
 """
 test that the types behave in specific ways
 """
-from mw_url_shortener.types import Username, HashedPassword, Uri, Key, PlainPassword
 import pytest
-from .utils import random_username, random_hashed_password
+
+from mw_url_shortener.types import HashedPassword, Key, PlainPassword, Uri, Username
+
+from .utils import random_hashed_password, random_username
 
 
 @pytest.mark.xfail(raises=NotImplementedError)

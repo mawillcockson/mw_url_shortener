@@ -1,12 +1,19 @@
 """
 tests the redirect part of the database interface
 """
-from mw_url_shortener.database.errors import RedirectNotFoundError
-from mw_url_shortener.database import redirect
-from mw_url_shortener.types import Key, Uri
-from .utils import random_redirect, random_uri, random_key
-from pony.orm import Database
 import pytest
+from pony.orm import Database
+
+from mw_url_shortener.database import redirect
+from mw_url_shortener.database.errors import RedirectNotFoundError
+from mw_url_shortener.types import Key, Uri
+
+from .utils import random_key, random_redirect, random_uri
+
+
+def test_new_key() -> None:
+    "redirect.new_key()"
+    raise NotImplementedError
 
 
 def test_create_redirect(database: Database) -> None:
@@ -40,7 +47,9 @@ def test_create_duplicate_key(database: Database) -> None:
     duplicate_redirect = created_redirect.copy(update={"key": example_key})
     with pytest.raises(KeyError) as err:
         redirect.create(db=database, redirect=duplicate_redirect)
-    assert f"a redirect with key '{duplicate_redirect.key}' already exists" in str(err.value)
+    assert f"a redirect with key '{duplicate_redirect.key}' already exists" in str(
+        err.value
+    )
 
 
 def test_create_duplicate_uri(database: Database) -> None:
@@ -56,7 +65,9 @@ def test_update_redirect(database: Database) -> None:
 
     created_redirect = redirect.create(db=database, redirect=example_redirect)
     updated_redirect = created_redirect.copy(update={"uri": example_uri})
-    redirect.update(db=database, key=created_redirect.key, updated_redirect=updated_redirect)
+    redirect.update(
+        db=database, key=created_redirect.key, updated_redirect=updated_redirect
+    )
     returned_updated_redirect = redirect.get(db=database, key=created_redirect.key)
     assert returned_updated_redirect == updated_redirect
 
@@ -84,7 +95,7 @@ def test_delete_nonexistent_redirect(database: Database) -> None:
     exist
     """
     example_redirect: redirect.Model = random_redirect()
-    
+
     with pytest.raises(RedirectNotFoundError) as err:
         redirect.delete(db=database, redirect=example_redirect)
     assert f"no redirect found with key '{example_redirect.key}'" in str(err.value)
@@ -93,7 +104,7 @@ def test_delete_nonexistent_redirect(database: Database) -> None:
 def test_redirct_duplicate_deletion(database: Database) -> None:
     "is an error raised when a redirect is deleted a second time"
     example_redirect: redirect.Model = random_redirect()
-    
+
     created_redirect = redirect.create(db=database, redirect=example_redirect)
     redirect.delete(db=database, redirect=created_redirect)
     with pytest.raises(RedirectNotFoundError) as err:
@@ -113,7 +124,9 @@ def test_update_deleted_redirect(database: Database) -> None:
     redirect.delete(db=database, redirect=created_redirect)
     updated_redirect = created_redirect.copy(update={"uri": example_uri})
     with pytest.raises(RedirectNotFoundError) as err:
-        redirect.update(db=database, uri=updated_redirect.uri, updated_redirect=updated_redirect)
+        redirect.update(
+            db=database, uri=updated_redirect.uri, updated_redirect=updated_redirect
+        )
     assert f"no redirect found with uri '{updated_redirect.uri}'" in str(err.value)
 
 
@@ -129,10 +142,4 @@ def test_delete_nonmatching_redirect() -> None:
     is an error raised if a deletion is requested for a redirect model that doesn't
     match what's in the database
     """
-    raise NotImplementedError
-
-
-@pytest.mark.xfail
-def test_new_key() -> None:
-    "redirect.new_key()"
     raise NotImplementedError

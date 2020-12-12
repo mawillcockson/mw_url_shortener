@@ -1,8 +1,9 @@
 """
 ensures mw_url_shortener.config behaves correctly
 """
-from mw_url_shortener import config
 import pytest
+
+from mw_url_shortener import config
 
 
 @pytest.mark.xfail()

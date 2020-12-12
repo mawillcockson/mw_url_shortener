@@ -116,12 +116,20 @@ def create_redirect(
 
 def update_redirect():
     raise NotImplementedError
+
+
 def delete_redirect():
     raise NotImplementedError
+
+
 def get_redirect():
     raise NotImplementedError
+
+
 def list_redirects():
     raise NotImplementedError
+
+
 def new_redirect_key():
     raise NotImplementedError
 

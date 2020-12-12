@@ -4,7 +4,6 @@ Manages the users portion of the API
 """
 from fastapi import APIRouter
 
-
 router_v1 = APIRouter()
 
 

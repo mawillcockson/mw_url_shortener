@@ -1,10 +1,9 @@
-from pony.orm import Database, PrimaryKey, Required, db_session, commit
-from typing import Optional, Dict, List
+from typing import Dict, List, Optional
 
 from fastapi import FastAPI
+from pony.orm import Database, PrimaryKey, Required, commit, db_session
 from pydantic import BaseModel
 from starlette.responses import RedirectResponse, Response
-
 
 db = Database()
 
@@ -14,7 +13,7 @@ class Redirect(db.Entity):
     url = Required(str)
 
 
-db.bind(provider='sqlite', filename=':memory:')
+db.bind(provider="sqlite", filename=":memory:")
 db.generate_mapping(create_tables=True)
 
 with db_session:
@@ -26,7 +25,11 @@ with db_session:
 def get_redirect(short_link: str) -> Response:
     redirect = Redirect.get(short_link=short_link)
     if redirect is None:
-        return Response(content="<html><head></head><body>no redirect found</body></html>", status_code=404, media_type="text/html")
+        return Response(
+            content="<html><head></head><body>no redirect found</body></html>",
+            status_code=404,
+            media_type="text/html",
+        )
     return RedirectResponse(url=redirect.url)
 
 

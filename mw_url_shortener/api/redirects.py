@@ -3,10 +3,10 @@ print(f"imported mw_url_shortener.api.redirects as {__name__}")
 Manages the redirects portion of the API
 """
 from fastapi import APIRouter, Body
+
+from ..database.entities import RedirectEntity
 from ..database.interface import add_redirect
 from ..database.models import Redirect
-from ..database.entities import RedirectEntity
-
 
 router_v1 = APIRouter()
 

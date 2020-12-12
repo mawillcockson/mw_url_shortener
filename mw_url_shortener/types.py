@@ -2,10 +2,10 @@ print(f"imported mw_url_shortener.types as {__name__}")
 """
 Holds all of the custom types used across the application
 """
-from typing import NewType, Union
 from pathlib import Path
-from pydantic import constr
+from typing import NewType, Union
 
+from pydantic import constr
 
 # DONE:NOTE:IMPLEMENTATION Should these be pydantic models instead?
 # This would allow the password hashes to be validated, but passlib already

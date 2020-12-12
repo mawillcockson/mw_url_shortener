@@ -1,9 +1,11 @@
+import pydantic
 import pytest
 from pony.orm import Database, db_session
+
 from mw_url_shortener.database.config import get_config, save_config
-from mw_url_shortener.settings import CommonSettings
 from mw_url_shortener.database.errors import BadConfigError
-import pydantic
+from mw_url_shortener.settings import CommonSettings
+
 from .utils import random_json
 
 

@@ -2,12 +2,13 @@ print(f"imported mw_url_shortener.server as {__name__}")
 """
 Primarily uses https://fastapi.tiangolo.com/tutorial/
 """
-from fastapi import Depends, FastAPI, APIRouter, status, HTTPException
-from starlette.responses import Response, RedirectResponse
-from .database.interface import get_redirect
 from typing import Union
-from . import Key
 
+from fastapi import APIRouter, Depends, FastAPI, HTTPException, status
+from starlette.responses import RedirectResponse, Response
+
+from . import Key
+from .database.interface import get_redirect
 
 ResponseOrException = Union[Response, HTTPException]
 
@@ -25,7 +26,7 @@ def redirect(key: Key) -> ResponseOrException:
             status_code=status.HTTP_404_NOT_FOUND,
             detail="No redirect found",
         )
-    
+
     return RedirectResponse(url=redirect.url)
 
 

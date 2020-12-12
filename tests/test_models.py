@@ -1,9 +1,11 @@
 """
 verify behaviour of models
 """
-from mw_url_shortener.database.models import UserModel, RedirectModel
-import pytest
 from typing import Union
+
+import pytest
+
+from mw_url_shortener.database.models import RedirectModel, UserModel
 
 
 @pytest.mark.xfail(raises=NotImplementedError, reason="no checks implemented yet")

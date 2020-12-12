@@ -1,4 +1,5 @@
 from pony.orm import Database
+
 from mw_url_shortener.database.config import get_config, save_config
 from mw_url_shortener.settings import CommonSettings
 

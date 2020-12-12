@@ -1,9 +1,9 @@
 print(f"imported mw_url_shortener.database.entities as {__name__}")
 from pony.orm import Database, PrimaryKey, Required
 
+
 def get_db() -> Database:
     db = Database()
-
 
     class RedirectEntity(db.Entity):
         key = PrimaryKey(str)
@@ -16,6 +16,5 @@ def get_db() -> Database:
     class ConfigEntity(db.Entity):
         version = PrimaryKey(str)
         json = Required(str)
-
 
     return db

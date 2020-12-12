@@ -1,54 +1,3 @@
-[tool.poetry]
-name = "mw_url_shortener"
-version = "0.0.3"
-description = "A URL shortener API webserver"
-authors = ["Matthew Willcockson <matthew@willcockson.family>"]
-license = "MIT"
-readme = "README.md"
-repository = "https://github.com/mawillcockson/mw_url_shortener"
-
-[tool.poetry.dependencies]
-python = ">=3.6.9,<3.10.0"
-fastapi = {version = "^0.61.2", extras = ["all"]}
-pony = "^0.7.14"
-python-dateutil = "^2.8.1"
-python-jose = "^3.2.0"
-passlib = {version = "^1.7.4", extras = ["bcrypt"]}
-questionary = "^1.8.1"
-decli = "^0.5.2"
-importlib-metadata = {version = "^2.1.0", python = "<3.8"} # NOTE:FUTURE tox depends on <3.0.0
-async-exit-stack = "^1.0.1"
-async_generator = "^1.10"
-python-dotenv = "^0.15.0"
-apistar = "^0.7.2"
-
-[tool.poetry.dev-dependencies]
-pytest = "^5.2"
-pytest-cov = "^2.10.1"
-black = "^20.8b1"
-mypy = "^0.790"
-isort = "^5.6.4"
-tox = "^3.20.1"
-Faker = "^5.0.1"
-
-[tool.pytest.ini_options]
-minversion = "6.0"
-addopts = "--cov=mw_url_shortener --strict-markers"
-# I don't plan on leaving parametersets empty
-# https://docs.pytest.org/en/stable/reference.html#confval-empty_parameter_set_mark
-empty_parameter_mark_set = "fail_at_collect"
-log_cli = true
-
-[tool.isort]
-profile = "black"
-# Ensures the output doesn't save if the resulting file contains syntax errors
-atomic = true
-# Add an explicitly defined source path (modules within src paths have their
-# imports automatically catorgorized as first_party)
-src_paths = ["mw_url_shortener", "tests"]
-
-[tool.pylint.MASTER]
-init-hook = '''
 # mypy: allow_any_expr
 (
     """
@@ -135,12 +84,3 @@ def munge_syspath() -> None:
 
 
 munge_syspath()
-
-'''
-
-[tool.poetry.scripts]
-mw_url_shortener = "mw_url_shortener.console:main"
-
-[build-system]
-requires = ["poetry-core>=1.0.0"]
-build-backend = "poetry.core.masonry.api"

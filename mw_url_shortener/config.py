@@ -2,13 +2,14 @@ print(f"imported mw_url_shortener.config as {__name__}")
 """
 Primarily uses https://github.com/tmbo/questionary
 """
-from questionary import Separator, prompt
-from enum import Enum
-from typing import List, Optional, Union, Callable, NewType
-from pathlib import Path
-from pydantic import BaseSettings, Field
 from argparse import Namespace
+from enum import Enum
 from pathlib import Path
+from typing import Callable, List, NewType, Optional, Union
+
+from pydantic import BaseSettings, Field
+from questionary import Separator, prompt
+
 from .types import Key, OptionalSPath
 from .utils import orjson_dumps, orjson_loads, unsafe_random_chars
 

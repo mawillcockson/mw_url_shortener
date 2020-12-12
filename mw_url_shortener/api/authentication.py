@@ -2,17 +2,19 @@ print(f"imported mw_url_shortener.api.authentication as {__name__}")
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from passlib.context import CryptContext
-from ..database import user, get_db
-from ..database.models import UserModel
-from ..types import HashedPassword, Username, PlainPassword
 from pony.orm import Database
 
+from ..database import get_db, user
+from ..database.models import UserModel
+from ..types import HashedPassword, PlainPassword, Username
 
 security = HTTPBasic()
 password_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
-def verify_password(plain_password: PlainPassword, hashed_password: HashedPassword) -> bool:
+def verify_password(
+    plain_password: PlainPassword, hashed_password: HashedPassword
+) -> bool:
     """
     Checks if a password is valid
 
@@ -34,7 +36,10 @@ def hash_password(plain_password: PlainPassword) -> HashedPassword:
 # DONE:
 # The passlib module's CryptContext automatically creates salts and adds them
 # to the password hash as needed
-def authorize(db: Database = Depends(get_db), credentials: HTTPBasicCredentials = Depends(security)) -> UserModel:
+def authorize(
+    db: Database = Depends(get_db),
+    credentials: HTTPBasicCredentials = Depends(security),
+) -> UserModel:
     """
     A function that can be used as FastAPI dependency to ensure use of an API
     endpoint is authenticaed
@@ -52,7 +57,9 @@ def authorize(db: Database = Depends(get_db), credentials: HTTPBasicCredentials 
     if not user:
         raise authentication_error
 
-    if not verify_password(plain_password=credentials.password, hashed_password=user.hashed_password):
+    if not verify_password(
+        plain_password=credentials.password, hashed_password=user.hashed_password
+    ):
         raise authentication_error
 
     return credentials.username

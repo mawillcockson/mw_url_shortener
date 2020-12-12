@@ -2,7 +2,12 @@ print(f"imported mw_url_shortener.database.errors as {__name__}")
 """
 collection of errors reported by the database interface
 """
-__all__ = ["UserNotFoundError", "DatabaseError", "UserAlreadyExistsError", "BadConfigError"]
+__all__ = [
+    "UserNotFoundError",
+    "DatabaseError",
+    "UserAlreadyExistsError",
+    "BadConfigError",
+]
 
 
 class DatabaseError(Exception):

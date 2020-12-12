@@ -4,14 +4,16 @@ The main cli frontend for the program
 
 Primarily uses: https://github.com/Woile/decli
 """
-from decli import cli
-from . import config, __version__
-from .config import CommonSettings, ServerSettings
-from typing import Callable, Union, Optional
-import sys
 import argparse
+import sys
 from argparse import ArgumentTypeError, Namespace
 from pathlib import Path
+from typing import Callable, Optional, Union
+
+from decli import cli
+
+from . import __version__, config
+from .config import CommonSettings, ServerSettings
 from .utils import unsafe_random_chars
 
 
@@ -22,6 +24,7 @@ class ArgumentValidationError(ArgumentTypeError, TypeError):
 
 class OpenableFileMeta(type):
     "Only here to make OpenableFile a callable class"
+
     def __call__(self, filename: Union[Path, str, type(None)]) -> Path:
         "checks that the filename is a valid path, and returns it"
         path = Path(filename).resolve()
@@ -49,6 +52,7 @@ def raise_not_implemented_gen(message: str) -> Callable[[], None]:
     Make a function that will raise a NotImplemented error with a custom
     message
     """
+
     def not_implemented() -> None:
         raise NotImplementedError(message)
 
@@ -62,19 +66,24 @@ def server_run(args: Namespace) -> None:
     # NOTE: import here so that it's not imported when console is imported and
     # run, to keep load times down
     import uvicorn
+
     from . import server
     from .api.main import api_app_v1
-    from .database.interface import setup_db, get_db
+
     # NOTE:BUG have to import this or entities won't be added to module
     # database object
     from .database import entities
+    from .database.interface import get_db, setup_db
+
     if args.env_file:
         settings = ServerSettings(_env_file=args.env_file, **vars(args))
     else:
         settings = ServerSettings.from_orm(args)
 
     if not settings.database_file:
-        sys.exit("No database file specified; please make one with the setup subcommand")
+        sys.exit(
+            "No database file specified; please make one with the setup subcommand"
+        )
 
     # NOTE:BUG create_tables should be False, if use of the setup command needs
     # to be forced
@@ -85,7 +94,7 @@ def server_run(args: Namespace) -> None:
     # NOTE:BUG Is this necessary?
     # Are the settings states shared to mounted apps?
     # Do I need to manage updates to that state in both places?
-    #server.api_app_v1.state.settings = settings
+    # server.api_app_v1.state.settings = settings
     server.app.mount(f"/{settings.api_key}", api_app_v1)
     server.app.include_router(server.app_router)
 
@@ -95,8 +104,11 @@ def server_run(args: Namespace) -> None:
     if not settings.root_path:
         uvicorn.run("mw_url_shortener.server:app", reload=settings.reload, root_path="")
     else:
-        uvicorn.run("mw_url_shortener.server:app", reload=settings.reload, root_path=settings.root_path)
-
+        uvicorn.run(
+            "mw_url_shortener.server:app",
+            reload=settings.reload,
+            root_path=settings.root_path,
+        )
 
 
 interface_spec = {
@@ -167,6 +179,7 @@ interface_spec = {
         ],
     },
 }
+
 
 def main() -> None:
     """

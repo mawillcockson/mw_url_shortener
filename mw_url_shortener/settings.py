@@ -1,8 +1,10 @@
 print(f"imported mw_url_shortener.settings as {__name__}")
-from pydantic import BaseSettings, Field
-from .types import OptionalSPath, Key
-from .utils import orjson_dumps, orjson_loads, unsafe_random_chars
 from typing import Optional
+
+from pydantic import BaseSettings, Field
+
+from .types import Key, OptionalSPath
+from .utils import orjson_dumps, orjson_loads, unsafe_random_chars
 
 
 class CommonSettings(BaseSettings):
@@ -19,9 +21,10 @@ class CommonSettings(BaseSettings):
     The .env file uses the python-dotenv syntax:
     https://github.com/theskumar/python-dotenv#usages
     """
+
     # NOTE:NIT It feels like a cheat to have the func and env_file here, though
     # it does make it easier to parse things
-    #func: Callable[[Namespace], None]
+    # func: Callable[[Namespace], None]
     env_file: OptionalSPath = None
     key_length: int = 3
     api_key: Key = "api"
