@@ -1,6 +1,6 @@
 from pony.orm import Database
 from mw_url_shortener.database.config import get_config, save_config
-from mw_url_shortener.config import CommonSettings
+from mw_url_shortener.settings import CommonSettings
 
 
 def test_save_config(database: Database, correct_settings: CommonSettings) -> None:

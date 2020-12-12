@@ -1,5 +1,6 @@
+print(f"imported mw_url_shortener.database.config as {__name__}")
 from pony.orm import Database, db_session
-from ..config import CommonSettings
+from ..settings import CommonSettings
 
 
 def get_config(db: Database) -> CommonSettings:

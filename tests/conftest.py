@@ -4,7 +4,7 @@ pytest fixtures and testing configuration
 import pytest
 from mw_url_shortener.database import get_db
 from mw_url_shortener.database.interface import setup_db
-from mw_url_shortener.config import CommonSettings
+from mw_url_shortener.settings import CommonSettings
 from pony.orm import Database
 from mw_url_shortener.utils import unsafe_random_chars, unsafe_random_hashed_password, random_username
 from pathlib import Path
