@@ -8,8 +8,16 @@ from pony.orm import Database, db_session
 from pony.orm.dbapiprovider import DBException
 
 from ..types import HashedPassword, Key, SPath, Uri, Username
+from ..utils import unsafe_random_chars
 from . import get_db
-from .errors import DatabaseError, UserAlreadyExistsError, UserNotFoundError
+from .errors import (
+    DatabaseError,
+    DuplicateKeyError,
+    DuplicateThresholdError,
+    RedirectNotFoundError,
+    UserAlreadyExistsError,
+    UserNotFoundError,
+)
 from .models import RedirectModel, UserModel
 
 
@@ -95,43 +103,106 @@ def setup_db(db: Database, filename: SPath, create_tables: bool = True) -> Datab
 
 def get_redirect(key: Key, db: Database = Depends(get_db)) -> RedirectModel:
     with db_session:
-        redirect = db.RedirectEntity.get(key=key)
+        redirect = db.RedirectEntity.get(key=str(key))
         if not redirect:
-            raise KeyError("redirect key not found")
+            raise RedirectNotFoundError(f"no redirect found with key '{key}'")
 
         return RedirectModel.from_orm(redirect)
 
 
 def create_redirect(
-    redirect: RedirectModel, db: Database = Depends(get_db)
+    redirect: Optional[RedirectModel] = None,
+    uri: Optional[Uri] = None,
+    db: Database = Depends(get_db),
 ) -> RedirectModel:
     "add a redirect to the database, and verify that it's represented correctly"
-    with db_session:
-        new_redirect = RedirectModel.from_orm(
-            db.RedirectEntity(key=redirect.key, uri=redirect.uri)
+    if redirect is None and uri is None:
+        raise TypeError("need exactly one of either uri or redirect")
+    if redirect and uri:
+        raise TypeError("need exactly one of either uri or redirect")
+
+    if not redirect:
+        new_redirect: RedirectModel = RedirectModel(
+            key=new_redirect_key(db=db), uri=uri
         )
-    assert redirect == new_redirect, "Database mutated data"
+    else:
+        new_redirect = redirect
+
+    try:
+        get_redirect(db=db, key=new_redirect.key)
+    except RedirectNotFoundError as err:
+        pass
+    else:
+        raise DuplicateKeyError(
+            f"a redirect with key '{new_redirect.key}' already exists"
+        )
+
+    with db_session:
+        created_redirect = RedirectModel.from_orm(
+            db.RedirectEntity(key=new_redirect.key, uri=new_redirect.uri)
+        )
+    assert created_redirect == new_redirect, "Database mutated data"
     return new_redirect
 
 
-def update_redirect():
-    raise NotImplementedError
+def update_redirect(
+    key: Key, updated_redirect: RedirectModel, db: Database = Depends(get_db)
+) -> RedirectModel:
+    "updates a redirect"
+    with db_session:
+        old_redirect_entity = db.RedirectEntity.get(key=updated_redirect.key)
+
+        if not old_redirect_entity:
+            raise RedirectNotFoundError(f"no redirect found with key '{key}'")
+
+        if old_redirect_entity.key != updated_redirect.key:
+            create_redirect(db=db, redirect=updated_redirect)
+            old_redirect_entity.delete()
+        else:
+            old_redirect_entity.uri = updated_redirect.uri
+
+        return RedirectModel.from_orm(db.RedirectEntity.get(key=updated_redirect.key))
 
 
-def delete_redirect():
-    raise NotImplementedError
+def delete_redirect(redirect: RedirectModel, db: Database = Depends(get_db)) -> None:
+    "deletes a redirect; the redirect must exist"
+    with db_session:
+        redirect_entity = db.RedirectEntity.get(key=redirect.key)
+
+        if not redirect_entity:
+            raise RedirectNotFoundError(f"no redirect found with key '{redirect.key}'")
+
+        redirect_entity.delete()
 
 
-def get_redirect():
-    raise NotImplementedError
+def list_redirects(db: Database = Depends(get_db)) -> List[RedirectModel]:
+    """
+    returns a list of all current redirects in the database
+
+    returned list may be empty
+    """
+    with db_session:
+        return list(
+            RedirectModel.from_orm(redirect) for redirect in db.RedirectEntity.select()
+        )
 
 
-def list_redirects():
-    raise NotImplementedError
+def new_redirect_key(
+    length: int = 3, duplicate_threshold: int = 10, db: Database = Depends(get_db)
+):
+    count = 0
+    while count <= duplicate_threshold:
+        new_key = Key(unsafe_random_chars(length))
+        try:
+            get_redirect(db=db, key=new_key)
+        except RedirectNotFoundError as err:
+            return new_key
 
+        count += 1
 
-def new_redirect_key():
-    raise NotImplementedError
+    raise DuplicateThresholdError(
+        f"duplicate threshold of {duplicate_threshold} reached"
+    )
 
 
 def get_user(username: Username, db: Database = Depends(get_db)) -> UserModel:

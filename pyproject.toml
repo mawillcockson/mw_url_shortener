@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "mw_url_shortener"
-version = "0.0.3"
+version = "0.0.4"
 description = "A URL shortener API webserver"
 authors = ["Matthew Willcockson <matthew@willcockson.family>"]
 license = "MIT"
@@ -30,6 +30,7 @@ mypy = "^0.790"
 isort = "^5.6.4"
 tox = "^3.20.1"
 Faker = "^5.0.1"
+pytest-timeout = "^1.4.2"
 
 [tool.pytest.ini_options]
 minversion = "6.0"
@@ -38,6 +39,7 @@ addopts = "--cov=mw_url_shortener --strict-markers"
 # https://docs.pytest.org/en/stable/reference.html#confval-empty_parameter_set_mark
 empty_parameter_mark_set = "fail_at_collect"
 log_cli = true
+timeout = 60
 
 [tool.isort]
 profile = "black"

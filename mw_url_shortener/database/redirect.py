@@ -3,7 +3,12 @@ print(f"imported mw_url_shortener.database.redirect as {__name__}")
 This file exists purely to export an organized namespace
 """
 from ..types import Key, Uri
-from .errors import RedirectNotFoundError
+from .errors import (
+    DatabaseError,
+    DuplicateKeyError,
+    DuplicateThresholdError,
+    RedirectNotFoundError,
+)
 from .interface import create_redirect as create
 from .interface import delete_redirect as delete
 from .interface import get_redirect as get

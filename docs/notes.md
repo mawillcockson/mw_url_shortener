@@ -56,8 +56,30 @@ Any way that they're entered, there should be a mechanism to give multiple short
 
 ```
 $ mw_url_shortener add 'https://example.com/another-page' awesome-thing awesome_thing awesomething
-short-links: /
+short-links: /awesome-thing /awesome_thing /awesomething
 ```
+
+### Finding a new key
+
+I prefer generating the keys randomly, so that it's more difficult to iterate through them. If I'm running this on my own, I don't want someone to be able to look at all of my links very easily. [`fail2ban` integration would help](#integrate-with-fail2ban), but still.
+
+Python has a a builtin function `random.choice`, which is what's currently being used to generate keys. As the number of used keys goes up, especially if the key length stays the same, eventually the probability of generating a key that's already been chosen reaches an appreciable amount.
+
+At some point, I want to implement a threshold setting, that takes an integer representing the percentage of the keyspace that's already been taken, and once that threshold is reached, it bumps the key length up by 1.
+
+Also, I want the algorithm to keep count of how many duplicate keys have been generated in a row, and to have a different threshold value that, when reached, it will switch globally from generating the keys randomly, to generating them with linearly with something like `itertools.product`.
+
+That way, if the "percent filled" threshold is 100%, the algorithm wouldn't spend forever searching for that last one. It may take a minute, but on my laptop, with my bad algorithm, written in Python, it takes about 572 msec to iterate through the whole key space of 4 characters.
+
+However, that's without database lookups in between. Still, I think a threshold of something like 10 to 50 duplicate keys in a row would be a good time to move to a larger key space.
+
+Also, it would be especially cool if the generator could be pickled, so that it could be resumed on server start, so that it doesn't have to spend time playing catch up on the first create request if it's already been using the linear algorithm for a while.
+
+For now, I'm going to optimistically hope that I don't need to do any of that, but I will add in a check that will give up after 10 failed attempts. I want to make this configurable once I figure out the configuration situation.
+
+### Integrate with fail2ban
+
+Being able to at least ban an address that's generating a lot of 404s would be nice. Same thing for attempts at brute-forcing the api authentication.
 
 ## Authentication
 
@@ -297,3 +319,19 @@ Also, using the `"/{chars:path}"` specifier to be able to collect all the path c
 If run with `--reload`, another process is created, and that process does not share global state with the initial process, which means that my previous attempt of having an in-memory database as part of the MVP won't work, and neither will creating a temporary database, as both are created each time the process is started.
 
 Instead, a persistent database file is needed, and the whole path has to be enumerated, as Python is started from various locations.
+
+I think a solid solution is to require the database file be added set in an environment variable. That way, it's always available, to every thread, and every child process.
+
+Python can also set it's own environment, but there's a note about that causing memory leaks on FreeBSD and MacOS.
+
+I'm sure there's got to be a solution out there that would work better than using the environment for state management.
+
+Something crazy like starting a separate process to act as a message brokering service, and will respond with the current database file.
+
+I'll admit that the above idea is inspired from reading the synopsis for ZeroMQ, and seeing that Python has a mature binding for it.
+
+Really, though, and network server, available at a well-known location, would be great. One that only responds to traffic from the application, and can store some state.
+
+I was wondering how it'd work if the `config.get` function would first check to see if there's a valid `_config` variable set in the module, and return a copy of that if there is.
+
+That way, it only really needs to gather all the settings once per worker process, hopefully. Are module variables given to each thread? Probably not. I've heard that sharing memory between threads is something that requires extra-special handling, not just setting a global variable.

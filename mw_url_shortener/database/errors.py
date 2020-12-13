@@ -29,3 +29,11 @@ class BadConfigError(DatabaseError):
 
 class RedirectNotFoundError(DatabaseError):
     pass
+
+
+class DuplicateKeyError(DatabaseError):
+    pass
+
+
+class DuplicateThresholdError(DatabaseError):
+    pass

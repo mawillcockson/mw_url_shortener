@@ -3,7 +3,9 @@ utilities used by the tests
 
 generally, these are utilities that can't work as pytest fixtures, since pytest fixtures provide the same value all throught a single test function, regardless of scope
 """
+import itertools
 from random import randint
+from typing import Iterable
 
 import faker  # faker fixture required for tests
 
@@ -67,3 +69,21 @@ def random_key() -> Key:
 def random_redirect() -> redirect.Model:
     "uses faker to generate a random redirect model"
     return redirect.Model(key=random_key(), uri=random_uri())
+
+
+def all_combinations(characters: str, length: int) -> Iterable[str]:
+    """
+    gives an iterator that produces all the combinations of characters from a
+    set for a particular length
+    """
+    if not (isinstance(characters, str) and len(characters) > 0):
+        raise TypeError("characters must be a str of 1 or more characters")
+    if not (isinstance(length, int) and length > 0):
+        raise TypeError("length must be a positive int greater than 0")
+
+    def combo_gen() -> Iterable[str]:
+        "inner generator"
+        for three_str_tuple in itertools.product(set(characters), repeat=length):
+            yield "".join(three_str_tuple)
+
+    return combo_gen()
