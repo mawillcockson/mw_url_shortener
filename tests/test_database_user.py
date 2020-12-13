@@ -5,12 +5,12 @@ import pytest
 from pony.orm import Database
 
 from mw_url_shortener.database import user
-from mw_url_shortener.database.errors import (
+from mw_url_shortener.database.user import (
     DatabaseError,
+    HashedPassword,
     UserAlreadyExistsError,
     UserNotFoundError,
 )
-from mw_url_shortener.types import HashedPassword
 
 from .utils import random_hashed_password, random_user, random_username
 
