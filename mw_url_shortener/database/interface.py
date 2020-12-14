@@ -150,7 +150,7 @@ def update_redirect(
 ) -> RedirectModel:
     "updates a redirect"
     with db_session:
-        old_redirect_entity = db.RedirectEntity.get(key=updated_redirect.key)
+        old_redirect_entity = db.RedirectEntity.get(key=key)
 
         if not old_redirect_entity:
             raise RedirectNotFoundError(f"no redirect found with key '{key}'")
@@ -256,7 +256,7 @@ def update_user(
 ) -> UserModel:
     "updates a user in the database using the new user data"
     with db_session:
-        old_user_entity = db.UserEntity.get(username=updated_user.username)
+        old_user_entity = db.UserEntity.get(username=username)
 
         if not old_user_entity:
             raise UserNotFoundError(f"no user found with username '{username}'")
