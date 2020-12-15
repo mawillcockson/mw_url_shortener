@@ -17,7 +17,8 @@ def get_config(db: Database) -> CommonSettings:
     return CommonSettings.parse_raw(current_config_json)
 
 
-def save_config(db: Database, settings: CommonSettings) -> None:
+def save_config(db: Database, settings: CommonSettings) -> CommonSettings:
     "encodes the settings and writes them to the database"
     with db_session:
-        db.ConfigEntity(version="current", json=settings.json())
+        config_entity = db.ConfigEntity(version="current", json=settings.json())
+        return CommonSettings.parse_raw(config_entity.json)

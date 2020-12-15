@@ -1,6 +1,7 @@
 """
 pytest fixtures and testing configuration
 """
+import os
 from pathlib import Path
 from random import randint
 
@@ -40,3 +41,18 @@ def correct_settings(tmp_path: Path, database: Database) -> CommonSettings:
         root_path=unsafe_random_chars(6),
         database_file=database.provider.pool.filename,
     )
+
+
+@pytest.fixture(autouse=True)
+def remove_settings_env_vars(monkeypatch: pytest.MonkeyPatch) -> None:
+    """
+    can't guarantee that the settings won't pull environment variables from the
+    test environment, since pydantic provides a lot of ways of setting the
+    names of environment variables it should in for values, but any current
+    environment variables that have the same prefix as what the settings class
+    will be looking for can be made unavailable to the function under test:
+    """
+    env_prefix: str = CommonSettings.Config().env_prefix
+    for env_var_name in os.environ:
+        if env_var_name.startswith(env_prefix):
+            monkeypatch.delenv(env_var_name)

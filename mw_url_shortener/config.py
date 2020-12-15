@@ -1,65 +1,58 @@
 print(f"imported mw_url_shortener.config as {__name__}")
 """
-Primarily uses https://github.com/tmbo/questionary
+where the global application configuration is retrieved and modified
 """
 from argparse import Namespace
-from enum import Enum
+from .settings import CommonSettings
+from typing import Optional
+from . import settings
+from collections.abc import Mapping
 from pathlib import Path
-from typing import Callable, List, NewType, Optional, Union
-
-from pydantic import BaseSettings, Field
-from questionary import Separator, prompt
-
-from .types import Key, OptionalSPath
-from .utils import orjson_dumps, orjson_loads, unsafe_random_chars
 
 
-class CreateDatabase(str, Enum):
-    create = "Create a database"
-    use_existing = "Use an existing database (choose file)"
+def get(args: Optional[Namespace] = None, settings_class: CommonSettings = CommonSettings) -> CommonSettings:
+    """
+    obtains configuration information
 
-    def __str__(self) -> str:
-        """
-        from:
-        https://www.cosmicpython.com/blog/2020-10-27-i-hate-enums.html
-        """
-        return str.__str__(self)
+    the order of precedence from lowest priority to highest is:
+    - defaults on the class
+    - .env file
+    - environment
+    - previously set settings
+    - args
+    """
+    if not isinstance(args, (Namespace, type(None))):
+        raise TypeError("args must be an argparse.Namespace or None")
+    if not issubclass(settings_class, CommonSettings):
+        raise TypeError("settings_class must be a subclass of settings.CommonSettings")
 
+    # The ordering is important, as the later ones override the earlier ones if
+    # they both have the same key
+    # >>> a = {"z": 0}
+    # >>> b = {"z": 1}
+    # >>> {**a, **b}
+    # {'z': 1}
+    extra_settings = dict()
+    if isinstance(settings._settings, Mapping):
+        extra_settings.update(settings._settings)
+    if isinstance(args, Namespace):
+        extra_settings.update(vars(args))
 
-first_time_questions = [
-    {
-        "message": "No database found",
-    },
-    {
-        "message": "Database location",
-    },
-    {
-        "message": "The database already has a user\nAdd user?",
-        "choices": [
-            "yes",
-            "no, I'll add one manually to the SQLite database",
-            "no, one already exists",
-        ],
-    },
-    {
-        "message": "Generate systemd files?",
-        "choices": [
-            "user",
-            "system",
-            "no",
-        ],
-    },
-    {
-        "message": """Would you like to put the API behind a hard-to-guess key?
-For example:
+    preliminary_settings = CommonSettings(env_file=extra_settings.get("env_file", None))
 
-https://example.com/tgHQiG9o0T/v1/users
+    pre_and_extra_settings = preliminary_settings.dict()
+    pre_and_extra_settings.update(extra_settings)
 
-Without the key:
+    if not isinstance(preliminary_settings.env_file, (Path, str)):
+        full_settings = settings_class(**pre_and_extra_settings)
+    else:
+        env_file = Path(preliminary_settings.env_file).resolve()
+        try:
+            env_file.read_text()
+        except OSError as err:
+            raise ValueError(f"cannot open .env file at '{env_file}'") from err
 
-https://example.com/v1/users""",
-    },
-    {
-        "message": "Allow unauthenticated local access?",
-    },
-]
+        full_settings = settings_class(_env_file=env_file, **preliminary_settings)
+
+    settings._settings = full_settings
+    return full_settings

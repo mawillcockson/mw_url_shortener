@@ -28,4 +28,3 @@ Key = NewType("Key", constr(min_length=1))
 Username = NewType("Username", constr(min_length=1))
 
 SPath = Union[str, Path]
-OptionalSPath = Union[Path, str, None]
