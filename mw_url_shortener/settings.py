@@ -1,11 +1,11 @@
 print(f"imported mw_url_shortener.settings as {__name__}")
+from pathlib import Path
 from typing import Optional
 
-from pydantic import BaseSettings, Field, Extra
+from pydantic import BaseSettings, Extra, Field
 
 from .types import Key, SPath
 from .utils import orjson_dumps, orjson_loads, unsafe_random_chars
-from pathlib import Path
 
 
 class CommonSettings(BaseSettings):
@@ -24,7 +24,7 @@ class CommonSettings(BaseSettings):
     """
 
     env_file: Optional[SPath] = None
-    
+
     class Config:
         env_prefix = "url_shortener_"
         orm_mode = True
@@ -40,19 +40,23 @@ class CommonSettings(BaseSettings):
 
 class AllowExtraSettings(CommonSettings):
     "purely for adding the config to all subclasses"
+
     class Config:
         extra = Extra.allow
 
 
 class DatabaseSettings(AllowExtraSettings):
+    "requires the database_file"
     database_file: Path
 
 
 class ClientSettings(AllowExtraSettings):
+    "requires the api_key"
     api_key: Key
 
 
 class ServerSettings(ClientSettings, DatabaseSettings):
+    "all of the settings needed for starting and running a server"
     # NOTE:BUG The following rules should be eforced:
     # - Does this value have to start with '/'?
     # - Can it end with a '/'?

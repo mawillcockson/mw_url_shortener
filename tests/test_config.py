@@ -1,15 +1,16 @@
 """
 ensures mw_url_shortener.config behaves correctly
 """
+import os
+from pathlib import Path
+from typing import Dict, Union
+
 import pytest
+from pydantic import ValidationError
 
 from mw_url_shortener import config
 from mw_url_shortener.config import Namespace
-from pydantic import ValidationError
-import os
-from pathlib import Path
-from typing import Union, Dict
-from mw_url_shortener.settings import DatabaseSettings, CommonSettings
+from mw_url_shortener.settings import CommonSettings, DatabaseSettings
 
 
 def test_get_no_args_error() -> None:
