@@ -119,7 +119,9 @@ def test_update_user_all_properties(database: Database) -> None:
     assert example_user.hashed_password != different_user.hashed_password
 
     created_user = user.create(db=database, user=example_user)
-    updated_user = user.update(db=database, username=created_user.username, updated_user=different_user)
+    updated_user = user.update(
+        db=database, username=created_user.username, updated_user=different_user
+    )
     assert created_user.username != updated_user.username
     assert created_user.hashed_password != updated_user.hashed_password
 

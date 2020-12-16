@@ -182,7 +182,9 @@ def test_update_redirectall_properties(database: Database) -> None:
     assert example_redirect.uri != different_redirect.uri
 
     created_redirect = redirect.create(db=database, redirect=example_redirect)
-    updated_redirect = redirect.update(db=database, key=created_redirect.key, updated_redirect=different_redirect)
+    updated_redirect = redirect.update(
+        db=database, key=created_redirect.key, updated_redirect=different_redirect
+    )
     assert created_redirect.key != updated_redirect.key
     assert created_redirect.uri != updated_redirect.uri
 

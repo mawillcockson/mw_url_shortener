@@ -10,9 +10,9 @@ from typing import Callable, List, NewType, Optional, Union
 from pydantic import BaseSettings, Field
 from questionary import Separator, prompt
 
+from .settings import CommonSettings
 from .types import Key, SPath
 from .utils import orjson_dumps, orjson_loads, unsafe_random_chars
-from .settings import CommonSettings
 
 
 class CreateDatabase(str, Enum):

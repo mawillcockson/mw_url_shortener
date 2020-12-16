@@ -9,7 +9,9 @@ from mw_url_shortener.settings import CommonSettings
 from .utils import random_json
 
 
-def test_save_and_load_config(database: Database, correct_settings: CommonSettings) -> None:
+def test_save_and_load_config(
+    database: Database, correct_settings: CommonSettings
+) -> None:
     "can a config be saved and read back correctly"
     saved_settings = save_config(db=database, settings=correct_settings)
     returned_settings = get_config(db=database)
