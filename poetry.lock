@@ -232,7 +232,7 @@ idna = ">=2.0.0"
 
 [[package]]
 name = "faker"
-version = "5.0.1"
+version = "5.0.2"
 description = "Faker is a Python package that generates fake data for you."
 category = "dev"
 optional = false
@@ -944,7 +944,7 @@ testing = ["pytest (>=3.5,!=3.7.3)", "pytest-checkdocs (>=1.2.3)", "pytest-flake
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.6.9,<3.10.0"
-content-hash = "5a0f4c425f0ba971cbcabc30b5a193b3d3176abbc241f83e8c3ab7b7249a2f3f"
+content-hash = "076017c563ee729f2719f1feebef796fbce76de3d2010cfd4ffe39b9452d9899"
 
 [metadata.files]
 aiofiles = [
@@ -1103,8 +1103,8 @@ email-validator = [
     {file = "email_validator-1.1.2-py2.py3-none-any.whl", hash = "sha256:094b1d1c60d790649989d38d34f69e1ef07792366277a2cf88684d03495d018f"},
 ]
 faker = [
-    {file = "Faker-5.0.1-py3-none-any.whl", hash = "sha256:1fcb415562ee6e2395b041e85fa6901d4708d30b84d54015226fa754ed0822c3"},
-    {file = "Faker-5.0.1.tar.gz", hash = "sha256:e8beccb398ee9b8cc1a91d9295121d66512b6753b4846eb1e7370545d46b3311"},
+    {file = "Faker-5.0.2-py3-none-any.whl", hash = "sha256:5b17c95cfb013a22b062b8df18286f08ce4ea880f9948ec74295e5a42dbb2e44"},
+    {file = "Faker-5.0.2.tar.gz", hash = "sha256:00ce4342c221b1931b2f35d46f5027d35bc62a4ca3a34628b2c5b514b4ca958a"},
 ]
 fastapi = [
     {file = "fastapi-0.62.0-py3-none-any.whl", hash = "sha256:62074dd38541d9d7245f3aacbbd0d44340c53d56186c9b249d261a18dad4874b"},
