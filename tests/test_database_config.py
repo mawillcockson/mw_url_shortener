@@ -45,7 +45,6 @@ def test_save_bad_config(database: Database, correct_settings: CommonSettings) -
         f"a dummy class meant to mimic {CommonSettings.__name__}"
         env_file: Path = correct_settings.env_file
 
-
     bad_settings = DummyClass()
     bad_settings.__class__.__name__ = CommonSettings.__name__
 
