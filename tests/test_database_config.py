@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import pydantic
 import pytest
 from pony.orm import Database, db_session
@@ -18,20 +20,17 @@ def test_save_and_load_config(
     assert correct_settings == saved_settings == returned_settings
 
 
-@pytest.mark.xfail
 def test_load_bad_config(database: Database) -> None:
     "is an error thrown if a bad config is read from the database"
     example_bad_json: str = random_json()
     # Prove the example_bad_json is not a valid configuration structure
-    try:
+    with pytest.raises(pydantic.ValidationError) as err:
         CommonSettings.parse_raw(example_bad_json)
-    except pydantic.ValidationError as validation_error:
-        pass
-    else:
-        assert not validation_error
 
     with db_session:
-        database.ConfigEntity(version="current", json=example_bad_json)
+        database.ConfigEntity(
+            version="current", json=example_bad_json, class_name=CommonSettings.__name__
+        )
         database.commit()
 
     with pytest.raises(BadConfigInDBError) as err:
@@ -39,18 +38,17 @@ def test_load_bad_config(database: Database) -> None:
     assert "bad configuration in database" in str(err.value)
 
 
-@pytest.mark.xfail
-def test_save_bad_config(database: Database) -> None:
+def test_save_bad_config(database: Database, correct_settings: CommonSettings) -> None:
     "is an error thrown when a bad config is saved"
-    example_bad_json: str = random_json()
-    # Prove the example_bad_json is not a valid configuration structure
-    try:
-        CommonSettings.parse_raw(example_bad_json)
-    except pydantic.ValidationError as validation_error:
-        pass
-    else:
-        assert not validation_error
 
-    with pytest.raises(BadConfigInDBError) as err:
-        save_config(db=database, new_settings=example_bad_json)
-    assert "bad configuration data" in str(err.value)
+    class DummyClass(pydantic.BaseSettings):
+        f"a dummy class meant to mimic {CommonSettings.__name__}"
+        env_file: Path = correct_settings.env_file
+
+
+    bad_settings = DummyClass()
+    bad_settings.__class__.__name__ = CommonSettings.__name__
+
+    with pytest.raises(ValueError) as err:
+        save_config(db=database, new_settings=bad_settings)
+    assert "new_settings must be an instance of a settings class" in str(err.value)
