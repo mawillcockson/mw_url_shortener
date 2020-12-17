@@ -6,24 +6,52 @@ import os
 from argparse import Namespace
 from collections.abc import Mapping
 from pathlib import Path
-from typing import NamedTuple, Optional
+from typing import Dict, NamedTuple, Optional
+
+import pydantic
+from pydantic import BaseModel, Field, ValidationError, constr, root_validator
 
 from . import settings
-from .settings import CommonSettings
+from .database.config import get_config as get_from_db
+from .database.config import save_config as save_to_db
+from .database.errors import BadConfigInDBError
+from .settings import CommonSettings, SettingsClassName
+
+# From:
+# https://stackoverflow.com/a/2821183
+# https://stackoverflow.com/questions/2821043/allowed-characters-in-linux-environment-variable-names/2821183#2821183
+EnvVarName = constr(min_length=1, regex=r"^[A-Z]([A-Z0-9_]+)?$")
 
 
-class SettingsEnvNames(NamedTuple):
+class SettingsEnvNames(BaseModel):
     "names of the environment variables for the settings class and values"
-    class_name: str
-    value_name: str
+    class_name: EnvVarName
+    value_name: EnvVarName
+
+    # Don't run this validator when the type validation fails
+    @root_validator(skip_on_failure=True)
+    def different_values(cls, values: Dict[str, EnvVarName]) -> Dict[str, EnvVarName]:
+        "are the class name and value name different"
+        print(values)
+        assert values.get("class_name", False), "class_name must not be empty"
+        assert values.get("value_name", False), "value_name must not be empty"
+        assert (
+            values["class_name"] != values["value_name"]
+        ), "variable names must be different"
+        return values
 
 
-class BadEnvConfigError(Exception):
+class BadConfigError(Exception):
+    "the configuration data did not conform to the settings model"
+    pass
+
+
+class BadEnvConfigError(BadConfigError):
     "the config found in the environment was not correct"
     pass
 
 
-def update_cache(new_settings: CommonSettings) -> CommonSettings:
+def update_module_cache(new_settings: CommonSettings) -> CommonSettings:
     "updates the internally cached settings"
     if settings._settings is None:
         raise TypeError(
@@ -40,46 +68,67 @@ def update_cache(new_settings: CommonSettings) -> CommonSettings:
 
 
 def settings_env_names(
-    base_settings_class: CommonSettings = CommonSettings,
+    settings_class: CommonSettings = CommonSettings,
 ) -> NamedTuple:
     """
     returns the current environment variable names for the settings class and
     value
     """
-    env_prefix = base_settings_class.Config().env_prefix
-    value_name = f"{env_prefix}__settings".upper()
+    try:
+        SettingsClassName.validate(settings_class)
+    except (ValidationError, ValueError) as err:
+        raise ValueError(
+            f"settings_class must be one of ({', '.join(SettingsClassName._class_names)})"
+        ) from err
+
+    env_config = settings_class.Config()
+    try:
+        env_prefix = EnvVarName.validate(env_config.env_prefix)
+    except (AttributeError, TypeError, pydantic.errors.StrRegexError) as err:
+        raise ValueError(
+            "settings_class must have a valid env_prefix configured"
+        ) from err
+    value_name = f"{env_prefix}_settings".upper()
     class_name = f"{value_name}_class".upper()
 
     return SettingsEnvNames(class_name=class_name, value_name=value_name)
 
 
-def set_env(new_settings: CommonSettings, env_names: SettingsEnvNames) -> None:
+def set_env(
+    new_settings: CommonSettings, env_names_or_none: Optional[SettingsEnvNames] = None
+) -> None:
     """
     sets the environment variables associated with the class of the settings
     object to their value in the settings object
     """
+    if env_names_or_none is not None and not isinstance(
+        env_names_or_none, SettingsEnvNames
+    ):
+        raise TypeError("env_names must be a SettingsEnvNames or None")
+
     if not isinstance(new_settings, CommonSettings):
         raise TypeError(
             "new_settings must be instantiated from "
             f"{CommonSettings.__name__} or a subclass"
         )
 
-    settings_class_name = new_settings.__class__.__name__
+    settings_class = type(new_settings)
+    settings_class_name = settings_class.__name__
 
-    class_err_msg = (
-        f"don't know where to find '{settings_class_name}'; " "not in .settings module"
-    )
+    try:
+        SettingsClassName.validate(settings_class)
+    except (ValidationError, ValueError) as err:
+        raise ValueError(
+            f"new_settings must be one of ({', '.join(SettingsClassName._class_names)})"
+        ) from err
 
-    if not hasattr(settings, settings_class_name):
-        raise ValueError(class_err_msg)
-
-    new_settings_class = getattr(settings, settings_class_name)
-
-    if new_settings_class != type(new_settings):
-        raise ValueError(class_err_msg)
+    if env_names_or_none is None:
+        env_names = settings_env_names()
+    else:
+        env_name = env_names_or_none
 
     settings_json = new_settings.json()
-    assert new_settings == new_settings_class.parse_raw(
+    assert new_settings == settings_class.parse_raw(
         settings_json
     ), "settings must be able to be serialized and deserialized"
 
@@ -87,8 +136,18 @@ def set_env(new_settings: CommonSettings, env_names: SettingsEnvNames) -> None:
     os.environ[env_names.value_name] = settings_json
 
 
-def get_env(env_names: SettingsEnvNames) -> CommonSettings:
+def get_env(env_names_or_none: SettingsEnvNames = None) -> CommonSettings:
     "gets the current settings from the environment"
+    if env_names_or_none is not None and not isinstance(
+        env_names_or_none, SettingsEnvNames
+    ):
+        raise TypeError("env_names must be a SettingsEnvNames or None")
+
+    if env_names_or_none is None:
+        env_names = settings_env_names()
+    else:
+        env_name = env_names_or_none
+
     settings_class_name = os.getenv(env_names.class_name, None)
     settings_value = os.getenv(env_names.value_name, None)
     if settings_class_name is None or settings_value is None:

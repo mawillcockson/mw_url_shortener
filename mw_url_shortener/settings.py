@@ -2,7 +2,7 @@ print(f"imported mw_url_shortener.settings as {__name__}")
 import enum
 from enum import Enum
 from pathlib import Path
-from typing import Callable, Iterable, Optional
+from typing import Callable, Iterable, Optional, Union
 
 from pydantic import BaseSettings, Extra, Field, validator
 
@@ -28,7 +28,7 @@ class CommonSettings(BaseSettings):
     env_file: Optional[Path] = None
 
     class Config:
-        env_prefix = "url_shortener_"
+        env_prefix = "URL_SHORTENER_"
         orm_mode = True
         # NOTE: Supposed to help speed up JSON encoding and decoding
         # from:
@@ -89,6 +89,7 @@ SettingsClasses = enum.unique(
 class SettingsClassName(str):
     "a name of a settings class from the settings module"
     _class_names = sorted(cls_enum.name for cls_enum in SettingsClasses)
+    _classes = [cls_enum.value for cls_enum in SettingsClasses]
 
     @classmethod
     def __get_validators__(cls) -> Iterable[Callable[[type, str], "SettingsClassName"]]:
@@ -96,12 +97,16 @@ class SettingsClassName(str):
         yield cls.validate
 
     @classmethod
-    def validate(cls, value: str) -> "SettingsClassName":
+    def validate(cls, value: Union[CommonSettings, str]) -> "SettingsClassName":
         "ensures the value matches the requirements and "
-        assert (
-            value in cls._class_names
-        ), f"class name must be a settings class:\n{', '.join(cls._class_names)}"
-        return cls(value)
+        if value in cls._classes:
+            return cls(value.__name__)
+        elif value in cls._class_names:
+            return cls(value)
+
+        raise ValueError(
+            f"class name must be a settings class:\n{', '.join(cls._class_names)}"
+        )
 
     def __repr__(self) -> str:
         "create a string representation of the value"
