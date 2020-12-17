@@ -3,14 +3,41 @@ ensures mw_url_shortener.config behaves correctly
 """
 import os
 from pathlib import Path
-from typing import Dict, Union
+from typing import Dict, NamedTuple, Tuple, Union
 
 import pytest
 from pydantic import ValidationError
 
 from mw_url_shortener import config
 from mw_url_shortener.config import Namespace
-from mw_url_shortener.settings import CommonSettings, DatabaseSettings
+from mw_url_shortener.settings import (
+    CommonSettings,
+    DatabaseSettings,
+    SettingsClassName,
+)
+
+def test_environment_isolation_set(random_env_var_names: Tuple[str, str]) -> None:
+    "set environment variables that _check will look for"
+    assert os.getenv(random_env_var_names[0], None) is None
+    assert os.getenv(random_env_var_names[1], None) is None
+    os.environ[random_env_var_names[0]] = "example"
+    os.putenv(random_env_var_names[1], "demo")
+    assert os.getenv(random_env_var_names[0], None) == "example"
+    # NOTE:BUG why is the below statement true?????
+    assert os.getenv(random_env_var_names[1], None) is None
+
+
+def test_environment_isolation_check(random_env_var_names: Tuple[str, str]) -> None:
+    """
+    checks to make sure the environment variables set in one test don't show up
+    in another test
+    """
+    assert os.getenv(random_env_var_names[0], None) is None
+    assert os.getenv(random_env_var_names[1], None) is None
+    with pytest.raises(KeyError):
+        os.environ[random_env_var_names[0]]
+    with pytest.raises(KeyError):
+        os.environ[random_env_var_names[1]]
 
 
 def test_get_no_args_error() -> None:

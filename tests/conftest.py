@@ -4,6 +4,8 @@ pytest fixtures and testing configuration
 import os
 from pathlib import Path
 from random import randint
+from typing import Iterable, Tuple
+from unittest.mock import patch
 
 import pytest
 from pony.orm import Database
@@ -12,11 +14,9 @@ from mw_url_shortener.database import get_db, user
 from mw_url_shortener.database.interface import setup_db
 from mw_url_shortener.settings import CommonSettings
 from mw_url_shortener.types import HashedPassword, Username
-from mw_url_shortener.utils import (
-    random_username,
-    unsafe_random_chars,
-    unsafe_random_hashed_password,
-)
+from mw_url_shortener.utils import random_username
+from mw_url_shortener.utils import unsafe_random_chars as random_string
+from mw_url_shortener.utils import unsafe_random_hashed_password
 
 
 @pytest.fixture
@@ -52,3 +52,19 @@ def remove_settings_env_vars(monkeypatch: pytest.MonkeyPatch) -> None:
     for env_var_name in os.environ:
         if env_var_name.startswith(env_prefix):
             monkeypatch.delenv(env_var_name)
+
+
+@pytest.fixture(scope="session")
+def random_env_var_names() -> Tuple[str, str]:
+    "provide some random environment variables names for each run"
+    return (random_string(10).upper(), random_string(11).upper())
+
+
+@pytest.fixture(scope="function", autouse=True)
+def patch_os_environ() -> Iterable[None]:
+    """
+    patches os.environ so that each test function can modify it to its heart's
+    content, and no other test will be able to see those changes
+    """
+    with patch.dict("os.environ") as nothing:
+        yield None
