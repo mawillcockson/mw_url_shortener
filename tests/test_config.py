@@ -16,6 +16,13 @@ from mw_url_shortener.settings import (
     SettingsClassName,
 )
 
+
+class SettingsEnvNames(NamedTuple):
+    f"a bad class meant to mimic {config.SettingsEnvNames.__name__}"
+    class_name: str = "BadClassName"
+    value_name: int = 3
+
+
 def test_environment_isolation_set(random_env_var_names: Tuple[str, str]) -> None:
     "set environment variables that _check will look for"
     assert os.getenv(random_env_var_names[0], None) is None
@@ -105,6 +112,15 @@ def test_settings_env_names_func_bad_input(correct_settings: CommonSettings) -> 
     )
 
 
+@pytest.mark.xfail
+def test_settings_env_names_func_no_env_prefix() -> None:
+    """
+    is an error raised if the settings class does not define a valid
+    env_prefix
+    """
+    raise NotImplementedError
+
+
 def test_settings_env_names_func() -> None:
     f"is {CommonSettings.__name__} used by default"
     env_names_default = config.settings_env_names()
@@ -123,6 +139,170 @@ def test_set_and_get_env(
     assert returned_settings == correct_settings
 
 
+@pytest.mark.xfail
+def test_set_env_bad_types(monkeypatch: pytest.MonkeyPatch) -> None:
+    "does set_env raise an error when the arguments are the wrong types"
+    raise NotImplementedError
+
+
+@pytest.mark.xfail
+def test_set_env_non_serializable(monkeypatch: pytest.MonkeyPatch) -> None:
+    """
+    does set_env throw an error when the settings can't be serialized into a
+    string
+    """
+    raise NotImplementedError
+
+
+@pytest.mark.xfail
+def test_set_env_bad_env_names(monkeypatch: pytest.MonkeyPatch) -> None:
+    """
+    does set_env raise an error when it's given bad environment variable names
+    """
+    raise NotImplementedError
+
+
+@pytest.mark.xfail
+def test_set_env_bad_settings_class(correct_settings: CommonSettings) -> None:
+    """
+    does set_env raise an error when the name of the settings class matches,
+    but isn't one from the settings module
+    """
+
+    class DummySettings(CommonSettings):
+        pass
+
+    dummy = DummySettings(**correct_settings.dict())
+    dummy.__class__.__name__ = CommonSettings.__name__
+    assert type(dummy).__name__ == CommonSettings.__name__
+
+    with pytest.raises(TypeError) as err:
+        config.set_env(env_names=env_names, new_settings=dummy)
+    assert (
+        f"don't know where to find '{dummy.__class__.__name__}'; not in .settings module"
+        in str(err.value)
+    )
+
+
+@pytest.mark.xfail
+def test_set_env_same_env_names() -> None:
+    """
+    does set_env raise an error when the names specified for the environment
+    variable are the same
+    """
+    raise NotImplementedError
+
+
+@pytest.mark.xfail
+def test_get_env_bad_types() -> None:
+    "is an error raised when it's passed bad arguments"
+
+    env_names = SettingsEnvNames()
+
+    with pytest.raises(TypeError) as err:
+        config.get_env(env_names=env_names)
+    assert (
+        "env_names bust be a SettingsEnvNames of strings naming the environment variables to look in"
+        in str(err.value)
+    )
+
+
+@pytest.mark.xfail
+def test_get_env_bad_class_name() -> None:
+    "is an error raised when the environment variable has a bad class name"
+    raise NotImplementedError
+
+
+@pytest.mark.xfail
+def test_get_env_vars_not_set() -> None:
+    "is an error raised when the environmet variables aren't set"
+    raise NotImplementedError
+
+
+@pytest.mark.xfail
+def test_get_env_vars_empty() -> None:
+    "is an error raised when the environment variables are set to empty strings"
+    raise NotImplementedError
+
+
+@pytest.mark.xfail
+def test_get_env_vars_non_deserializable() -> None:
+    "will an error be raised if the environment variable has a string that can't be deseriealized"
+    raise NotImplementedError
+
+
+@pytest.mark.xfail
+def test_get_env_extra_properties() -> None:
+    "will extra properties not part of the settings class be allowed"
+    raise NotImplementedError
+
+
+@pytest.mark.xfail
+def test_get_priorities() -> None:
+    """
+    is the priority of the sources for configuration information:
+    defaults < dotenv < env vars < database < args
+    """
+    raise NotImplementedError
+
+
+@pytest.mark.xfail
+def test_get_updates_db() -> None:
+    "is the cache in the database updated"
+    raise NotImplementedError
+
+
+@pytest.mark.xfail
+def test_get_updates_env() -> None:
+    "is the environment updated"
+
+
+@pytest.mark.xfail
+def test_get_updates_module_cache() -> None:
+    "is the cache in the settings module updated"
+    raise NotImplementedError
+
+
+@pytest.mark.xfail
+def test_get_updates_everwhere() -> None:
+    "is the environment, database, and cache all updated to match"
+    raise NotImplementedError
+
+
+@pytest.mark.xfail
+def test_save_updates_env() -> None:
+    "is the environment updated"
+    raise NotImplementedError
+
+
+@pytest.mark.xfail
+def test_save_updates_db() -> None:
+    "is the database updated"
+    raise NotImplementedError
+
+
+@pytest.mark.xfail
+def test_save_updates_module_cache() -> None:
+    "is the cache in the settings module updated"
+    raise NotImplementedError
+
+
+@pytest.mark.xfail
+def test_save_updates_everywhere() -> None:
+    "is the environment, database, and cache all updated to match"
+    raise NotImplementedError
+
+
+@pytest.mark.xfail
+def test_save_allow_bad_db() -> None:
+    """
+    will updating the database be skipped if the database file points to a bad
+    database
+    """
+    raise NotImplementedError
+
+
+@pytest.mark.xfail
 def test_get_no_args_error() -> None:
     "does get() throw an error if no database file is given"
     with pytest.raises(ValidationError) as err:
@@ -152,31 +332,31 @@ def test_get_database_in_args(tmp_path: Path) -> None:
     assert os.getenv("URL_SHORTENER_DATABASE_FILE") == str(resolved_database_file)
 
 
-@pytest.mark.xfail()
+@pytest.mark.xfail
 def test_from_db() -> None:
     "config.from_db()"
     raise NotImplementedError
 
 
-@pytest.mark.xfail()
+@pytest.mark.xfail
 def test_to_db() -> None:
     "config.to_db()"
     raise NotImplementedError
 
 
-@pytest.mark.xfail()
+@pytest.mark.xfail
 def test_save() -> None:
     "config.save()"
     raise NotImplementedError
 
 
-@pytest.mark.xfail()
+@pytest.mark.xfail
 def test_export() -> None:
     "config.export()"
     raise NotImplementedError
 
 
-@pytest.mark.xfail()
+@pytest.mark.xfail
 def test_write_dotenv() -> None:
     "config.write_dotenv()"
     raise NotImplementedError
