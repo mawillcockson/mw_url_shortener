@@ -15,6 +15,7 @@ def get_db() -> Database:
 
     class ConfigEntity(db.Entity):
         version = PrimaryKey(str)
+        class_name = Required(str)
         json = Required(str)
 
     return db

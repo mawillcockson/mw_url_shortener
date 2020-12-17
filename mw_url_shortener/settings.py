@@ -1,10 +1,12 @@
 print(f"imported mw_url_shortener.settings as {__name__}")
+import enum
+from enum import Enum
 from pathlib import Path
-from typing import Optional
+from typing import Callable, Iterable, Optional
 
-from pydantic import BaseSettings, Extra, Field
+from pydantic import BaseSettings, Extra, Field, validator
 
-from .types import Key, SPath
+from .types import Key
 from .utils import orjson_dumps, orjson_loads, unsafe_random_chars
 
 
@@ -23,7 +25,7 @@ class CommonSettings(BaseSettings):
     https://github.com/theskumar/python-dotenv#usages
     """
 
-    env_file: Optional[SPath] = None
+    env_file: Optional[Path] = None
 
     class Config:
         env_prefix = "url_shortener_"
@@ -68,3 +70,39 @@ class ServerSettings(ClientSettings, DatabaseSettings):
 
 
 _settings: Optional[CommonSettings] = None
+
+
+SettingsClasses = enum.unique(
+    Enum(
+        value="SettingsClasses",
+        names={
+            cls.__name__: cls
+            for cls in locals().values()
+            if hasattr(cls, "__mro__")
+            and issubclass(cls, BaseSettings)
+            and cls != BaseSettings
+        },
+    )
+)
+
+
+class SettingsClassName(str):
+    "a name of a settings class from the settings module"
+    _class_names = sorted(cls_enum.name for cls_enum in SettingsClasses)
+
+    @classmethod
+    def __get_validators__(cls) -> Iterable[Callable[[type, str], "SettingsClassName"]]:
+        "returns all the validators"
+        yield cls.validate
+
+    @classmethod
+    def validate(cls, value: str) -> "SettingsClassName":
+        "ensures the value matches the requirements and "
+        assert (
+            value in cls._class_names
+        ), f"class name must be a settings class:\n{', '.join(cls._class_names)}"
+        return cls(value)
+
+    def __repr__(self) -> str:
+        "create a string representation of the value"
+        return f"{self.__class__.__name__}({super().__repr__()})"

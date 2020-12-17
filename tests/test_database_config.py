@@ -3,7 +3,7 @@ import pytest
 from pony.orm import Database, db_session
 
 from mw_url_shortener.database.config import get_config, save_config
-from mw_url_shortener.database.errors import BadConfigError
+from mw_url_shortener.database.errors import BadConfigInDBError
 from mw_url_shortener.settings import CommonSettings
 
 from .utils import random_json
@@ -13,7 +13,7 @@ def test_save_and_load_config(
     database: Database, correct_settings: CommonSettings
 ) -> None:
     "can a config be saved and read back correctly"
-    saved_settings = save_config(db=database, settings=correct_settings)
+    saved_settings = save_config(db=database, new_settings=correct_settings)
     returned_settings = get_config(db=database)
     assert correct_settings == saved_settings == returned_settings
 
@@ -34,7 +34,7 @@ def test_load_bad_config(database: Database) -> None:
         database.ConfigEntity(version="current", json=example_bad_json)
         database.commit()
 
-    with pytest.raises(BadConfigError) as err:
+    with pytest.raises(BadConfigInDBError) as err:
         get_config(db=database)
     assert "bad configuration in database" in str(err.value)
 
@@ -51,6 +51,6 @@ def test_save_bad_config(database: Database) -> None:
     else:
         assert not validation_error
 
-    with pytest.raises(BadConfigError) as err:
-        save_config(db=database, settings=example_bad_json)
+    with pytest.raises(BadConfigInDBError) as err:
+        save_config(db=database, new_settings=example_bad_json)
     assert "bad configuration data" in str(err.value)

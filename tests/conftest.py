@@ -36,10 +36,6 @@ def correct_settings(tmp_path: Path, database: Database) -> CommonSettings:
     env_file = (tmp_path / ".env").resolve()
     return CommonSettings(
         env_file=env_file,
-        key_length=11,
-        api_key=unsafe_random_chars(5),
-        root_path=unsafe_random_chars(6),
-        database_file=database.provider.pool.filename,
     )
 
 
