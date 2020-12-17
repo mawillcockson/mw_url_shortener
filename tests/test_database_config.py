@@ -51,3 +51,17 @@ def test_save_bad_config(database: Database, correct_settings: CommonSettings) -
     with pytest.raises(ValueError) as err:
         save_config(db=database, new_settings=bad_settings)
     assert "new_settings must be an instance of a settings class" in str(err.value)
+
+
+@pytest.mark.xfail
+def test_save_bad_config_bad_types() -> None:
+    "is an error raised on bad input types"
+    with pytest.raises(TypeError) as err:
+        save_config(db=None, new_settings=None)
+    assert None
+
+
+@pytest.mark.xfail
+def test_get_bad_class_name() -> None:
+    "is an error raised when the class name is not a settings class"
+    raise NotImplementedError
