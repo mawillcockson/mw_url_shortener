@@ -5,14 +5,15 @@ import os
 from pathlib import Path
 from random import randint
 from typing import Iterable, Tuple
-from unittest.mock import patch
+from unittest.mock import patch, sentinel
+from unittest.mock import _SentinelObject as Sentinel
 
 import pytest
 from pony.orm import Database
 
 from mw_url_shortener.database import get_db, user
 from mw_url_shortener.database.interface import setup_db
-from mw_url_shortener.settings import CommonSettings
+from mw_url_shortener.settings import CommonSettings, DatabaseSettings
 from mw_url_shortener.types import HashedPassword, Username
 from mw_url_shortener.utils import random_username
 from mw_url_shortener.utils import unsafe_random_chars as random_string
@@ -60,11 +61,30 @@ def random_env_var_names() -> Tuple[str, str]:
     return (random_string(10).upper(), random_string(11).upper())
 
 
+@pytest.fixture(scope="session")
+def session_sentinel() -> Sentinel:
+    """
+    generates a unique object to use as a sentinel value over the course of a
+    testing run
+    """
+    return sentinel.session_sentinel
+
+
 @pytest.fixture(scope="function", autouse=True)
 def patch_os_environ() -> Iterable[None]:
     """
     patches os.environ so that each test function can modify it to its heart's
     content, and no other test will be able to see those changes
     """
-    with patch.dict("os.environ") as nothing:
+    with patch.dict("os.environ", clear=True) as nothing:
+        yield None
+
+
+@pytest.fixture(scope="function", autouse=True)
+def clear_settings_cache() -> Iterable[None]:
+    """
+    patches settings._settings module cache for settings so that each test
+    starts with that unset
+    """
+    with patch("mw_url_shortener.settings._settings", new=None):
         yield None

@@ -17,36 +17,6 @@ from mw_url_shortener.settings import (
 )
 
 
-class SettingsEnvNames(NamedTuple):
-    f"a bad class meant to mimic {config.SettingsEnvNames.__name__}"
-    class_name: str = "BadClassName"
-    value_name: int = 3
-
-
-def test_environment_isolation_set(random_env_var_names: Tuple[str, str]) -> None:
-    "set environment variables that _check will look for"
-    assert os.getenv(random_env_var_names[0], None) is None
-    assert os.getenv(random_env_var_names[1], None) is None
-    os.environ[random_env_var_names[0]] = "example"
-    os.putenv(random_env_var_names[1], "demo")
-    assert os.getenv(random_env_var_names[0], None) == "example"
-    # NOTE:BUG why is the below statement true?????
-    assert os.getenv(random_env_var_names[1], None) is None
-
-
-def test_environment_isolation_check(random_env_var_names: Tuple[str, str]) -> None:
-    """
-    checks to make sure the environment variables set in one test don't show up
-    in another test
-    """
-    assert os.getenv(random_env_var_names[0], None) is None
-    assert os.getenv(random_env_var_names[1], None) is None
-    with pytest.raises(KeyError):
-        os.environ[random_env_var_names[0]]
-    with pytest.raises(KeyError):
-        os.environ[random_env_var_names[1]]
-
-
 # NOTE:TESTS::RANDOMIZATION
 @pytest.mark.parametrize(
     "class_name,value_name",

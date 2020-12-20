@@ -43,6 +43,10 @@ $ mw_url_shortener add 'https://example.com/another-page' awesome
 short-link: /awesome
 ```
 
+#### Implementation
+
+Could the FastAPI TestClient be used for manipulating the database locally? That way, the configuration can be injected and everything.
+
 #### Unauthenticated local access
 
 I picture the local version doing the same thing as the remote version, but using "`127.0.0.1`" for the URL instead.
