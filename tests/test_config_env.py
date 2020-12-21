@@ -214,3 +214,19 @@ def test_get_env_vars_non_deserializable() -> None:
 def test_get_env_extra_properties() -> None:
     "will extra properties not part of the settings class be allowed"
     raise NotImplementedError
+
+
+def test_get_updates_from_env(correct_settings: CommonSettings) -> None:
+    "is the cache in the settings module updated"
+    assert settings._settings is None
+    env_names = config.settings_env_names()
+    class_name = env_names.class_name
+    value_name = env_names.value_name
+    os.environ[class_name] = type(correct_settings).__name__
+    os.environ[value_name] = correct_settings.json()
+
+    returned_settings = config.get()
+    assert os.getenv(class_name, None) == type(correct_settings).__name__
+    assert os.getenv(value_name, None) == correct_settings.json()
+    assert returned_settings == correct_settings
+    assert settings._settings == correct_settings

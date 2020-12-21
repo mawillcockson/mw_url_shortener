@@ -7,6 +7,7 @@ from typing import Dict, NamedTuple, Tuple, Union
 
 import pytest
 from pydantic import ValidationError
+from pony.orm import Database
 
 from mw_url_shortener import config, settings
 from mw_url_shortener.config import Namespace
@@ -14,102 +15,126 @@ from mw_url_shortener.settings import (
     CommonSettings,
     DatabaseSettings,
     SettingsClassName,
+    AllowExtraSettings
 )
 
 
-@pytest.mark.xfail
-def test_get_priorities() -> None:
-    """
-    is the priority of the sources for configuration information:
-    defaults < dotenv < env vars < database < args
-    """
-    raise NotImplementedError
-
-
-@pytest.mark.xfail
-def test_get_updates_db() -> None:
-    "is the cache in the database updated"
-    raise NotImplementedError
-
-
-@pytest.mark.xfail
-def test_get_updates_env() -> None:
+def test_get_updates_env(correct_settings: CommonSettings) -> None:
     "is the environment updated"
+    assert list(os.environ) == ["PYTEST_CURRENT_TEST"]
+    settings._settings = correct_settings
+    env_names = config.settings_env_names()
+    class_name = env_names.class_name
+    value_name = env_names.value_name
+
+    returned_settings = config.get()
+    assert returned_settings == correct_settings
+    assert os.getenv(class_name, None) == type(correct_settings).__name__
+    assert os.getenv(value_name, None) == correct_settings.json()
 
 
-@pytest.mark.xfail
-def test_get_updates_module_cache() -> None:
-    "is the cache in the settings module updated"
-    raise NotImplementedError
-
-
-@pytest.mark.xfail
-def test_get_updates_everwhere() -> None:
+def test_get_updates_everwhere(database: Database, correct_database_settings: DatabaseSettings) -> None:
     "is the environment, database, and cache all updated to match"
-    raise NotImplementedError
+    # Show that there's no configuration in the database
+    with pytest.raises(ValueError) as err:
+        config.get_from_db(db=database)
+    # Show that there's no configuration in the environment
+    env_names = config.settings_env_names()
+    class_name = env_names.class_name
+    value_name = env_names.value_name
+    assert os.getenv(class_name, None) is None
+    assert os.getenv(value_name, None) is None
+    # Put the configuration in the module cache
+    settings._settings = correct_database_settings
+
+    # Use config.get()
+    returned_settings = config.get()
+    # Ensure the module cache is still the same
+    assert settings._settings == correct_database_settings
+    # Check that the returned settings match the module cache
+    assert returned_settings == correct_database_settings
+    # Verify the environment got the settings
+    assert os.getenv(class_name, None) == type(correct_database_settings).__name__
+    assert os.getenv(value_name, None) == correct_database_settings.json()
+    # Verify the database was updated
+    assert config.get_from_db(db=database) == correct_database_settings
 
 
-@pytest.mark.xfail
-def test_save_updates_env() -> None:
-    "is the environment updated"
-    raise NotImplementedError
-
-
-@pytest.mark.xfail
-def test_save_updates_db() -> None:
-    "is the database updated"
-    raise NotImplementedError
-
-
-@pytest.mark.xfail
-def test_save_updates_module_cache() -> None:
-    "is the cache in the settings module updated"
-    raise NotImplementedError
-
-
-@pytest.mark.xfail
-def test_save_updates_everywhere() -> None:
+def test_save_sets_everywhere(database: Database, correct_database_settings: DatabaseSettings) -> None:
     "is the environment, database, and cache all updated to match"
-    raise NotImplementedError
+    # Show that the cache is empty
+    assert settings._settings is None
+    # Show the database is empty
+    with pytest.raises(ValueError):
+        config.get_from_db(db=database)
+    # Show the environment is unset, except for pytest's marker
+    assert list(os.environ) == ["PYTEST_CURRENT_TEST"]
+    
+    # Save the configuration
+    config.save(new_settings=correct_database_settings)
+    # Grab the settings from the database
+    settings_in_db = config.get_from_db(db=database)
+    # Grab the settings from the environment
+    settings_in_env = config.get_env()
+    # Show that the cache is updated
+    assert settings._settings == correct_database_settings
+    # Show that the environment was updated
+    assert settings_in_env == correct_database_settings
+    # Show that the database was updated
+    assert settings_in_db == correct_database_settings
 
 
-@pytest.mark.xfail
-def test_save_allow_bad_db() -> None:
+def test_save_allow_bad_db(tmp_path: Path, correct_database_settings: DatabaseSettings) -> None:
     """
     will updating the database be skipped if the database file points to a bad
     database
     """
-    raise NotImplementedError
+    assert settings._settings is None
+    assert list(os.environ) == ["PYTEST_CURRENT_TEST"]
+    nonexistent_database_file = tmp_path/"nonexistent.sqlitedb"
+    # Fill the database with nonsense
+    nonexistent_database_file.write_bytes(bytes(range(256)))
+    assert bad_database_file.is_file()
+    bad_database_file_settings = correct_database_settings.copy(update={"database_file": bad_database_file})
+    
+    config.save(new_settings=bad_database_file_settings)
+    settings_in_env = config.get_env()
+    assert settings._settings == bad_database_file_settings
+    assert settings_in_env == bad_database_file_settings
+    # Show that the database hasn't been modified
+    assert bad_database_file.read_bytes() == bytes(range(256))
 
 
-@pytest.mark.xfail
-def test_get_no_args_error() -> None:
-    "does get() throw an error if no database file is given"
-    with pytest.raises(ValidationError) as err:
-        config.get(settings_class=DatabaseSettings)
-    assert "database_file" in str(err.value)
+def test_save_allow_nonexistent_db(tmp_path: Path, correct_database_settings: DatabaseSettings) -> None:
+    """
+    will updating the database be skipped if the database file points to a bad
+    database
+    """
+    assert settings._settings is None
+    assert list(os.environ) == ["PYTEST_CURRENT_TEST"]
+    nonexistent_database_file = tmp_path/"nonexistent.sqlitedb"
+    assert not nonexistent_database_file.exists()
+    nonexistent_database_file_settings = correct_database_settings.copy(update={"database_file": nonexistent_database_file})
+    
+    config.save(new_settings=bad_database_file_settings)
+    settings_in_env = config.get_env()
+    assert settings._settings == nonexistent_database_file_settings
+    assert settings_in_env == nonexistent_database_file_settings
+    assert not nonexistent_database_file.exists()
 
 
-@pytest.mark.xfail
-@pytest.mark.parametrize("args", [object(), type, {"a": 1}])
-def test_get_bad_type(args: Union[object, type, Dict[str, int]]) -> None:
-    "does get raise a TypeError if args isn't a Namespace"
-    with pytest.raises(TypeError) as err:
-        config.get(args=args)
-    assert "args must be an argparse.Namespace or None" in str(err.value)
+def test_get_priorities(correct_database_settings: DatabaseSettings) -> None:
+    """
+    is the priority of the sources for configuration information:
+    defaults < dotenv < env vars < database < args
+    """
+    class ExtraProperties(AllowExtraSettings):
+        "adds extra properties used for this test"
+        example: int = 5
+        demo: set = {0, 1, 2}
+    
+    default_settings = ExtraProperties(env_file=None)
 
-
-@pytest.mark.xfail
-def test_get_database_in_args(tmp_path: Path) -> None:
-    "if the database_file is indicated in the args, is it then set in the environment"
-    database_file = tmp_path / "temp.sqlitedb"
-    resolved_database_file = database_file.resolve()
-    resolved_database_file.touch()
-    args = Namespace(database_file=database_file)
-    settings = config.get(args=args, settings_class=DatabaseSettings)
-    assert isinstance(settings, CommonSettings)
-    assert settings.database_file == resolved_database_file
-    assert os.getenv("URL_SHORTENER_DATABASE_FILE") == str(resolved_database_file)
 
 
 @pytest.mark.xfail
@@ -130,13 +155,141 @@ def test_save() -> None:
     raise NotImplementedError
 
 
+def test_json(correct_settings: CommonSettings) -> None:
+    """
+    does config.json() produce the same output as the .json() method on
+    BaseSettings objects
+    """
+    config.save(new_settings=correct_settings)
+
+    assert config.json() == correct_settings.json()
+
+
+def test_write_dotenv_no_args(database: Database, correct_database_settings: DatabaseSettings) -> None:
+    """
+    when called with no arguments, does config.write_dotenv() write out an
+    environment file to the env_file in the current settings, using the
+    currently set settings
+    """
+    env_file = correct_database_settings.env_file
+    assert isinstance(env_file, Path)
+    assert envfile.is_file()
+    assert env_file.read_text() == ""
+    env_names = config.settings_env_names()
+
+    config.save(new_settings=correct_database_settings)
+    # Write the settings to the env_file in the settings
+    config.write_dotenv()
+    # Delete settings from the database
+    with db_session:
+        database.ConfigEntity["current"].delete()
+        database.commit()
+    # Delete settings from the environment
+    del os.environ[env_names.class_name]
+    del os.environ[env_names.value_name]
+    # Clear the settings module cache
+    settings._settings = None
+
+    # Instantiate the settings using only the env_file
+    settings_from_env_file = DatabaseSettings(_env_file=correct_database_settings.env_file)
+    assert settings_from_env_file == correct_database_settings
+
+
+def test_write_dotenv_no_args_no_settings() -> None:
+    """
+    is an error raised when config.write_dotenv() is called without arguments
+    and without any settings set
+    """
+    with pytest.raises(ValueError) as err:
+        config.write_dotenv()
+    assert "need an env_file" in str(err.value)
+
+
+def test_write_dotenv_just_env_file(correct_database_settings: DatabaseSettings, database: Database) -> None:
+    """
+    does config.write_dotenv() raise an error when it's called with just an
+    env_file, and settings aren't set
+    """
+    # Show that the database doesn't have settings
+    with pytest.raises(ValueError):
+        config.get_from_db(db=database)
+    # Show that the environment is empty
+    env_names = config.settings_env_names()
+    assert os.getenv(env_names.class_name, None) is None
+    assert os.getenv(env_names.value_name, None) is None
+    # Show that the settings module cache is unset
+    assert settings._settings is None
+    # Show that the env_file exists and is empty
+    env_file = correct_database_settings.env_file
+    assert isinstance(env_file, Path)
+    assert envfile.is_file()
+    assert env_file.read_text() == ""
+
+    with pytest.raises(ValueError) as err:
+        config.write_dotenv(env_file=env_file)
+    assert "no settings found" in str(err.value)
+
+    # Show that the database didn't have settings added
+    with pytest.raises(ValueError):
+        config.get_from_db(db=database)
+    # Show that the environment is unmodified
+    assert os.getenv(env_names.class_name, None) is None
+    assert os.getenv(env_names.value_name, None) is None
+    # Show the settings module cache is still unset
+    assert settings._settings is None
+
+
+def test_write_dotenv(database: Database, correct_database_settings: DatabaseSettings) -> None:
+    """
+    if called with all parameters filled, does config.write_dotenv() write out
+    an env_file without expecting any settings to be set, and without setting
+    any settings
+    """
+    # Show that the environment file exists and is empty
+    env_file = correct_database_settings.env_file
+    assert isinstance(env_file, Path)
+    assert envfile.is_file()
+    assert env_file.read_text() == ""
+    
+    # Show that the database doesn't have settings
+    with pytest.raises(ValueError):
+        config.get_from_db(db=database)
+    # Show that the environment is empty
+    env_names = config.settings_env_names()
+    assert os.getenv(env_names.class_name, None) is None
+    assert os.getenv(env_names.value_name, None) is None
+    # Show that the settings module cache is unset
+    assert settings._settings is None
+
+    # Write the settings to the env_file
+    config.write_dotenv(filename=correct_database_settings.env_file, configuration=correct_database_settings)
+
+    # Show that the database didn't have settings added
+    with pytest.raises(ValueError):
+        config.get_from_db(db=database)
+    # Show that the environment is unmodified
+    assert os.getenv(env_names.class_name, None) is None
+    assert os.getenv(env_names.value_name, None) is None
+    # Show the settings module cache is still unset
+    assert settings._settings is None
+
+    # Instantiate the settings using only the env_file
+    settings_from_env_file = DatabaseSettings(_env_file=correct_database_settings.env_file)
+    assert settings_from_env_file == correct_database_settings
+
+
 @pytest.mark.xfail
-def test_export() -> None:
-    "config.export()"
+def test_get_read_only_env_file() -> None:
+    """
+    can config.get() function if the env_file is on a read-only filesystem
+    """
     raise NotImplementedError
 
 
 @pytest.mark.xfail
-def test_write_dotenv() -> None:
-    "config.write_dotenv()"
+def test_write_dotenv_matching_read_only_env_file() -> None:
+    """
+    does config.write_dotenv() silently succeed when the env_file is read-only,
+    but already holds everything it should
+    """
     raise NotImplementedError
