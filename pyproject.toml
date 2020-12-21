@@ -41,7 +41,7 @@ empty_parameter_set_mark = "fail_at_collect"
 log_cli = true
 timeout = 60
 markers = [
-    "run_only_this: Temporary mark for test debugging"
+    "select: Temporary mark for selecting specific tests"
 ]
 
 [tool.isort]
