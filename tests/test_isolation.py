@@ -11,6 +11,11 @@ from mw_url_shortener import settings
 from typing import Tuple
 
 
+def test_environment_starts_empty() -> None:
+    "does the environment start with only pytest's settings"
+    assert list(os.environ) == ["PYTEST_CURRENT_TEST"]
+
+
 def test_environment_isolation_set(random_env_var_names: Tuple[str, str]) -> None:
     "set environment variables that _check will look for"
     assert os.getenv(random_env_var_names[0], None) is None
@@ -50,5 +55,3 @@ def test_settings_cache_cleared_check() -> None:
     relies on test_settings_cache_cleared_set to be run first
     """
     assert settings._settings is None
-
-
