@@ -34,7 +34,7 @@ def database(tmp_path: Path) -> Database:
 def correct_settings(tmp_path: Path, database: Database) -> CommonSettings:
     "makes a complete CommonSettings object, that has realistic values"
     # NOTE:TEST::RANDOMIZATION Best to avoid hardcoded test values where possible
-    env_file = (tmp_path / ".env").resolve()
+    env_file = (tmp_path / "test.env").resolve()
     return CommonSettings(
         env_file=env_file,
     )
