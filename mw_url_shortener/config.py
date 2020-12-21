@@ -51,19 +51,39 @@ class BadEnvConfigError(BadConfigError):
     pass
 
 
-def update_module_cache(new_settings: CommonSettings) -> CommonSettings:
+def set_module_cache(new_settings: CommonSettings) -> CommonSettings:
     "updates the internally cached settings"
-    if settings._settings is None:
-        raise TypeError(
-            "cannot update settings since settings have not been set; call set()"
-        )
-
     if not isinstance(new_settings, CommonSettings):
         raise TypeError(
-            f"new_settings must be a {CommonSettings.__name__} subclass; got '{new_settings.__qualname__}'"
+            "new_settings must be instantiated from "
+            f"{CommonSettings.__name__} or a subclass"
         )
 
-    settings._settings = new_settings(**new_settings.dict())
+    try:
+        SettingsClassName.validate(type(new_settings))
+    except (ValidationError, ValueError) as err:
+        raise ValueError(
+            f"new_settings must be one of ({', '.join(SettingsClassName._class_names)})"
+        )
+
+    if settings._settings is None:
+        settings._settings = new_settings
+        return new_settings
+
+    if not isinstance(new_settings, type(settings._settings)):
+        raise TypeError(
+            f"new_settings must be a '{type(settings._settings)}' subclass; got '{new_settings}'"
+        )
+
+    settings._settings = settings._settings(**new_settings.dict())
+    return settings._settings
+
+
+def get_module_cache() -> CommonSettings:
+    "retrieves the current module cache"
+    if settings._settings is None:
+        raise ValueError("module cache not set; call set or get")
+
     return settings._settings
 
 
