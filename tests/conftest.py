@@ -9,7 +9,7 @@ from unittest.mock import patch, sentinel
 from unittest.mock import _SentinelObject as Sentinel
 
 import pytest
-from pony.orm import Database
+from pony.orm import Database, db_session
 
 from mw_url_shortener.database import get_db, user
 from mw_url_shortener.database.interface import setup_db
@@ -38,6 +38,15 @@ def correct_settings(tmp_path: Path, database: Database) -> CommonSettings:
     return CommonSettings(
         env_file=env_file,
     )
+
+
+@pytest.fixture
+def correct_database_settings(database: Database, correct_settings: CommonSettings) -> DatabaseSettings:
+    "adds onto correct_settings to return a {DatabaseSettings.__name__}"
+    with db_session:
+        database_file_name = database.provider.pool.filename
+    database_file = Path(database_file_name).resolve(strict=True)
+    return DatabaseSettings(**correct_settings.dict(), database_file=database_file)
 
 
 @pytest.fixture(autouse=True)

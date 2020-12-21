@@ -8,6 +8,11 @@ import pytest
 from mw_url_shortener.api.authentication import password_context
 from mw_url_shortener.database import user
 from mw_url_shortener.types import HashedPassword, Username
+from mw_url_shortener.settings import CommonSettings, DatabaseSettings
+from mw_url_shortener.database.interface import setup_db
+from mw_url_shortener.database import get_db
+from mw_url_shortener import config
+from pony.orm import Database
 
 from .utils import (
     all_combinations,
@@ -62,7 +67,7 @@ def test_all_combinations_bad_types() -> None:
 
 @pytest.mark.timeout(5)
 def test_all_combinations() -> None:
-    "does all keys generate the same number of items as there are combinations"
+    "does all_keys() generate the same number of items as there are combinations"
     characters = string.ascii_letters + string.digits
     length: int = 3
     all_three_character_combinations = list(
@@ -79,3 +84,26 @@ def test_all_combinations() -> None:
         return isinstance(value, str) and len(value) == 3
 
     assert all(map(is_three_character_str, all_three_character_combinations))
+
+
+def test_settings_match(correct_settings: CommonSettings, correct_database_settings: DatabaseSettings) -> None:
+    "does DatabaseSettings only add a database_file"
+    correct_settings_dict = correct_settings.copy().dict()
+    correct_settings_dict.update({"database_file": correct_database_settings.database_file})
+    assert correct_settings_dict == correct_database_settings.dict()
+
+
+def test_same_database(database: Database, correct_database_settings: DatabaseSettings) -> None:
+    "is the database_file the same file used for the database"
+    # Create a new Database object using the database_file
+    database_from_settings = setup_db(db=get_db(), filename=correct_database_settings.database_file, create_tables=False)
+    # Show that the fixture database is empty
+    with pytest.raises(ValueError):
+        config.get_from_db(db=database)
+    # Add the settings to the created Database object
+    config.save_to_db(db=database_from_settings, new_settings=correct_database_settings)
+
+    # Retrieve the settings from the fixture database object, showing that the
+    # database_file points to a database file that, when manipulated,
+    # manipulates the same database that the fixture provides
+    assert config.get_from_db(db=database) == correct_database_settings
