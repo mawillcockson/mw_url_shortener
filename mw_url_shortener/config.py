@@ -181,12 +181,23 @@ def get_env(env_names_or_none: SettingsEnvNames = None) -> CommonSettings:
 
 
 def set(
-    args: Optional[Namespace] = None, settings_class: CommonSettings = CommonSettings
+        new_settings: CommonSettings, env_names_or_none: Optional[CommonSettings] = None,
 ) -> CommonSettings:
-    if not isinstance(args, (Namespace, type(None))):
-        raise TypeError("args must be an argparse.Namespace or None")
-    if not issubclass(settings_class, CommonSettings):
-        raise TypeError("settings_class must be a subclass of settings.CommonSettings")
+    if env_names_or_none is not None and not isinstance(
+        env_names_or_none, SettingsEnvNames
+    ):
+        raise TypeError("env_names must be a SettingsEnvNames or None")
+
+    if not isinstance(new_settings, CommonSettings):
+        raise TypeError(
+            "new_settings must be instantiated from "
+            f"{CommonSettings.__name__} or a subclass"
+        )
+
+    if env_names_or_none is None:
+        env_names = settings_env_names()
+    else:
+        env_names = env_names_or_none
 
     # The ordering is important, as the later ones override the earlier ones if
     # they both have the same key
