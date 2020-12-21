@@ -75,7 +75,7 @@ def settings_env_names(
     value
     """
     try:
-        SettingsClassName.validate(settings_class)
+        _ = SettingsClassName.validate(settings_class)
     except (ValidationError, ValueError) as err:
         raise ValueError(
             f"settings_class must be one of ({', '.join(SettingsClassName._class_names)})"
