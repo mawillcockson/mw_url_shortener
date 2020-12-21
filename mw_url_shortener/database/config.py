@@ -13,7 +13,7 @@ def get_config(db: Database) -> CommonSettings:
         current_config = db.ConfigEntity.get(version="current")
 
         if not current_config:
-            raise ValueError("No current config")
+            raise ValueError("no current config in database")
 
         current_config_json = current_config.json
         class_name = SettingsClassName.validate(current_config.class_name)
