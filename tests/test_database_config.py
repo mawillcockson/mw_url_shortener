@@ -11,6 +11,13 @@ from mw_url_shortener.settings import CommonSettings
 from .utils import random_json
 
 
+def test_load_no_config(database: Database) -> None:
+    "is an error raised when there's no configuration in the database"
+    with pytest.raises(ValueError) as err:
+        get_config(db=database)
+    assert "no current config in database" in str(err.value)
+
+
 def test_save_and_load_config(
     database: Database, correct_settings: CommonSettings
 ) -> None:
