@@ -55,7 +55,9 @@ def test_settings_env_names_class_bad_input(
 )
 def test_settings_env_names_class(class_name: str, value_name: str) -> None:
     "are all of these valid environment variable names"
-    config.SettingsEnvNames(class_name=class_name, value_name=value_name)
+    env_names = config.SettingsEnvNames(class_name=class_name, value_name=value_name)
+    assert env_names.class_name == class_name
+    assert env_names.value_name == value_name
 
 
 @pytest.mark.parametrize("settings_class", [object(), int(1), type])
