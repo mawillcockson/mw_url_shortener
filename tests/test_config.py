@@ -19,6 +19,32 @@ from mw_url_shortener.settings import (
 )
 
 
+def test_get_module_cache() -> None:
+    "if the modue cache is already set, can those settings be retrieved"
+    raise NotImplementedError
+
+
+def test_get_module_cache_bad_type() -> None:
+    """
+    is an error raised if the module cache is populated with a bad settings
+    object
+    """
+    raise NotImplementedError
+
+
+def test_set_module_cache_different_type() -> None:
+    """
+    is an error raised if the module cache is already set with a different
+    settings class
+    """
+    raise NotImplementedError
+
+
+def test_set_module_cache() -> None:
+    "can the module cache be set"
+    raise NotImplementedError
+
+
 def test_get_updates_env(correct_settings: CommonSettings) -> None:
     "is the environment updated"
     assert list(os.environ) == ["PYTEST_CURRENT_TEST"]
