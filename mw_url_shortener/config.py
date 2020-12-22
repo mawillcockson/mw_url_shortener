@@ -51,6 +51,11 @@ class BadEnvConfigError(BadConfigError):
     pass
 
 
+class BadCacheConfigError(BadConfigError):
+    "the config in the mdule cache was not correct"
+    pass
+
+
 def set_module_cache(new_settings: CommonSettings) -> CommonSettings:
     "updates the internally cached settings"
     if not isinstance(new_settings, CommonSettings):
@@ -60,9 +65,9 @@ def set_module_cache(new_settings: CommonSettings) -> CommonSettings:
         )
 
     try:
-        SettingsClassName.validate(type(new_settings))
-    except (ValidationError, ValueError) as err:
-        raise ValueError(
+        _ = SettingsClassName.validate(type(new_settings))
+    except ValueError as err:
+        raise TypeError(
             f"new_settings must be one of ({', '.join(SettingsClassName._class_names)})"
         )
 
@@ -70,19 +75,28 @@ def set_module_cache(new_settings: CommonSettings) -> CommonSettings:
         settings._settings = new_settings
         return new_settings
 
-    if not isinstance(new_settings, type(settings._settings)):
+    if type(new_settings) != type(settings._settings):
         raise TypeError(
-            f"new_settings must be a '{type(settings._settings)}' subclass; got '{new_settings}'"
+            "cache type does not match new_settings type: "
+            f"'{settings._settings.__class__.__name__}' vs "
+            f"'{new_settings.__class__.__name__}'"
         )
 
-    settings._settings = settings._settings(**new_settings.dict())
+    settings._settings = type(settings._settings).from_orm(new_settings)
     return settings._settings
 
 
 def get_module_cache() -> CommonSettings:
     "retrieves the current module cache"
     if settings._settings is None:
-        raise ValueError("module cache not set; call set or get")
+        raise ValueError("module cache not set")
+
+    try:
+        _ = SettingsClassName.validate(type(settings._settings))
+    except ValueError as err:
+        raise ValueError(
+            f"settings type in cache not one of ({', '.join(SettingsClassName._class_names)})"
+        )
 
     return settings._settings
 

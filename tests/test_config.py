@@ -19,9 +19,12 @@ from mw_url_shortener.settings import (
 )
 
 
-def test_get_module_cache() -> None:
+def test_get_module_cache(correct_settings: CommonSettings) -> None:
     "if the modue cache is already set, can those settings be retrieved"
-    raise NotImplementedError
+    settings._settings = correct_settings
+    assert config.get_module_cache() == correct_settings
+    # Ensure calling the function didn't modify the cache
+    assert settings._settings == correct_settings
 
 
 def test_get_module_cache_bad_type() -> None:
@@ -29,20 +32,49 @@ def test_get_module_cache_bad_type() -> None:
     is an error raised if the module cache is populated with a bad settings
     object
     """
-    raise NotImplementedError
+
+    class BadClass(AllowExtraSettings):
+        "a class meant to simulate a user-defined class"
+        database_file: Path = Path("example.sqlitedb")
+
+    bad_settings = BadClass()
+    bad_settings.__class__.__name__ = DatabaseSettings.__name__
+    settings._settings = bad_settings
+
+    with pytest.raises(ValueError) as err:
+        config.get_module_cache()
+    assert (
+        f"settings type in cache not one of ({', '.join(SettingsClassName._class_names)})"
+        in str(err.value)
+    )
 
 
-def test_set_module_cache_different_type() -> None:
+def test_set_module_cache_different_type(
+    correct_settings: CommonSettings, correct_database_settings: DatabaseSettings
+) -> None:
     """
     is an error raised if the module cache is already set with a different
     settings class
     """
-    raise NotImplementedError
+    settings._settings = correct_settings
+
+    with pytest.raises(TypeError) as err:
+        config.set_module_cache(new_settings=correct_database_settings)
+    assert (
+        "cache type does not match new_settings type: "
+        f"'{correct_settings.__class__.__name__}' vs "
+        f"'{correct_database_settings.__class__.__name__}'"
+    ) in str(err.value)
 
 
-def test_set_module_cache() -> None:
-    "can the module cache be set"
-    raise NotImplementedError
+def test_set_get_module_cache(correct_settings: CommonSettings) -> None:
+    "can the module cache be set and retrieved"
+    assert settings._settings is None
+
+    config.set_module_cache(new_settings=correct_settings)
+
+    assert config.get_module_cache() == correct_settings
+    assert settings._settings == correct_settings
 
 
 def test_get_updates_env(correct_settings: CommonSettings) -> None:
