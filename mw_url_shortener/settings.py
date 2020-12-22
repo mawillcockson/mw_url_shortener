@@ -10,6 +10,11 @@ from .types import Key
 from .utils import orjson_dumps, orjson_loads, unsafe_random_chars
 
 
+class SettingsTypeError(TypeError):
+    "the type of the settings object is not correct"
+    pass
+
+
 class CommonSettings(BaseSettings):
     """
     All of the settings for the application

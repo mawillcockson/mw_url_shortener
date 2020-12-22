@@ -8,6 +8,7 @@ from mw_url_shortener import config, settings
 from mw_url_shortener.settings import CommonSettings, DatabaseSettings
 
 
+@pytest.mark.xfail  # NOTE:NEXT
 def test_get_updates_from_db(
     database: Database, correct_database_settings: DatabaseSettings
 ) -> None:

@@ -15,7 +15,7 @@ from . import settings
 from .database.config import get_config as get_from_db
 from .database.config import save_config as save_to_db
 from .database.errors import BadConfigInDBError
-from .settings import CommonSettings, SettingsClassName
+from .settings import CommonSettings, SettingsClassName, SettingsTypeError
 
 # From:
 # https://stackoverflow.com/a/2821183
@@ -41,25 +41,45 @@ class SettingsEnvNames(BaseModel):
         return values
 
 
-class BadConfigError(Exception):
+class ConfigException(Exception):
+    "base config error class"
+    pass
+
+
+class ConfigError(ConfigException, ValueError):
     "the configuration data did not conform to the settings model"
     pass
 
 
-class BadEnvConfigError(BadConfigError):
+class EnvConfigError(ConfigError):
     "the config found in the environment was not correct"
     pass
 
 
-class BadCacheConfigError(BadConfigError):
-    "the config in the mdule cache was not correct"
+class CacheConfigError(ConfigError):
+    "the config in the module cache was not correct"
+    pass
+
+
+class ConfigTypeError(ConfigException, TypeError):
+    "the configuration type is not correct"
+    pass
+
+
+class EnvConfigTypeError(ConfigTypeError):
+    "the class of the settings in the environment was not correct"
+    pass
+
+
+class CacheConfigTypeError(ConfigTypeError):
+    "the class of the settings in the cache is not correct"
     pass
 
 
 def set_module_cache(new_settings: CommonSettings) -> CommonSettings:
     "updates the internally cached settings"
     if not isinstance(new_settings, CommonSettings):
-        raise TypeError(
+        raise ConfigTypeError(
             "new_settings must be instantiated from "
             f"{CommonSettings.__name__} or a subclass"
         )
@@ -67,7 +87,7 @@ def set_module_cache(new_settings: CommonSettings) -> CommonSettings:
     try:
         _ = SettingsClassName.validate(type(new_settings))
     except ValueError as err:
-        raise TypeError(
+        raise SettingsTypeError(
             f"new_settings must be one of ({', '.join(SettingsClassName._class_names)})"
         )
 
@@ -76,7 +96,7 @@ def set_module_cache(new_settings: CommonSettings) -> CommonSettings:
         return new_settings
 
     if type(new_settings) != type(settings._settings):
-        raise TypeError(
+        raise CacheConfigTypeError(
             "cache type does not match new_settings type: "
             f"'{settings._settings.__class__.__name__}' vs "
             f"'{new_settings.__class__.__name__}'"
@@ -89,12 +109,12 @@ def set_module_cache(new_settings: CommonSettings) -> CommonSettings:
 def get_module_cache() -> CommonSettings:
     "retrieves the current module cache"
     if settings._settings is None:
-        raise ValueError("module cache not set")
+        raise ConfigError("module cache not set")
 
     try:
         _ = SettingsClassName.validate(type(settings._settings))
     except ValueError as err:
-        raise ValueError(
+        raise CacheConfigTypeError(
             f"settings type in cache not one of ({', '.join(SettingsClassName._class_names)})"
         )
 
@@ -110,8 +130,8 @@ def settings_env_names(
     """
     try:
         _ = SettingsClassName.validate(settings_class)
-    except (ValidationError, ValueError) as err:
-        raise ValueError(
+    except ValueError as err:
+        raise SettingsTypeError(
             f"settings_class must be one of ({', '.join(SettingsClassName._class_names)})"
         ) from err
 
@@ -141,7 +161,7 @@ def set_env(
         raise TypeError("env_names must be a SettingsEnvNames or None")
 
     if not isinstance(new_settings, CommonSettings):
-        raise TypeError(
+        raise SettingsTypeError(
             "new_settings must be instantiated from "
             f"{CommonSettings.__name__} or a subclass"
         )
@@ -151,8 +171,8 @@ def set_env(
 
     try:
         SettingsClassName.validate(settings_class)
-    except (ValidationError, ValueError) as err:
-        raise ValueError(
+    except ValueError as err:
+        raise SettingsTypeError(
             f"new_settings must be one of ({', '.join(SettingsClassName._class_names)})"
         ) from err
 
@@ -185,7 +205,7 @@ def get_env(env_names_or_none: SettingsEnvNames = None) -> CommonSettings:
     settings_class_name = os.getenv(env_names.class_name, None)
     settings_value = os.getenv(env_names.value_name, None)
     if settings_class_name is None or settings_value is None:
-        raise ValueError("environment not set")
+        raise EnvConfigError("environment not set")
 
     settings_class = getattr(settings, settings_class_name, None)
     if settings_class is None or not issubclass(settings_class, CommonSettings):

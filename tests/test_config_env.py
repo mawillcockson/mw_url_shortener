@@ -8,12 +8,13 @@ from typing import Dict, NamedTuple, Tuple, Union
 import pytest
 from pydantic import ValidationError
 
-from mw_url_shortener import config
+from mw_url_shortener import config, settings
 from mw_url_shortener.config import Namespace
 from mw_url_shortener.settings import (
     CommonSettings,
     DatabaseSettings,
     SettingsClassName,
+    SettingsTypeError,
 )
 
 
@@ -65,7 +66,7 @@ def test_settings_env_names_func_bad_inputs(
     settings_class: Union[object, int, type]
 ) -> None:
     "is an error raised if bad inputs are given"
-    with pytest.raises(ValueError) as err:
+    with pytest.raises(SettingsTypeError) as err:
         config.settings_env_names(settings_class=settings_class)
     assert (
         f"settings_class must be one of ({', '.join(SettingsClassName._class_names)})"
@@ -82,7 +83,7 @@ def test_settings_env_names_func_bad_input(correct_settings: CommonSettings) -> 
 
     DummyClass.__name__ = CommonSettings.__name__
 
-    with pytest.raises(ValueError) as err:
+    with pytest.raises(SettingsTypeError) as err:
         config.settings_env_names(settings_class=DummyClass)
     assert (
         f"settings_class must be one of ({', '.join(SettingsClassName._class_names)})"
@@ -216,6 +217,7 @@ def test_get_env_extra_properties() -> None:
     raise NotImplementedError
 
 
+@pytest.mark.xfail # NOTE:NEXT
 def test_get_updates_from_env(correct_settings: CommonSettings) -> None:
     "is the cache in the settings module updated"
     assert settings._settings is None
