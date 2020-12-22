@@ -4,11 +4,13 @@ These tests are meant to ensure that tests are being properly isolated
 They usually come in pairs, and each pair needs to be run in the order that
 they are presented in this file
 """
-from unittest.mock import _SentinelObject as Sentinel
 import os
-import pytest
-from mw_url_shortener import settings
 from typing import Tuple
+from unittest.mock import _SentinelObject as Sentinel
+
+import pytest
+
+from mw_url_shortener import settings
 
 
 def test_environment_starts_empty() -> None:
@@ -51,7 +53,7 @@ def test_settings_cache_cleared_set(session_sentinel: Sentinel) -> None:
 def test_settings_cache_cleared_check() -> None:
     """
     checks if the settings cache is cleared between runs
-    
+
     relies on test_settings_cache_cleared_set to be run first
     """
     assert settings._settings is None

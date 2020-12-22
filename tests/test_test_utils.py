@@ -4,15 +4,14 @@ tests the utilities used in other tests
 import string
 
 import pytest
-
-from mw_url_shortener.api.authentication import password_context
-from mw_url_shortener.database import user
-from mw_url_shortener.types import HashedPassword, Username
-from mw_url_shortener.settings import CommonSettings, DatabaseSettings
-from mw_url_shortener.database.interface import setup_db
-from mw_url_shortener.database import get_db
-from mw_url_shortener import config
 from pony.orm import Database
+
+from mw_url_shortener import config
+from mw_url_shortener.api.authentication import password_context
+from mw_url_shortener.database import get_db, user
+from mw_url_shortener.database.interface import setup_db
+from mw_url_shortener.settings import CommonSettings, DatabaseSettings
+from mw_url_shortener.types import HashedPassword, Username
 
 from .utils import (
     all_combinations,
@@ -86,17 +85,27 @@ def test_all_combinations() -> None:
     assert all(map(is_three_character_str, all_three_character_combinations))
 
 
-def test_settings_match(correct_settings: CommonSettings, correct_database_settings: DatabaseSettings) -> None:
+def test_settings_match(
+    correct_settings: CommonSettings, correct_database_settings: DatabaseSettings
+) -> None:
     "does DatabaseSettings only add a database_file"
     correct_settings_dict = correct_settings.copy().dict()
-    correct_settings_dict.update({"database_file": correct_database_settings.database_file})
+    correct_settings_dict.update(
+        {"database_file": correct_database_settings.database_file}
+    )
     assert correct_settings_dict == correct_database_settings.dict()
 
 
-def test_same_database(database: Database, correct_database_settings: DatabaseSettings) -> None:
+def test_same_database(
+    database: Database, correct_database_settings: DatabaseSettings
+) -> None:
     "is the database_file the same file used for the database"
     # Create a new Database object using the database_file
-    database_from_settings = setup_db(db=get_db(), filename=correct_database_settings.database_file, create_tables=False)
+    database_from_settings = setup_db(
+        db=get_db(),
+        filename=correct_database_settings.database_file,
+        create_tables=False,
+    )
     # Show that the fixture database is empty
     with pytest.raises(ValueError):
         config.get_from_db(db=database)

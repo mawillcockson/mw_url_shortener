@@ -5,8 +5,8 @@ import os
 from pathlib import Path
 from random import randint
 from typing import Iterable, Tuple
-from unittest.mock import patch, sentinel
 from unittest.mock import _SentinelObject as Sentinel
+from unittest.mock import patch, sentinel
 
 import pytest
 from pony.orm import Database, db_session
@@ -41,7 +41,9 @@ def correct_settings(tmp_path: Path, database: Database) -> CommonSettings:
 
 
 @pytest.fixture
-def correct_database_settings(database: Database, correct_settings: CommonSettings) -> DatabaseSettings:
+def correct_database_settings(
+    database: Database, correct_settings: CommonSettings
+) -> DatabaseSettings:
     "adds onto correct_settings to return a {DatabaseSettings.__name__}"
     with db_session:
         database_file_name = database.provider.pool.filename

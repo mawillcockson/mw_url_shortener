@@ -181,7 +181,8 @@ def get_env(env_names_or_none: SettingsEnvNames = None) -> CommonSettings:
 
 
 def set(
-        new_settings: CommonSettings, env_names_or_none: Optional[CommonSettings] = None,
+    new_settings: CommonSettings,
+    env_names_or_none: Optional[CommonSettings] = None,
 ) -> CommonSettings:
     if env_names_or_none is not None and not isinstance(
         env_names_or_none, SettingsEnvNames
