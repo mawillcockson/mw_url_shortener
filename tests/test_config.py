@@ -6,16 +6,16 @@ from pathlib import Path
 from typing import Dict, NamedTuple, Tuple, Union
 
 import pytest
-from pydantic import ValidationError
 from pony.orm import Database
+from pydantic import ValidationError
 
 from mw_url_shortener import config, settings
 from mw_url_shortener.config import Namespace
 from mw_url_shortener.settings import (
+    AllowExtraSettings,
     CommonSettings,
     DatabaseSettings,
     SettingsClassName,
-    AllowExtraSettings
 )
 
 
@@ -33,7 +33,9 @@ def test_get_updates_env(correct_settings: CommonSettings) -> None:
     assert os.getenv(value_name, None) == correct_settings.json()
 
 
-def test_get_updates_everwhere(database: Database, correct_database_settings: DatabaseSettings) -> None:
+def test_get_updates_everwhere(
+    database: Database, correct_database_settings: DatabaseSettings
+) -> None:
     "is the environment, database, and cache all updated to match"
     # Show that there's no configuration in the database
     with pytest.raises(ValueError) as err:
@@ -60,7 +62,9 @@ def test_get_updates_everwhere(database: Database, correct_database_settings: Da
     assert config.get_from_db(db=database) == correct_database_settings
 
 
-def test_save_sets_everywhere(database: Database, correct_database_settings: DatabaseSettings) -> None:
+def test_save_sets_everywhere(
+    database: Database, correct_database_settings: DatabaseSettings
+) -> None:
     "is the environment, database, and cache all updated to match"
     # Show that the cache is empty
     assert settings._settings is None
@@ -69,7 +73,7 @@ def test_save_sets_everywhere(database: Database, correct_database_settings: Dat
         config.get_from_db(db=database)
     # Show the environment is unset, except for pytest's marker
     assert list(os.environ) == ["PYTEST_CURRENT_TEST"]
-    
+
     # Save the configuration
     config.save(new_settings=correct_database_settings)
     # Grab the settings from the database
@@ -84,19 +88,23 @@ def test_save_sets_everywhere(database: Database, correct_database_settings: Dat
     assert settings_in_db == correct_database_settings
 
 
-def test_save_allow_bad_db(tmp_path: Path, correct_database_settings: DatabaseSettings) -> None:
+def test_save_allow_bad_db(
+    tmp_path: Path, correct_database_settings: DatabaseSettings
+) -> None:
     """
     will updating the database be skipped if the database file points to a bad
     database
     """
     assert settings._settings is None
     assert list(os.environ) == ["PYTEST_CURRENT_TEST"]
-    nonexistent_database_file = tmp_path/"nonexistent.sqlitedb"
+    nonexistent_database_file = tmp_path / "nonexistent.sqlitedb"
     # Fill the database with nonsense
     nonexistent_database_file.write_bytes(bytes(range(256)))
     assert bad_database_file.is_file()
-    bad_database_file_settings = correct_database_settings.copy(update={"database_file": bad_database_file})
-    
+    bad_database_file_settings = correct_database_settings.copy(
+        update={"database_file": bad_database_file}
+    )
+
     config.save(new_settings=bad_database_file_settings)
     settings_in_env = config.get_env()
     assert settings._settings == bad_database_file_settings
@@ -105,17 +113,21 @@ def test_save_allow_bad_db(tmp_path: Path, correct_database_settings: DatabaseSe
     assert bad_database_file.read_bytes() == bytes(range(256))
 
 
-def test_save_allow_nonexistent_db(tmp_path: Path, correct_database_settings: DatabaseSettings) -> None:
+def test_save_allow_nonexistent_db(
+    tmp_path: Path, correct_database_settings: DatabaseSettings
+) -> None:
     """
     will updating the database be skipped if the database file points to a bad
     database
     """
     assert settings._settings is None
     assert list(os.environ) == ["PYTEST_CURRENT_TEST"]
-    nonexistent_database_file = tmp_path/"nonexistent.sqlitedb"
+    nonexistent_database_file = tmp_path / "nonexistent.sqlitedb"
     assert not nonexistent_database_file.exists()
-    nonexistent_database_file_settings = correct_database_settings.copy(update={"database_file": nonexistent_database_file})
-    
+    nonexistent_database_file_settings = correct_database_settings.copy(
+        update={"database_file": nonexistent_database_file}
+    )
+
     config.save(new_settings=bad_database_file_settings)
     settings_in_env = config.get_env()
     assert settings._settings == nonexistent_database_file_settings
@@ -128,13 +140,13 @@ def test_get_priorities(correct_database_settings: DatabaseSettings) -> None:
     is the priority of the sources for configuration information:
     defaults < dotenv < env vars < database < args
     """
+
     class ExtraProperties(AllowExtraSettings):
         "adds extra properties used for this test"
         example: int = 5
         demo: set = {0, 1, 2}
-    
-    default_settings = ExtraProperties(env_file=None)
 
+    default_settings = ExtraProperties(env_file=None)
 
 
 @pytest.mark.xfail
@@ -165,7 +177,9 @@ def test_json(correct_settings: CommonSettings) -> None:
     assert config.json() == correct_settings.json()
 
 
-def test_write_dotenv_no_args(database: Database, correct_database_settings: DatabaseSettings) -> None:
+def test_write_dotenv_no_args(
+    database: Database, correct_database_settings: DatabaseSettings
+) -> None:
     """
     when called with no arguments, does config.write_dotenv() write out an
     environment file to the env_file in the current settings, using the
@@ -191,7 +205,9 @@ def test_write_dotenv_no_args(database: Database, correct_database_settings: Dat
     settings._settings = None
 
     # Instantiate the settings using only the env_file
-    settings_from_env_file = DatabaseSettings(_env_file=correct_database_settings.env_file)
+    settings_from_env_file = DatabaseSettings(
+        _env_file=correct_database_settings.env_file
+    )
     assert settings_from_env_file == correct_database_settings
 
 
@@ -205,7 +221,9 @@ def test_write_dotenv_no_args_no_settings() -> None:
     assert "need an env_file" in str(err.value)
 
 
-def test_write_dotenv_just_env_file(correct_database_settings: DatabaseSettings, database: Database) -> None:
+def test_write_dotenv_just_env_file(
+    correct_database_settings: DatabaseSettings, database: Database
+) -> None:
     """
     does config.write_dotenv() raise an error when it's called with just an
     env_file, and settings aren't set
@@ -239,7 +257,9 @@ def test_write_dotenv_just_env_file(correct_database_settings: DatabaseSettings,
     assert settings._settings is None
 
 
-def test_write_dotenv(database: Database, correct_database_settings: DatabaseSettings) -> None:
+def test_write_dotenv(
+    database: Database, correct_database_settings: DatabaseSettings
+) -> None:
     """
     if called with all parameters filled, does config.write_dotenv() write out
     an env_file without expecting any settings to be set, and without setting
@@ -250,7 +270,7 @@ def test_write_dotenv(database: Database, correct_database_settings: DatabaseSet
     assert isinstance(env_file, Path)
     assert envfile.is_file()
     assert env_file.read_text() == ""
-    
+
     # Show that the database doesn't have settings
     with pytest.raises(ValueError):
         config.get_from_db(db=database)
@@ -262,7 +282,10 @@ def test_write_dotenv(database: Database, correct_database_settings: DatabaseSet
     assert settings._settings is None
 
     # Write the settings to the env_file
-    config.write_dotenv(filename=correct_database_settings.env_file, configuration=correct_database_settings)
+    config.write_dotenv(
+        filename=correct_database_settings.env_file,
+        configuration=correct_database_settings,
+    )
 
     # Show that the database didn't have settings added
     with pytest.raises(ValueError):
@@ -274,7 +297,9 @@ def test_write_dotenv(database: Database, correct_database_settings: DatabaseSet
     assert settings._settings is None
 
     # Instantiate the settings using only the env_file
-    settings_from_env_file = DatabaseSettings(_env_file=correct_database_settings.env_file)
+    settings_from_env_file = DatabaseSettings(
+        _env_file=correct_database_settings.env_file
+    )
     assert settings_from_env_file == correct_database_settings
 
 
