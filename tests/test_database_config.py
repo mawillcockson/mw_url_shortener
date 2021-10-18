@@ -8,6 +8,7 @@ from mw_url_shortener.database.config import get_config, save_config
 from mw_url_shortener.database.errors import BadConfigInDBError
 from mw_url_shortener.settings import CommonSettings
 
+from .conftest import BadSettings
 from .utils import random_json
 
 
@@ -45,16 +46,8 @@ def test_load_bad_config(database: Database) -> None:
     assert "bad configuration in database" in str(err.value)
 
 
-def test_save_bad_config(database: Database, correct_settings: CommonSettings) -> None:
+def test_save_bad_config(database: Database, bad_settings: BadSettings) -> None:
     "is an error thrown when a bad config is saved"
-
-    class DummyClass(pydantic.BaseSettings):
-        f"a dummy class meant to mimic {CommonSettings.__name__}"
-        env_file: Path = correct_settings.env_file
-
-    bad_settings = DummyClass()
-    bad_settings.__class__.__name__ = CommonSettings.__name__
-
     with pytest.raises(ValueError) as err:
         save_config(db=database, new_settings=bad_settings)
     assert "new_settings must be an instance of a settings class" in str(err.value)

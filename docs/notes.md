@@ -93,7 +93,7 @@ It would be awesome if it could authenticate users with the same mechanism that 
 
 ### Emoji normalization
 
-Also, I'd want an option for emoji normalization, where things like {❤️, 🧡, 💛} and {👃, 👃🏿} are all collapsed to one common key.
+Also, I'd want an option for emoji normalization, where things like {❤️, 🧡, 💛} and {👃, 👃🏿} are both collapsed to one common key (e.g. either a textual representation, like "heart" and "nose", or an emoji representation).
 
 It'd be important for this to be a setting that defaults to on, so that emoji links work, but can be turned off.
 
@@ -184,13 +184,33 @@ It might be better to use this scheme all the time, and the config option determ
 A cool feature to add would be expiring redirects. Two major ways I can think of expiring them:
 
 1. By number of uses
-2. By time
+1. By time
 
 The first one would be very easy to implement: A counter associated with the entry is incremented, and once it equals or exceeds a limit, the entire redirect is deleted.
 
 The second one would be a bit more difficult:
 
-I would not want any polling, so one technique I've heard of would be to start a scheduler
+I would not want any polling, so one technique I've heard of would be to start a scheduler.
+
+Another technique would be storing the expiration date, and if the entry is accessed after that expiration date:
+
+1. It behaves as if there's no entry
+1. It deletes the expired entry
+
+There would also be a nightly vacuuming routine that goes through all timed entries and deletes them if they're expired.
+
+The one issue I'd be worried about is funnybusiness with timezones:
+
+1. an entry is created with an expiration in 2 hours, at 4:00 P.M. GMT (UTC+0)
+1. the database is backed up
+1. the backup is restored on a computer in the PST (UTC-8) timezone
+1. the redirect is accessed
+
+This would probably be fine if the date and time are stored with timezone information, but the worrisome part is that this completely relies on the date and time to be set correctly on the local computer, as well as the timezone.
+
+With a running, in-memory task, it would take care of itself, regardless of whether or not the timezone has been changed while the computer is running (Daylight Saving Time).
+
+However, this would still be an issue in the above scenario, when saving and loading the database, and it's unlikely that proper datetime timestamps would not be able to handle timezones changing while it's running, any differently than loading them on startup.
 
 ### Export and Import of Configuration and Data
 
@@ -339,3 +359,21 @@ Really, though, and network server, available at a well-known location, would be
 I was wondering how it'd work if the `config.get` function would first check to see if there's a valid `_config` variable set in the module, and return a copy of that if there is.
 
 That way, it only really needs to gather all the settings once per worker process, hopefully. Are module variables given to each thread? Probably not. I've heard that sharing memory between threads is something that requires extra-special handling, not just setting a global variable.
+
+### Client
+
+I think the project should share as much implementation with the client as possible. I'm thinking the ORM would be very handy to share, so that the database can be interacted with locally.
+
+I'm picturing something like:
+
+```sh
+pip install mw-url-shortener
+```
+
+gets the client and server code, but doesn't install the server code "script" and doesn't install the packages the server needs to run.
+
+```sh
+pip install mw-url-shortener[server]
+```
+
+installs both: `mw-redir` and `mw-redir-server`.

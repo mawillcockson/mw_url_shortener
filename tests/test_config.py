@@ -27,6 +27,8 @@ from mw_url_shortener.settings import (
     SettingsTypeError,
 )
 
+from .conftest import BadSettings
+
 
 def test_get_module_cache(correct_settings: CommonSettings) -> None:
     "if the modue cache is already set, can those settings be retrieved"
@@ -36,18 +38,11 @@ def test_get_module_cache(correct_settings: CommonSettings) -> None:
     assert settings._settings == correct_settings
 
 
-def test_get_module_cache_bad_type() -> None:
+def test_get_module_cache_bad_type(bad_settings: BadSettings) -> None:
     """
     is an error raised if the module cache is populated with a bad settings
     object
     """
-
-    class BadClass(AllowExtraSettings):
-        "a class meant to simulate a user-defined class"
-        database_file: Path = Path("example.sqlitedb")
-
-    bad_settings = BadClass()
-    bad_settings.__class__.__name__ = DatabaseSettings.__name__
     settings._settings = bad_settings
 
     with pytest.raises(CacheConfigTypeError) as err:

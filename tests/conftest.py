@@ -13,7 +13,12 @@ from pony.orm import Database, db_session
 
 from mw_url_shortener.database import get_db, user
 from mw_url_shortener.database.interface import setup_db
-from mw_url_shortener.settings import CommonSettings, DatabaseSettings
+from mw_url_shortener.settings import (
+    AllowExtraSettings,
+    CommonSettings,
+    DatabaseSettings,
+    SettingsClassName,
+)
 from mw_url_shortener.types import HashedPassword, Username
 from mw_url_shortener.utils import random_username
 from mw_url_shortener.utils import unsafe_random_chars as random_string
@@ -38,6 +43,22 @@ def correct_settings(tmp_path: Path, database: Database) -> CommonSettings:
     return CommonSettings(
         env_file=env_file,
     )
+
+
+class BadSettings(AllowExtraSettings):
+    "a settings class meant to imitate a user-defined class"
+    pass
+
+
+@pytest.fixture
+def bad_settings(correct_settings: CommonSettings) -> BadSettings:
+    "builds a settings object meant to imitate a correct settings class"
+    assert (
+        BadSettings not in SettingsClassName._classes
+    ), f"{BadSettings} must not be a good settings class"
+    bad_settings = BadSettings()
+    bad_settings.__class__.__name__ = CommonSettings.__name__
+    return bad_settings
 
 
 @pytest.fixture

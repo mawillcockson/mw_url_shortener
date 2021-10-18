@@ -135,6 +135,7 @@ def settings_env_names(
             f"settings_class must be one of ({', '.join(SettingsClassName._class_names)})"
         ) from err
 
+    # BaseSettings will always have a Config subclass
     env_config = settings_class.Config()
     try:
         env_prefix = EnvVarName.validate(env_config.env_prefix)
@@ -148,6 +149,30 @@ def settings_env_names(
     return SettingsEnvNames(class_name=class_name, value_name=value_name)
 
 
+def get_env(env_names_or_none: SettingsEnvNames = None) -> CommonSettings:
+    "gets the current settings from the environment"
+    if env_names_or_none is not None and not isinstance(
+        env_names_or_none, SettingsEnvNames
+    ):
+        raise TypeError(f"env_names must be a {SettingsEnvNames.__name__} or None")
+
+    if env_names_or_none is None:
+        env_names = settings_env_names()
+    else:
+        env_names = env_names_or_none
+
+    settings_class_name = os.getenv(env_names.class_name, None)
+    settings_value = os.getenv(env_names.value_name, None)
+    if settings_class_name is None or settings_value is None:
+        raise EnvConfigError("environment not set")
+
+    settings_class = getattr(settings, settings_class_name, None)
+    if settings_class is None or not issubclass(settings_class, CommonSettings):
+        raise EnvConfigTypeError(f"cannot find class '{settings_class_name}'")
+
+    return settings_class.parse_raw(settings_value)
+
+
 def set_env(
     new_settings: CommonSettings, env_names_or_none: Optional[SettingsEnvNames] = None
 ) -> None:
@@ -158,13 +183,7 @@ def set_env(
     if env_names_or_none is not None and not isinstance(
         env_names_or_none, SettingsEnvNames
     ):
-        raise TypeError("env_names must be a SettingsEnvNames or None")
-
-    if not isinstance(new_settings, CommonSettings):
-        raise SettingsTypeError(
-            "new_settings must be instantiated from "
-            f"{CommonSettings.__name__} or a subclass"
-        )
+        raise TypeError(f"env_names must be a {SettingsEnvNames.__name__} or None")
 
     settings_class = type(new_settings)
     settings_class_name = settings_class.__name__
@@ -179,39 +198,47 @@ def set_env(
     if env_names_or_none is None:
         env_names = settings_env_names()
     else:
-        env_name = env_names_or_none
+        env_names = env_names_or_none
 
-    settings_json = new_settings.json()
-    assert new_settings == settings_class.parse_raw(
-        settings_json
-    ), "settings must be able to be serialized and deserialized"
+    serialization_err_msg = "settings must be able to be serialized and deserialized"
+    try:
+        settings_json = new_settings.json()
+    except TypeError as err:
+        raise ConfigError(serialization_err_msg) from err
+
+    if new_settings != settings_class.parse_raw(settings_json):
+        raise ConfigError(serialization_err_msg)
 
     os.environ[env_names.class_name] = settings_class_name
     os.environ[env_names.value_name] = settings_json
 
 
-def get_env(env_names_or_none: SettingsEnvNames = None) -> CommonSettings:
-    "gets the current settings from the environment"
-    if env_names_or_none is not None and not isinstance(
-        env_names_or_none, SettingsEnvNames
-    ):
-        raise TypeError("env_names must be a SettingsEnvNames or None")
+def get() -> CommonSettings:
+    """
+    obtains configuration information
 
-    if env_names_or_none is None:
-        env_names = settings_env_names()
-    else:
-        env_name = env_names_or_none
+    the order of precedence from lowest priority to highest is:
+    - defaults on the class
+    - .env file
+    - environment
+    - previously set settings
+    - args
+    """
+    if isinstance(settings._settings, Mapping):
+        return settings._settings
 
-    settings_class_name = os.getenv(env_names.class_name, None)
-    settings_value = os.getenv(env_names.value_name, None)
-    if settings_class_name is None or settings_value is None:
-        raise EnvConfigError("environment not set")
+    env_prefix: str = CommonSettings.Config().env_prefix
+    env_name = f"{env_prefix}__settings_class_name"
+    settings_class_name: Optional[str] = os.getenv(env_name, default=None)
+    if settings_class_name is None or not hasattr(settings, settings_class_name):
+        raise ValueError(
+            f"expected environment variable '{env_name.upper()}' "
+            "to be set with the name of the settings class"
+        )
 
-    settings_class = getattr(settings, settings_class_name, None)
-    if settings_class is None or not issubclass(settings_class, CommonSettings):
-        raise ValueError(f"cannot find class '{settings_class_name}'")
-
-    return settings_class.parse_raw(settings_value)
+    settings_class = getattr(settings, settings_class_name)
+    settings._settings = settings_class()
+    return setting._settings
 
 
 def set(
@@ -221,7 +248,7 @@ def set(
     if env_names_or_none is not None and not isinstance(
         env_names_or_none, SettingsEnvNames
     ):
-        raise TypeError("env_names must be a SettingsEnvNames or None")
+        raise TypeError(f"env_names must be a {SettingsEnvNames.__name__} or None")
 
     if not isinstance(new_settings, CommonSettings):
         raise TypeError(
@@ -264,31 +291,3 @@ def set(
 
     settings._settings = full_settings
     return full_settings
-
-
-def get() -> CommonSettings:
-    """
-    obtains configuration information
-
-    the order of precedence from lowest priority to highest is:
-    - defaults on the class
-    - .env file
-    - environment
-    - previously set settings
-    - args
-    """
-    if isinstance(settings._settings, Mapping):
-        return settings._settings
-
-    env_prefix: str = CommonSettings.Config().env_prefix
-    env_name = f"{env_prefix}__settings_class_name"
-    settings_class_name: Optional[str] = os.getenv(env_name, default=None)
-    if settings_class_name is None or not hasattr(settings, settings_class_name):
-        raise ValueError(
-            f"expected environment variable '{env_name.upper()}' "
-            "to be set with the name of the settings class"
-        )
-
-    settings_class = getattr(settings, settings_class_name)
-    settings._settings = settings_class()
-    return setting._settings

@@ -10,9 +10,14 @@ from mw_url_shortener import config
 from mw_url_shortener.api.authentication import password_context
 from mw_url_shortener.database import get_db, user
 from mw_url_shortener.database.interface import setup_db
-from mw_url_shortener.settings import CommonSettings, DatabaseSettings
+from mw_url_shortener.settings import (
+    CommonSettings,
+    DatabaseSettings,
+    SettingsClassName,
+)
 from mw_url_shortener.types import HashedPassword, Username
 
+from .conftest import BadSettings
 from .utils import (
     all_combinations,
     random_hashed_password,
@@ -116,3 +121,15 @@ def test_same_database(
     # database_file points to a database file that, when manipulated,
     # manipulates the same database that the fixture provides
     assert config.get_from_db(db=database) == correct_database_settings
+
+
+def test_bad_settings(bad_settings: BadSettings) -> None:
+    f"""
+    does the bad_settings fixture produce an object that derives from
+    {CommonSettings}, has a class name that is ok, but is not an ok settings
+    object to use
+    """
+    assert isinstance(bad_settings, CommonSettings)
+    assert SettingsClassName.validate(type(bad_settings).__name__)
+    with pytest.raises(ValueError):
+        SettingsClassName.validate(type(bad_settings))

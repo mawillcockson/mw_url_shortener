@@ -96,7 +96,7 @@ def unsafe_word_characters_generator() -> Iterable[str]:
     """
     returns an infinte generator of unicode word characters
     """
-    word_characters_re = re.compile(r"^[\w]+$")
+    word_characters_re = re.compile(r"^\w+$")
 
     def character_gen() -> Iterable[str]:
         "iterates over range of unicode characters, filtering out unprintable ones"
