@@ -8,19 +8,18 @@ readme = "README.md"
 repository = "https://github.com/mawillcockson/mw_url_shortener"
 
 [tool.poetry.dependencies]
-python = ">=3.6.9,<3.10.0"
-fastapi = {version = "^0.62.0", extras = ["all"]}
-pony = "^0.7.14"
-python-dateutil = "^2.8.1"
-python-jose = "^3.2.0"
-passlib = {version = "^1.7.4", extras = ["bcrypt"]}
-questionary = "^1.8.1"
-decli = "^0.5.2"
-importlib-metadata = {version = "^2.1.0", python = "<3.8"} # NOTE:FUTURE tox depends on <3.0.0
-async-exit-stack = {version = "^1.0.1", python = "<3.7"}
-async_generator = {version = "^1.10", python = "<3.7"}
-python-dotenv = "^0.15.0"
-apistar = "^0.7.2"
+python = ">=3.7.3,<3.10.0"
+importlib-metadata = {version = "^4.8.1", python = "<3.8"}
+appdirs = "^1.4.4"
+
+[tool.poetry.extras]
+server = [
+    "fastapi[all]>=0.62.0",
+    "python-dateutil>=2.8.1",
+    "python-jose>=3.2.0",
+    "passlib[bcrypt]>=1.7.4",
+    "python-dotenv>=0.15.0",
+]
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.2.0"
@@ -28,9 +27,10 @@ pytest-cov = "^2.10.1"
 black = "^20.8b1"
 mypy = "^0.790"
 isort = "^5.6.4"
-tox = "^3.20.1"
-Faker = "^5.0.1"
+# Faker = "^5.0.1"
 pytest-timeout = "^1.4.2"
+tox = "^3.24.4"
+pylint = "^2.11.1"
 
 [tool.pytest.ini_options]
 minversion = "6.2.0" # First version to have easily accessible types
@@ -40,9 +40,6 @@ addopts = "--cov=mw_url_shortener --strict-markers"
 empty_parameter_set_mark = "fail_at_collect"
 log_cli = true
 timeout = 60
-markers = [
-    "select: Temporary mark for selecting specific tests"
-]
 
 [tool.isort]
 profile = "black"
@@ -52,100 +49,114 @@ atomic = true
 # imports automatically catorgorized as first_party)
 src_paths = ["mw_url_shortener", "tests"]
 
-[tool.pylint.MASTER]
-init-hook = '''
-# mypy: allow_any_expr
-(
-    """
-Tries to find the virtual environment used by the module being linted, and add
-it to sys.path so pylint can find the imported modules.
-
-Intended to be included in the pylint --init-hook
-
-Easier if a section is added to pyproject.toml:
-[tool.pylint.MASTER]
-init-hook = ```
-<this script>
-```
-
-Replace the backticks in the above snippet with triple single-quotes to allow
-the escaped newlines in this file to be passed to Python, instead of being
-interpreted and expanded by TOML parsing:
-Multi-line literal strings
-https://toml.io/en/v1.0.0-rc.1#string
-
-Peculiarities of pylint:
-Since this is being executed in an exec() Python function call, as opposed to a
-normal Ptyhon script execution environment, there are some weird behaviours
-that have to be worked around:
-- Probably shouldn't call sys.exit()
-- Names imported into the global namespace don't appear to be available in the
-  scope of a defined function
-- This whole module-level docstring has to be wrapped in parenthesis, otherwise
-  an IndentationError is thrown
-"""
-)
-
-
-def munge_syspath() -> None:
-    "wrapping function to allow return statements to be used to halt execution"
-    # pylint: disable=import-outside-toplevel
-    import sys
-    from pathlib import Path
-    from subprocess import run
-    from warnings import warn
-
-    majorminor = f"{sys.version_info.major}.{sys.version_info.minor}"
-
-    try:
-        poetry_about = run(
-            ["poetry", "about"], capture_output=True, text=True, check=False
-        )
-    except FileNotFoundError:
-        warn("poetry not found")
-        return
-
-    if poetry_about.returncode != 0:
-        warn(f"Issue with poetry\n{poetry_about.stdout}\n{poetry_about.stderr}")
-        return
-
-    poetry_env_info = run(
-        "poetry env info -p", capture_output=True, text=True, shell=True, check=False
-    )
-
-    if poetry_env_info.returncode != 0:
-        warn(
-            f"Are we in a poetry project?\n{poetry_env_info.stdout}\n{poetry_env_info.stderr}"
-        )
-        return
-
-    poetry_venv = Path(poetry_env_info.stdout.strip())
-
-    if sys.platform == "linux":
-        site_packages = poetry_venv / "lib" / f"python{majorminor}" / "site-packages"
-    elif sys.platform == "win32":
-        site_packages = poetry_venv / "Lib" / "site-packages"
-    else:
-        raise NotImplementedError(
-            f"Haven't implemented pylint sys.path munging\n"
-            f"to find poetry virtual environment directories on {sys.platform}"
-        )
-
-    if not site_packages.exists():
-        warn("Can't find poetry virtual environment")
-        return
-
-    if str(site_packages) not in sys.path:
-        sys.path.append(str(site_packages.absolute()))
-
-
-munge_syspath()
-
-'''
-
 [tool.poetry.scripts]
-mw_url_shortener = "mw_url_shortener.console:main"
+mw-redir-server = "mw_url_shortener.server:main"
+mw-redir = "mw_url_shortener.client:main"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.mypy]
+always_true = true
+always_false = false
+strict = true
+##### enabled by strict in v0.790
+# # Warn about unused '[mypy-<pattern>]' config sections
+# warn_unused_configs = true
+# # Disallow usage of generic types that do not specify explicit type parameters
+# disallow_any_generics = true
+# # Disallow subclassing values of type 'Any' when defining classes
+# disallow_subclassing_any = true
+# # Disallow calling functions without type annotations from functions with type annotations
+# disallow_untyped_calls = true
+# # Disallow defining functions without type annotations or with incomplete type annotations
+# disallow_untyped_defs = true
+# # Disallow defining functions with incomplete type annotations (inverse: --allow-incomplete-defs)
+# disallow_incomplete_defs = true
+# # Type check the interior of functions without type annotations
+# check_untyped_defs = true
+# # Disallow decorating typed functions with untyped decorators
+# disallow_untyped_decorators = true
+# # Don't assume arguments with default values of None are Optional
+# no_implicit_optional = true
+# # Warn about casting an expression to its inferred type
+# # Don't cast something that's already an appropriate type
+# warn_redundant_casts = true
+# # Warn about unneeded '# type: ignore' comments
+# warn_unused_ignores = true
+# # Warn about returning values of type Any from non- Any typed functions
+# warn_return_any = true
+# # Treat imports as private unless aliased
+# no_implicit_reexport = true
+# # Prohibit equality, identity, and container checks for non-overlapping types
+# strict_equality = true
+#####
+
+### Configuring warnings
+# Warn about statements or expressions inferred to be unreachable or redundant
+warn_unreachable = true
+# Warn about functions that end without returning
+# Must explicitly specify return type -> NoReturn
+warn_no_return = false
+### Configuring warnings
+
+# Support namespace packages (PEP 420, __init__.py-less)
+# Allow typechecking single-file scripts
+namespace_packages = true
+# Cache previous checking results
+incremental = true
+# Pull type information about imports, but don't complain if it's missing
+ignore_missing_imports = true
+follow_imports = "silent"
+
+### Don't allow working with non-specific types
+# Disallow Any types resulting from unfollowed imports
+disallow_any_unimported = true
+# Disallow all expressions that have type Any
+disallow_any_expr = true
+# Disallow functions that have Any in their signature after decorator transformation
+disallow_any_decorated = true
+# Disallow explicit Any in type positions
+disallow_any_explicit = true
+### Don't allow working with non-specific types
+
+# Everything must be typed, or inferable
+disallow_untyped_globals = true
+strict_optional = true
+# Don't let us forget about # type: ignore
+warn_unused_ignores = true
+warn_return_any = true
+# A variable can be reassigned, but it's type can't be changed
+disallow_redefinition = true
+
+### Configuring error messages
+# Precede errors with "note:" messages explaining context
+show_error_context = true
+# Show column numbers in error messages
+show_column_numbers = true
+# Show error codes in error messages
+show_error_codes = true
+# Use visually nicer output in error messages: Use soft word wrap, show source
+# code snippets, and show error location markers
+pretty = true
+# Do not colorize error messages
+color_output = true
+# Do not show error stats summary
+error_summary = true
+# Show absolute paths to files
+show_absolute_path = true
+### Configuring error messages
+
+#[mypy-tests.conftest.*,tests.test_mw_url_shortener.*]
+## NOTE:BUG pytest-dev/pytest#7448
+## From issue:
+## https://github.com/python/mypy/issues/7030
+## pytest only recently published type hints
+## The pull request adding typing information
+## https://github.com/pytest-dev/pytest/pull/7448
+## Has ben merged, waiting for pytest v6.0
+## disallow_any_expr = false
+## disallow_untyped_decorators = false
+## disallow_any_decorated = false
+#implicit_reexport = true
