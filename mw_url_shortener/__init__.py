@@ -1,4 +1,3 @@
-print(f"imported mw_url_shortener.__init__ as {__name__}")
 import sys
 
 # From:

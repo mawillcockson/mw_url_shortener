@@ -377,3 +377,27 @@ pip install mw-url-shortener[server]
 ```
 
 installs both: `mw-redir` and `mw-redir-server`.
+
+#### Usage
+
+Examples:
+
+```sh
+$ mw-redir --local user add admin
+No settings found in default location (~/.config/mw_url_shortener/0.0.5/config.json)
+Path to database file: /var/db/redirects.sqlite
+Create database? (Y/n):
+Creating database at '/var/db/redirects.sqlite'
+Adding user 'admin' with user ID 0
+Password:
+Again:
+User 'admin' added
+```
+
+#### Design
+
+I think the client and server should share as much as possible.
+
+Currently, I'm thinking the database access layer would probably be shared wholesale. Much of that will be async since FastAPI can use async functions, so there'll have to be some use of either `asyncio`, or more likely, `trio` in the client to be able to call the DB functions.
+
+It also hopefully means the database functions will be tested before the server portion is added, reducing the surface the new tests would have to cover.

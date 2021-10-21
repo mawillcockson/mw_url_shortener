@@ -8,9 +8,12 @@ readme = "README.md"
 repository = "https://github.com/mawillcockson/mw_url_shortener"
 
 [tool.poetry.dependencies]
-python = ">=3.7.3,<3.10.0"
+python = ">=3.7.3,<4"
 importlib-metadata = {version = "^4.8.1", python = "<3.8"}
 appdirs = "^1.4.4"
+SQLAlchemy = "^1.4.25"
+aiosqlite = "^0.17.0"
+pydantic = "^1.8.2"
 
 [tool.poetry.extras]
 server = [
@@ -31,6 +34,7 @@ isort = "^5.6.4"
 pytest-timeout = "^1.4.2"
 tox = "^3.24.4"
 pylint = "^2.11.1"
+anyio = "^3.3.4" # provides pytest.mark.anyio decorator for async test function support
 
 [tool.pytest.ini_options]
 minversion = "6.2.0" # First version to have easily accessible types
