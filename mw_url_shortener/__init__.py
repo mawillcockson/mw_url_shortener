@@ -3,8 +3,11 @@ import sys
 # From:
 # https://github.com/mawillcockson/eggord/blob/ea7e56ce173561a550a08b67a9dafdaec149ff17/eggord/__init__.py
 if sys.version_info >= (3, 8):
-    from importlib.metadata import version as metadata_version
+    from importlib.metadata import metadata as package_metadata
 else:
-    from importlib_metadata import version as metadata_version
+    from importlib_metadata import metadata as package_metadata
 
-__version__ = str(metadata_version(__name__))
+APP_NAME = __name__
+metadata = package_metadata(APP_NAME)
+__version__ = str(metadata["version"])
+APP_AUTHOR = str(metadata["author"])
