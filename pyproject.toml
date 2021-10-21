@@ -14,6 +14,7 @@ appdirs = "^1.4.4"
 SQLAlchemy = "^1.4.25"
 aiosqlite = "^0.17.0"
 pydantic = "^1.8.2"
+typer = "^0.4.0"
 
 [tool.poetry.extras]
 server = [
@@ -54,8 +55,8 @@ atomic = true
 src_paths = ["mw_url_shortener", "tests"]
 
 [tool.poetry.scripts]
-mw-redir-server = "mw_url_shortener.server:main"
-mw-redir = "mw_url_shortener.client:main"
+# mw-redir-server = "mw_url_shortener.server.cli:app"
+mw-redir = "mw_url_shortener.client.cli:app"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
