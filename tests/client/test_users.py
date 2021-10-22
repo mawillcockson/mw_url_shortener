@@ -6,6 +6,8 @@ from pathlib import Path
 from typer.testing import CliRunner
 
 from mw_url_shortener.client.cli import app
+from sqlalchemy import and_, select
+from mw_url_shortener.security import hash_password
 
 runner = CliRunner()
 
@@ -30,7 +32,7 @@ def test_create_user(on_disk_database: Path) -> None:
         ],
     )
     assert result.exit_code == 0
-    assert f"user 'test' created with id '{expected_user_id}'" in result.stdout
+    assert f"user '{test_username}' created with id '{expected_user_id}'" in result.stdout
     user_in_db = (
         select(UserInDB)
         .where(and_(UserInDB.username == test_username, UserInDB.id == test_user_id))
