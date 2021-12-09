@@ -41,6 +41,15 @@ $ mw_url_shortener add 'https://example.com/awesome-page'
 short-link: /aF3
 $ mw_url_shortener add 'https://example.com/another-page' awesome
 short-link: /awesome
+$ mw_url_shortener add https://example.org \
+    --regex='.*this[\s_-]thing.*' \
+    --fixed-string='exactly_this' \
+    --prefix=starts_with \
+    --suffix=ends_with \
+    --tag=examples \
+    --tag=test
+short-link: r/.*this[\s-]thing.* /exactly_thing p/starts_with s/ends_with
+tags: examples test
 ```
 
 #### Implementation
@@ -221,7 +230,7 @@ An unexpected feature is image hosting: if the image is encoded in a "`data:`" U
 For example:
 
 ```
-data:image/gif;base64,R0lGODlhEAAQAMQAAORHHOVSKudfOulrSOp3WOyDZu6QdvCchPGolfO0o/XBs/fNwfjZ0frl3/zy7////wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACH5BAkAABAALAAAAAAQABAAAAVVICSOZGlCQAosJ6mu7fiyZeKqNKToQGDsM8hBADgUXoGAiqhSvp5QAnQKGIgUhwFUYLCVDFCrKUE1lBavAViFIDlTImbKC5Gm2hB0SlBCBMQiB0UjIQA7
+data:image/gif;base64,R0lGODlhHgAeAPEDAG6TPXWM0JCk3F52WiH5BAAAAAAALAAAAAAeAB4AAAK5hA8zyO24UnTiNQVHCBV10T2TApbVBloJJKDgxsFceEyG1s7ynjIKBkDthrOSDygc5nhGwe9GjDJvT41UZrX2gNZhV2r84WBLbODropJeuJY1GA39imXyKyaTa0uwgeke86L3JQhQYZIn1DF35uVyFUDVCEmphtbXpyBlSdR1mRQpoRn1SRZjWTpJ9FIjNkopc+QKGyvrmopRNXLLuOMqwrvwNvhkK3Zz8dsqervCQGMTETzyXANhUAAAOw==
 ```
 
 Will work just fine when returned by the application. This could be made easier by the application providing an API to receive these images, limited in file size by the server, and then will encode them and store them as the redirect URI.
