@@ -14,7 +14,7 @@ python -m pipx ensurepath
 python -m pipx install mw_url_shortener
 exec "${SHELL}"
 mw_url_shortener
->> No config found; run 'mw_url_shortener setup' to create on
+>> No config found; run 'mw_url_shortener setup' to create one
 mw_url_shortener setup
 >> First-time setup
 >> No database found
@@ -51,6 +51,10 @@ $ mw_url_shortener add https://example.org \
 short-link: r/.*this[\s-]thing.* /exactly_thing p/starts_with s/ends_with
 tags: examples test
 ```
+
+I think the interface for manipulating the database should be the same, whether acting on a local database file directly, or acting remotely.
+
+The config file should store the location of the local database, or the address for the remote API endpoints and the credentials for using them.
 
 #### Implementation
 
@@ -410,3 +414,11 @@ I think the client and server should share as much as possible.
 Currently, I'm thinking the database access layer would probably be shared wholesale. Much of that will be async since FastAPI can use async functions, so there'll have to be some use of either `asyncio`, or more likely, `trio` in the client to be able to call the DB functions.
 
 It also hopefully means the database functions will be tested before the server portion is added, reducing the surface the new tests would have to cover.
+
+### Auditing
+
+If SQLite doesn't support a native way to log database manipulations to the database itself, it'd be interesting to see what patterns other people have come up with for storing auditing information in the database itself.
+
+For instance, an `audit` table, where each row is an atomic action that the app takes (e.g. "create redirect", "modify redirect"), and it associates that with either an API user or "`cli`".
+
+I think this would be useful later.
