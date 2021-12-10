@@ -4,7 +4,8 @@ from typing import Optional
 
 import typer
 
-from .. import __version__, settings
+from .. import __version__
+from ..settings import CommonSettings
 from . import user
 
 app = typer.Typer()
@@ -22,7 +23,7 @@ def version(flag: bool) -> None:
 @app.callback()
 def main(
     ctx: typer.Context,
-    local_config: Path = typer.Option(settings.DEFAULT_CONFIG_PATH, "--local"),
+    database_path: Path = typer.Option(settings.DEFAULT_DATABASE_PATH, "--local"),
     version: Optional[bool] = typer.Option(
         None, "--version", callback=version, is_eager=True
     ),
@@ -35,8 +36,8 @@ def main(
     if ctx.resilient_parsing:
         return
 
-    if not settings.settings:
-        settings.settings = settings.CommonSettings(config_file=local_config)
+    # in cli command signature: session: AsyncSession = Depends(make_session)
+        settings = settings.CommonSettings(session=session)
 
     ctx.obj = settings.settings
 
