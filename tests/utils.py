@@ -12,7 +12,9 @@ from collections import UserString
 from random import randint
 
 from mw_url_shortener.settings import defaults
-from mw_url_shortener.utils import unsafe_random_printable_string as random_printable_string
+from mw_url_shortener.utils import (
+    unsafe_random_printable_string as random_printable_string,
+)
 
 
 def random_username() -> str:

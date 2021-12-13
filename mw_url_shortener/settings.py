@@ -9,6 +9,7 @@ from pydantic import BaseSettings
 
 from . import APP_AUTHOR, APP_NAME, __version__
 
+
 class Defaults(BaseSettings):
     # NOTE:FEAT redirects.sqlite should be in a more "typical" location
     config_path = Path(
@@ -18,7 +19,7 @@ class Defaults(BaseSettings):
     )
     database_path = Path("/var/db/redirects.sqlite")
     database_url_scheme = "sqlite+aiosqlite"
-    database_url = F"{database_url_scheme}:///{database_path}"
+    database_url = f"{database_url_scheme}:///{database_path}"
     max_username_length = 30
     max_password_length = 128
 

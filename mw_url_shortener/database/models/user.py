@@ -1,7 +1,8 @@
 from sqlalchemy import Column, Integer, String
 
-from .base import DeclarativeBase
 from mw_url_shortener.settings import defaults
+
+from .base import DeclarativeBase
 
 
 class UserModel(DeclarativeBase):

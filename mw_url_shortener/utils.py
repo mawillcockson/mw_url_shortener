@@ -6,7 +6,7 @@ all of these functions can be loaded independently of the rest of this library
 import secrets
 import string
 from math import floor
-from random import random, choices
+from random import choices, random
 from sys import maxunicode as LARGEST_UNICODE_CODEPOINT
 from typing import List
 

@@ -19,7 +19,9 @@ class InterfaceBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         """
         self.model = model
 
-    async def get_by_id(self, async_session: AsyncSession, id: Any) -> Optional[ModelType]:
+    async def get_by_id(
+        self, async_session: AsyncSession, id: Any
+    ) -> Optional[ModelType]:
         return await async_session.get(User, id)
         # in cases where the id is not the primary key
         # return (
@@ -31,7 +33,9 @@ class InterfaceBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
     async def get_multiple(
         self, async_session: AsyncSession, *, skip: int = 0, limit: int = 100
     ) -> List[ModelType]:
-        return await async_session.execute(select(self.model).offset(skip).limit(limit)).all()
+        return await async_session.execute(
+            select(self.model).offset(skip).limit(limit)
+        ).all()
 
     async def create(
         self, async_session: AsyncSession, *, object_schema_in: CreateSchemaType

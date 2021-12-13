@@ -36,7 +36,7 @@ def main(
     if ctx.resilient_parsing:
         return
 
-    # in cli command signature: session: AsyncSession = Depends(make_session)
+        # in cli command signature: session: AsyncSession = Depends(make_session)
         settings = settings.CommonSettings(session=session)
 
     ctx.obj = settings.settings

@@ -5,9 +5,8 @@ from fastapi.encoders import jsonable_encoder
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from mw_url_shortener import database_interface
-from mw_url_shortener.security import verify_password
 from mw_url_shortener.schemas.user import UserCreate, UserUpdate
-
+from mw_url_shortener.security import verify_password
 from tests.utils import random_password, random_username
 
 
@@ -56,7 +55,9 @@ async def test_get_user(in_memory_database: AsyncSession) -> None:
     user_created = await database_interface.user.create(
         in_memory_database, object_schema_in=user_create_schema
     )
-    user_retrieved = await database_interface.user.get_by_id(in_memory_database, id=user.id)
+    user_retrieved = await database_interface.user.get_by_id(
+        in_memory_database, id=user.id
+    )
     assert user_retrieved
     assert user_created.email == user_retrieved.email
     assert jsonable_encoder(user_created) == jsonable_encoder(user_retrieved)

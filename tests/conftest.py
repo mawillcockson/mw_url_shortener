@@ -1,8 +1,8 @@
-from pathlib import Path
-from sqlalchemy.ext.asyncio import AsyncSession
 import sqlite3
+from pathlib import Path
 
 import pytest
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from mw_url_shortener.database.start import make_session
 
