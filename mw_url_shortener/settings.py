@@ -5,24 +5,25 @@ from pathlib import Path
 from typing import Optional
 
 import appdirs
-from pydantic import BaseSettings, root_validator
+from pydantic import BaseSettings
 
 from . import APP_AUTHOR, APP_NAME, __version__
 
-# NOTE:FEAT redirects.sqlite should be in a more "typical" location
-DEFAULT_DATABASE_PATH = Path("/var/db/redirects.sqlite")
-DEFAULT_CONFIG_PATH = Path(
-    appdirs.user_config_dir(
-        appname=APP_NAME, appauthor=APP_AUTHOR, version=__version__, roaming=True
+class Defaults(BaseSettings):
+    # NOTE:FEAT redirects.sqlite should be in a more "typical" location
+    config_path = Path(
+        appdirs.user_config_dir(
+            appname=APP_NAME, appauthor=APP_AUTHOR, version=__version__, roaming=True
+        )
     )
-)
-DEFAULT_DATABASE_URL_SCHEME = "sqlite+aiosqlite"
-DEFAULT_DATABASE_URL = f"{DEFAULT_DATABASE_URL_SCHEME}:///{DEFAULT_DATABASE_PATH}"
+    database_path = Path("/var/db/redirects.sqlite")
+    database_url_scheme = "sqlite+aiosqlite"
+    database_url = F"{database_url_scheme}:///{database_path}"
+    max_username_length = 30
+    max_password_length = 128
+
+    class Config:
+        allow_mutation = False
 
 
-class CommonSettings(BaseSettings):
-    config_file: Path = DEFAULT_CONFIG_PATH
-    database_url: str = DEFAULT_DATABASE_URL
-
-
-settings: Optional[CommonSettings] = None
+defaults = Defaults()

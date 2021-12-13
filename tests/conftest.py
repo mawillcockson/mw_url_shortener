@@ -9,6 +9,8 @@ from mw_url_shortener.database.start import make_session
 
 @pytest.fixture
 def anyio_backend() -> str:
+    "declares the backend to use for all async tests"
+    # SQLAlchemy uses a sqlite DBAPI (aiosqlite) that depends upon asyncio
     return "asyncio"
 
 

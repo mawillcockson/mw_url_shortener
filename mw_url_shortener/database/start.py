@@ -8,7 +8,9 @@ async def make_session(database_url: str) -> AsyncSession:
     "creates the main way to talk to the database"
     engine = create_async_engine(database_url, echo=True, future=True)
 
-    # Create database if it doesn't exist?
+    # Q: should the database be created if it doesn't exist?
+    # A: this should be done at the client layer, using a function provided
+    # here to "initialize" a database file
 
     async with engine.begin() as connection:
         await connection.run_sync(mapper_registry.metadata.create_all)
