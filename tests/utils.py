@@ -8,7 +8,6 @@ they could be written as pytest fixtures if they returned the named functions,
 but the function signatures would have to be imported from conftest.py, and it
 would be easier to import the function directly
 """
-from collections import UserString
 from random import randint
 
 from mw_url_shortener.settings import defaults
