@@ -163,6 +163,8 @@ error_summary = true
 show_absolute_path = true
 ### Configuring error messages
 
+plugins = ["pydantic.mypy"]
+
 #[mypy-tests.conftest.*,tests.test_mw_url_shortener.*]
 ## NOTE:BUG pytest-dev/pytest#7448
 ## From issue:
@@ -175,3 +177,8 @@ show_absolute_path = true
 ## disallow_untyped_decorators = false
 ## disallow_any_decorated = false
 #implicit_reexport = true
+
+# NOTE::FUTURE add mypy plugin configuration when syntax is available
+# [pydantic-mypy]
+# warn_required_dynamic_aliases = true
+# warn_untyped_fields = true
