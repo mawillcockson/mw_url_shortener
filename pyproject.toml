@@ -58,6 +58,11 @@ atomic = true
 # Add an explicitly defined source path (modules within src paths have their
 # imports automatically catorgorized as first_party)
 src_paths = ["mw_url_shortener", "tests"]
+# https://pycqa.github.io/isort/docs/configuration/options.html#extend-skip-glob
+extend_skip_glob = ["mw_url_shortener/client/*"]
+
+[tool.black]
+extend_exclude = ["mw_url_shortener/client"]
 
 [tool.poetry.scripts]
 # mw-redir-server = "mw_url_shortener.server.cli:app"
