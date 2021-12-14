@@ -1,5 +1,6 @@
 from typing import Any, Dict, Optional, Union
 
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from mw_url_shortener.database.models.user import UserModel
@@ -12,9 +13,16 @@ class InterfaceUser(InterfaceBase[UserModel, UserCreate, UserUpdate]):
     async def get_by_username(
         self, async_session: AsyncSession, *, username: str
     ) -> Optional[UserModel]:
-        return await async_session.execute(
-            select(UserModel).where(UserModel.username == username)
-        ).scalar_one()
+        async with async_session() as session:
+            async with session.begin():
+                user_model = (
+                    await session.execute(
+                        select(UserModel).where(UserModel.username == username)
+                    )
+                ).scalar_one_or_none()
+            if user_model is not None:
+                await session.refresh(user_model)
+        return user_model
 
     async def create(
         self, async_session: AsyncSession, *, object_schema_in: UserCreate
@@ -34,27 +42,29 @@ class InterfaceUser(InterfaceBase[UserModel, UserCreate, UserUpdate]):
         async_session: AsyncSession,
         *,
         current_object_model: UserModel,
-        update_object_schema: Union[UserUpdate, Dict[str, Any]]
+        object_update_schema: Union[UserUpdate, Dict[str, Any]]
     ) -> UserModel:
-        if isinstance(update_object_schema, dict):
-            update_object_data = update_object_schema
+        if isinstance(object_update_schema, dict):
+            updated_object_data = object_update_schema
         else:
-            update_object_data = update_object_schema.dict(exclude_unset=True)
-        if update_object_data["password"] is not None:
-            hashed_password = get_password_hash(update_object_data["password"])
-            del update_object_data["password"]
-            update_object_data["hashed_password"] = hashed_password
+            updated_object_data = object_update_schema.dict(exclude_unset=True)
+
+        if updated_object_data["password"] is not None:
+            hashed_password = hash_password(updated_object_data["password"])
+            del updated_object_data["password"]
+            updated_object_data["hashed_password"] = hashed_password
+
         return await super().update(
             async_session,
             current_object_model=current_object_model,
-            update_object_schema=update_object_data,
+            object_update_schema=updated_object_data,
         )
 
     async def authenticate(
         self, async_session: AsyncSession, *, username: str, password: str
     ) -> Optional[UserModel]:
         user_model = await self.get_by_username(async_session, username=username)
-        if not user_model:
+        if user_model is None:
             return None
         if not verify_password(password, user_model.hashed_password):
             return None

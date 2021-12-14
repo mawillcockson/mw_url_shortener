@@ -30,11 +30,11 @@ async def test_authenticate_user(in_memory_database: AsyncSession) -> None:
     user_created = await database_interface.user.create(
         in_memory_database, object_schema_in=user_create_schema
     )
-    user_authenticated = database_interface.user.authenticate(
+    user_authenticated = await database_interface.user.authenticate(
         in_memory_database, username=username, password=password
     )
     assert user_authenticated
-    assert user_created.email == user_authenticated.email
+    assert user_created.username == user_authenticated.username
 
 
 async def test_not_authenticate_user(in_memory_database: AsyncSession) -> None:
@@ -42,12 +42,12 @@ async def test_not_authenticate_user(in_memory_database: AsyncSession) -> None:
     username = random_username()
     password = random_password()
     user_created = await database_interface.user.authenticate(
-        db, username=username, password=password
+        in_memory_database, username=username, password=password
     )
     assert user_created is None
 
 
-async def test_get_user(in_memory_database: AsyncSession) -> None:
+async def test_get_user_by_id(in_memory_database: AsyncSession) -> None:
     "can a previously added user be retrieved by id, and is the data the same?"
     username = random_username()
     password = random_password()
@@ -56,11 +56,38 @@ async def test_get_user(in_memory_database: AsyncSession) -> None:
         in_memory_database, object_schema_in=user_create_schema
     )
     user_retrieved = await database_interface.user.get_by_id(
-        in_memory_database, id=user.id
+        in_memory_database, id=user_created.id
     )
     assert user_retrieved
-    assert user_created.email == user_retrieved.email
+    assert user_created.username == user_retrieved.username
     assert jsonable_encoder(user_created) == jsonable_encoder(user_retrieved)
+
+
+async def test_get_two_users(in_memory_database: AsyncSession) -> None:
+    "can a previous two users be retrieved simultaneously?"
+    username1 = random_username()
+    password1 = random_password()
+    user_create_schema1 = UserCreate(username=username1, password=password1)
+    user_created1 = await database_interface.user.create(
+        in_memory_database, object_schema_in=user_create_schema1
+    )
+
+    username2 = random_username()
+    password2 = random_password()
+    user_create_schema2 = UserCreate(username=username2, password=password2)
+    user_created2 = await database_interface.user.create(
+        in_memory_database, object_schema_in=user_create_schema2
+    )
+
+    retrieved_users = await database_interface.user.get_multiple(
+        in_memory_database, skip=0, limit=100
+    )
+    assert len(retrieved_users) == 2
+    retrieved_user_data = list(map(jsonable_encoder, retrieved_users))
+    user1_data = jsonable_encoder(user_created1)
+    user2_data = jsonable_encoder(user_created2)
+    assert user1_data in retrieved_user_data
+    assert user2_data in retrieved_user_data
 
 
 async def test_update_user(in_memory_database: AsyncSession) -> None:
@@ -68,15 +95,49 @@ async def test_update_user(in_memory_database: AsyncSession) -> None:
     username = random_username()
     password = random_password()
     user_create_schema = UserCreate(username=username, password=password)
-    user_created = database_interface.user.create(
+    user_created = await database_interface.user.create(
         in_memory_database, object_schema_in=user_create_schema
     )
     new_password = random_password()
     user_update_schema = UserUpdate(password=new_password)
-    database_interface.user.update(
-        in_memory_database, current_in_db=user, update_schema=user_in_update
+    await database_interface.user.update(
+        in_memory_database,
+        current_object_model=user_created,
+        object_update_schema=user_update_schema,
     )
-    user_retrieved = database_interface.user.get_by_id(db, id=user.id)
-    assert user_2
-    assert user.email == user_2.email
-    assert verify_password(new_password, user_2.hashed_password)
+    user_retrieved = await database_interface.user.get_by_id(
+        in_memory_database, id=user_created.id
+    )
+    assert user_retrieved
+    assert user_created.username == user_retrieved.username
+    assert verify_password(new_password, user_retrieved.hashed_password)
+
+
+async def test_delete_user(in_memory_database: AsyncSession) -> None:
+    "if a user is deleted, can their data no longer be found in the database?"
+    # create user
+    username = random_username()
+    password = random_password()
+    user_create_schema = UserCreate(username=username, password=password)
+    user_created = await database_interface.user.create(
+        in_memory_database,
+        object_schema_in=user_create_schema,
+    )
+
+    # affirm user is in database
+    user_retrieved = await database_interface.user.get_by_id(
+        in_memory_database, user_created.id
+    )
+    # roundtripping with get_by_id() is tested more thoroughly elsewhere, no
+    # need to test it again here
+    assert user_retrieved
+
+    deleted_user = await database_interface.user.remove_by_id(
+        in_memory_database, id=user_retrieved.id
+    )
+    assert (
+        await database_interface.user.get_by_id(
+            in_memory_database, id=user_retrieved.id
+        )
+        is None
+    )
