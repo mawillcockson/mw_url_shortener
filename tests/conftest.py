@@ -1,5 +1,7 @@
+# mypy: allow_any_expr
 import sqlite3
 from pathlib import Path
+from typing import AsyncIterator
 
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -36,5 +38,7 @@ async def on_disk_database(tmp_path: Path, anyio_backend: str) -> Path:
 
 
 @pytest.fixture
-async def in_memory_database(anyio_backend: str) -> AsyncSession:
-    return await make_session("sqlite+aiosqlite:///:memory:")
+async def in_memory_database(anyio_backend: str) -> AsyncIterator[AsyncSession]:
+    async_sessionmaker = await make_session("sqlite+aiosqlite:///:memory:")
+    async with async_sessionmaker() as async_session:
+        yield async_session
