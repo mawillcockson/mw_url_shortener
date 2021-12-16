@@ -1,7 +1,7 @@
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 
-from .models.registry import mapper_registry
+from .models.base import DeclarativeBase
 
 
 async def make_session(database_url: str) -> "sessionmaker[AsyncSession]":
@@ -13,7 +13,7 @@ async def make_session(database_url: str) -> "sessionmaker[AsyncSession]":
     # here to "initialize" a database file
 
     async with engine.begin() as connection:
-        await connection.run_sync(mapper_registry.metadata.create_all)  # type: ignore
+        await connection.run_sync(DeclarativeBase.metadata.create_all)  # type: ignore
 
     async_sessionmaker = sessionmaker(engine, expire_on_commit=True, class_=AsyncSession)  # type: ignore
     return async_sessionmaker
