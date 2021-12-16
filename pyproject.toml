@@ -10,7 +10,7 @@ repository = "https://github.com/mawillcockson/mw_url_shortener"
 [tool.poetry.dependencies]
 python = ">=3.7.3,<4"
 importlib-metadata = {version = ">=4.8.1", python = "<3.8"}
-appdirs = ">=1.4.4"
+platformdirs = ">=2.4.0"
 SQLAlchemy = {version = ">=1.4.25", extras = ["mypy"]}
 aiosqlite = ">=0.17.0"
 pydantic = ">=1.8.2"

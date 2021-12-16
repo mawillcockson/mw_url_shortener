@@ -4,7 +4,7 @@ settings common to the server and client
 from pathlib import Path
 from typing import Optional
 
-import appdirs
+import platformdirs
 from pydantic import BaseSettings
 
 from . import APP_AUTHOR, APP_NAME, __version__
@@ -13,7 +13,7 @@ from . import APP_AUTHOR, APP_NAME, __version__
 class Defaults(BaseSettings):
     # NOTE:FEAT redirects.sqlite should be in a more "typical" location
     config_path = Path(
-        appdirs.user_config_dir(
+        platformdirs.user_config_dir(
             appname=APP_NAME, appauthor=APP_AUTHOR, version=__version__, roaming=True
         )
     )
