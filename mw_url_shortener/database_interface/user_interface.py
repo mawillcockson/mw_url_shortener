@@ -1,3 +1,4 @@
+# mypy: allow_any_expr
 from typing import Any, Dict, Optional, Union
 
 from sqlalchemy import select
@@ -13,15 +14,18 @@ class InterfaceUser(InterfaceBase[UserModel, UserCreate, UserUpdate]):
     async def get_by_username(
         self, async_session: AsyncSession, *, username: str
     ) -> Optional[UserModel]:
-        async with async_session() as session:
-            async with session.begin():
-                user_model = (
-                    await session.execute(
-                        select(UserModel).where(UserModel.username == username)
-                    )
-                ).scalar_one_or_none()
-            if user_model is not None:
-                await session.refresh(user_model)
+        async with async_session.begin():
+            user_model = (
+                await async_session.execute(
+                    select(UserModel).where(UserModel.username == username)
+                )
+            ).scalar_one_or_none()
+        if user_model is None:
+            return None
+        assert isinstance(
+            user_model, UserModel
+        ), f"expected '{UserModel}', got '{type(user_model)}'"
+        await async_session.refresh(user_model)
         return user_model
 
     async def create(
@@ -31,10 +35,9 @@ class InterfaceUser(InterfaceBase[UserModel, UserCreate, UserUpdate]):
             username=object_schema_in.username,
             hashed_password=hash_password(object_schema_in.password),
         )
-        async with async_session() as session:
-            async with session.begin():
-                session.add(object_model)
-            await session.refresh(object_model)
+        async with async_session.begin():
+            async_session.add(object_model)
+        await async_session.refresh(object_model)
         return object_model
 
     async def update(
@@ -42,29 +45,23 @@ class InterfaceUser(InterfaceBase[UserModel, UserCreate, UserUpdate]):
         async_session: AsyncSession,
         *,
         current_object_model: UserModel,
-        object_update_schema: Union[UserUpdate, Dict[str, Any]]
+        object_update_schema: UserUpdate,
     ) -> UserModel:
-        if isinstance(object_update_schema, dict):
-            updated_object_data = object_update_schema
-        else:
-            updated_object_data = object_update_schema.dict(exclude_unset=True)
-
-        if updated_object_data["password"] is not None:
-            hashed_password = hash_password(updated_object_data["password"])
-            del updated_object_data["password"]
-            updated_object_data["hashed_password"] = hashed_password
+        if object_update_schema.password is not None:
+            hashed_password = hash_password(object_update_schema.password)
+            object_update_schema.password = hashed_password
 
         return await super().update(
             async_session,
             current_object_model=current_object_model,
-            object_update_schema=updated_object_data,
+            object_update_schema=object_update_schema,
         )
 
     async def authenticate(
         self, async_session: AsyncSession, *, username: str, password: str
     ) -> Optional[UserModel]:
         user_model = await self.get_by_username(async_session, username=username)
-        if user_model is None:
+        if user_model is None or not user_model.hashed_password:
             return None
         if not verify_password(password, user_model.hashed_password):
             return None
