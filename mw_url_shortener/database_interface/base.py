@@ -26,7 +26,7 @@ class InterfaceBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         ).scalar_one()
         assert isinstance(
             object_model, self.model
-        ), f"expected '{type(self.model)}', got '{type(object_model)}'"
+        ), f"expected '{self.model}', got '{type(object_model)}'"
         return object_model
 
     async def get_multiple(
