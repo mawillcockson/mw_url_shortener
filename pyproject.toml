@@ -164,7 +164,10 @@ show_absolute_path = true
 ### Configuring error messages
 
 plugins = [
-    "pydantic.mypy",
+    # NOTE::FUTURE support for pyproject.toml configuration is in this PR:
+    # https://github.com/samuelcolvin/pydantic/pull/2908
+    # without it, the pydantic.mypy plugin cannot read this file
+    # "pydantic.mypy",
     "sqlalchemy.ext.mypy.plugin",
 ]
 
