@@ -11,7 +11,7 @@ repository = "https://github.com/mawillcockson/mw_url_shortener"
 python = ">=3.7.3,<4"
 importlib-metadata = {version = ">=4.8.1", python = "<3.8"}
 appdirs = ">=1.4.4"
-SQLAlchemy = ">=1.4.25"
+SQLAlchemy = {version = ">=1.4.25", extras = ["mypy"]}
 aiosqlite = ">=0.17.0"
 pydantic = ">=1.8.2"
 typer = ">=0.4.0"
@@ -163,7 +163,10 @@ error_summary = true
 show_absolute_path = true
 ### Configuring error messages
 
-plugins = ["pydantic.mypy"]
+plugins = [
+    "pydantic.mypy",
+    "sqlalchemy.ext.mypy.plugin",
+]
 
 #[[tool.mypy.overrides]]
 #module = ["tests.conftest.*", "tests.test_mw_url_shortener.*"]
