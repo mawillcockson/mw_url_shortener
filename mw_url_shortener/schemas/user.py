@@ -1,23 +1,25 @@
 from typing import Optional
 
 from pydantic import BaseModel as BaseSchema
-from pydantic import constr
+from pydantic import ConstrainedStr
 
 from mw_url_shortener.settings import defaults
 
-Username = constr(max_length=defaults.max_username_length)
+
+class Username(ConstrainedStr):
+    max_length = defaults.max_username_length
 
 
 class UserBase(BaseSchema):
-    username: Username
+    username: Optional[Username]
 
 
 class UserCreate(UserBase):
+    username: Username
     password: str
 
 
 class UserUpdate(UserBase):
-    username: Optional[Username]
     password: Optional[str] = None
 
 
