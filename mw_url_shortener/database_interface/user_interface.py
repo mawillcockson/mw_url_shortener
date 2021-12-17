@@ -49,19 +49,19 @@ class InterfaceUser(InterfaceBase[UserModel, User, UserCreate, UserUpdate]):
         async_session: AsyncSession,
         *,
         current_object_schema: User,
-        object_update_schema: UserUpdate,
+        update_object_schema: UserUpdate,
     ) -> User:
-        if object_update_schema.password is not None:
-            hashed_password = hash_password(object_update_schema.password)
+        if update_object_schema.password is not None:
+            hashed_password = hash_password(update_object_schema.password)
             current_object_schema = current_object_schema.copy(
                 update={"hashed_password": hashed_password}
             )
-            object_update_schema = object_update_schema.copy(exclude={"password"})
+            update_object_schema = update_object_schema.copy(exclude={"password"})
 
         return await super().update(
             async_session,
             current_object_schema=current_object_schema,
-            object_update_schema=object_update_schema,
+            update_object_schema=update_object_schema,
         )
 
     async def authenticate(

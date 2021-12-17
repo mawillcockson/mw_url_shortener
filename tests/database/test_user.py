@@ -116,7 +116,7 @@ async def test_update_user_password(in_memory_database: AsyncSession) -> None:
     await database_interface.user.update(
         in_memory_database,
         current_object_schema=user_created,
-        object_update_schema=user_update_schema,
+        update_object_schema=user_update_schema,
     )
 
     user_retrieved = await database_interface.user.get_by_id(
