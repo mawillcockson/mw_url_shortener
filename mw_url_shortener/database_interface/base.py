@@ -1,7 +1,6 @@
 # mypy: allow_any_expr
 from typing import Dict, Generic, List, Optional, Type, TypeVar, Union
 
-from fastapi.encoders import jsonable_encoder
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -48,10 +47,12 @@ class InterfaceBase(
         return objects
 
     async def create(
-        self, async_session: AsyncSession, *, object_schema_in: CreateSchemaType
+        self,
+        async_session: AsyncSession,
+        *,
+        create_object_schema: CreateSchemaType,
     ) -> ObjectSchemaType:
-        object_in_data = jsonable_encoder(object_schema_in)
-        object_model = self.model(**object_in_data)
+        object_model = self.model(**create_object_schema.dict(exclude_unset=True))
         async with async_session.begin():
             async_session.add(object_model)
         await async_session.refresh(object_model)
