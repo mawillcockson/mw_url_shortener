@@ -1,7 +1,9 @@
 """
 does the database interface behave as expected?
 """
+import pytest
 from fastapi.encoders import jsonable_encoder
+from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from mw_url_shortener import database_interface
@@ -19,7 +21,7 @@ async def test_create_user(in_memory_database: AsyncSession) -> None:
         in_memory_database, object_schema_in=user_create_schema
     )
     assert user.username == username
-    assert hasattr(user, "hashed_password")
+    assert hasattr(user, "id")
 
 
 async def test_authenticate_user(in_memory_database: AsyncSession) -> None:
@@ -102,7 +104,7 @@ async def test_update_user(in_memory_database: AsyncSession) -> None:
     user_update_schema = UserUpdate(password=new_password)
     await database_interface.user.update(
         in_memory_database,
-        current_object_model=user_created,
+        current_object_schema=user_created,
         object_update_schema=user_update_schema,
     )
     user_retrieved = await database_interface.user.get_by_id(
@@ -110,7 +112,10 @@ async def test_update_user(in_memory_database: AsyncSession) -> None:
     )
     assert user_retrieved
     assert user_created.username == user_retrieved.username
-    assert verify_password(new_password, user_retrieved.hashed_password)
+    authenticated_user = await database_interface.user.authenticate(
+        in_memory_database, username=user_retrieved.username, password=new_password
+    )
+    assert authenticated_user
 
 
 async def test_delete_user(in_memory_database: AsyncSession) -> None:
@@ -135,9 +140,8 @@ async def test_delete_user(in_memory_database: AsyncSession) -> None:
     deleted_user = await database_interface.user.remove_by_id(
         in_memory_database, id=user_retrieved.id
     )
-    assert (
+    assert deleted_user == user_created
+    with pytest.raises(NoResultFound):
         await database_interface.user.get_by_id(
             in_memory_database, id=user_retrieved.id
         )
-        is None
-    )
