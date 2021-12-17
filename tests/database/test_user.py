@@ -12,6 +12,15 @@ from mw_url_shortener.security import verify_password
 from tests.utils import random_password, random_username
 
 
+async def test_get_nonexistent_user_by_id(in_memory_database: AsyncSession) -> None:
+    "does get_by_id() fail if the database is empty?"
+    with pytest.raises(NoResultFound):
+        assert not database_interface.user.get_by_id(in_memory_database, id=0)
+
+    with pytest.raises(NoResultFound):
+        assert not database_interface.user.get_by_id(in_memory_database, id=1)
+
+
 async def test_create_user(in_memory_database: AsyncSession) -> None:
     "can a user be added to the database?"
     username = random_username()
