@@ -41,6 +41,7 @@ class InterfaceBase(
             statement = select(self.model).offset(skip).limit(limit)
             object_models = (await async_session.execute(statement)).scalars().all()
             for object_model in object_models:
+                breakpoint()
                 objects.append(self.schema.from_orm(object_models))
         return objects
 
@@ -51,7 +52,9 @@ class InterfaceBase(
         object_model = self.model(**object_in_data)
         async with async_session.begin():
             async_session.add(object_model)
-            return self.schema.from_orm(object_model)
+        await async_session.refresh(object_model)
+        await async_session.close()  # .refresh() opens a new session
+        return self.schema.from_orm(object_model)
 
     async def update(
         self,

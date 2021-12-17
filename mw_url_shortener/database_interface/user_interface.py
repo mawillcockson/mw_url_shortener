@@ -36,7 +36,9 @@ class InterfaceUser(InterfaceBase[UserModel, User, UserCreate, UserUpdate]):
         )
         async with async_session.begin():
             async_session.add(user_model)
-            return self.schema.from_orm(user_model)
+        await async_session.refresh(user_model)
+        await async_session.close()
+        return self.schema.from_orm(user_model)
 
     async def update(
         self,
