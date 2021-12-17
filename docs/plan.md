@@ -1,9 +1,5 @@
 ## Plan
 
-- introduce mypy, restricted to the user database interface
-- name things better
-- only return schemas from the database interface, since it's impossible to do
-  anything without starting a session ansyways
 - complete database interface
 - complete local client
 - add a server implementing an API
