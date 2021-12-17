@@ -3,7 +3,6 @@
 does the database interface behave as expected?
 """
 import pytest
-from fastapi.encoders import jsonable_encoder
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -74,7 +73,7 @@ async def test_get_user_by_id(in_memory_database: AsyncSession) -> None:
     )
     assert user_retrieved
     assert user_created.username == user_retrieved.username
-    assert jsonable_encoder(user_created) == jsonable_encoder(user_retrieved)
+    assert user_created == user_retrieved
 
 
 async def test_get_two_users(in_memory_database: AsyncSession) -> None:
@@ -97,11 +96,8 @@ async def test_get_two_users(in_memory_database: AsyncSession) -> None:
         in_memory_database, skip=0, limit=100
     )
     assert len(retrieved_users) == 2
-    retrieved_user_data = list(map(jsonable_encoder, retrieved_users))
-    user1_data = jsonable_encoder(user_created1)
-    user2_data = jsonable_encoder(user_created2)
-    assert user1_data in retrieved_user_data
-    assert user2_data in retrieved_user_data
+    assert user_created1 in retrieved_users
+    assert user_created2 in retrieved_users
 
 
 async def test_update_user(in_memory_database: AsyncSession) -> None:
