@@ -62,7 +62,7 @@ src_paths = ["mw_url_shortener", "tests"]
 extend_skip_glob = ["mw_url_shortener/client/*"]
 
 [tool.black]
-extend_exclude = ["mw_url_shortener/client"]
+extend_exclude = "mw_url_shortener/client"
 
 [tool.poetry.scripts]
 # mw-redir-server = "mw_url_shortener.server.cli:app"
