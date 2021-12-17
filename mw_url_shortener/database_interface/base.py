@@ -87,7 +87,7 @@ class InterfaceBase(
         async with async_session.begin():
             get_by_id = select(self.model).where(self.model.id == id)
             object_model = (await async_session.execute(get_by_id)).scalar_one()
-            await async_session.delete(object_model)
             object_schema = self.schema.from_orm(object_model)
+            await async_session.delete(object_model)
             object_schema_with_id = object_schema.copy(update={"id": id})
             return object_schema_with_id
