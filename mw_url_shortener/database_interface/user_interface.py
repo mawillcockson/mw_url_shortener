@@ -44,16 +44,17 @@ class InterfaceUser(InterfaceBase[UserModel, User, UserCreate, UserUpdate]):
         self,
         async_session: AsyncSession,
         *,
-        current_object_model: UserModel,
+        current_object_schema: User,
         object_update_schema: UserUpdate,
     ) -> User:
         if object_update_schema.password is not None:
             hashed_password = hash_password(object_update_schema.password)
-            object_update_schema.password = hashed_password
+            current_object_schema = current_object_schema.copy(update={"hashed_password": hashed_password})
+            object_update_schema = object_update_schema.copy(exclude={"password"})
 
         return await super().update(
             async_session,
-            current_object_model=current_object_model,
+            current_object_schema=current_object_schema,
             object_update_schema=object_update_schema,
         )
 

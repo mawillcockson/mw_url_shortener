@@ -3,7 +3,7 @@ from typing import Dict, Generic, List, Optional, Type, TypeVar, Union
 
 from fastapi.encoders import jsonable_encoder
 from pydantic import BaseModel as BaseSchema
-from sqlalchemy import select
+from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from mw_url_shortener.database.models.base import DeclarativeBase
@@ -60,18 +60,23 @@ class InterfaceBase(
         self,
         async_session: AsyncSession,
         *,
-        current_object_model: ModelType,
+        current_object_schema: ObjectSchemaType,
         object_update_schema: UpdateSchemaType,
     ) -> ObjectSchemaType:
-        current_data = jsonable_encoder(current_object_model)
         update_data = object_update_schema.dict(exclude_unset=True)
-        for field in current_data:
-            if field in update_data:
-                setattr(current_object_model, field, update_data[field])
+        updated_object = current_object_schema.copy(exclude={"id"}, update=update_data)
 
+        get_by_id = select(self.model).where(self.model.id == current_object_schema.id)
         async with async_session.begin():
-            async_session.add(current_object_model)
-            return self.schema.from_orm(current_object_model)
+            object_model = (await async_session.execute(get_by_id)).scalar_one()
+            update_sql = (
+                update(self.model)
+                .where(self.model.id == current_object_schema.id)
+                .values(**updated_object.dict())
+                .execution_options(synchronize_session="evaluate")
+            )
+            await async_session.execute(update_sql)
+            return self.schema.from_orm(object_model)
 
     async def remove_by_id(
         self, async_session: AsyncSession, *, id: int
