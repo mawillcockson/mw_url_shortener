@@ -23,9 +23,16 @@ def unsafe_random_string(length: int) -> str:
     return "".join(map(chr, unsafe_random_unicode_codepoints(length)))
 
 
+def unsafe_random_string_from_pool(length: int, allowed_characters: str) -> str:
+    "use only allowed characters"
+    return "".join(choices(allowed_characters, k=length))
+
+
 def unsafe_random_printable_string(length: int) -> str:
     "returns `length` random printable ASCII characters"
-    return "".join(choices(string.printable, k=length))
+    return unsafe_random_string_from_pool(
+        length=length, allowed_characters=string.printable
+    )
 
 
 def safe_random_string(num_bytes: int) -> str:
