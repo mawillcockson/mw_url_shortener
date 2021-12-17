@@ -64,9 +64,9 @@ class InterfaceBase(
         async_session: AsyncSession,
         *,
         current_object_schema: ObjectSchemaType,
-        object_update_schema: UpdateSchemaType,
+        update_object_schema: UpdateSchemaType,
     ) -> ObjectSchemaType:
-        update_data = object_update_schema.dict(exclude_unset=True)
+        update_data = update_object_schema.dict(exclude_unset=True)
         updated_object = current_object_schema.copy(exclude={"id"}, update=update_data)
 
         get_by_id = select(self.model).where(self.model.id == current_object_schema.id)
