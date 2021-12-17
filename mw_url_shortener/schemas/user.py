@@ -25,6 +25,7 @@ class UserUpdate(UserBase):
 
 class UserInDBBase(UserBase):
     id: Optional[int] = None
+    username: Username
 
     class Config:
         orm_mode = True
