@@ -1,6 +1,6 @@
 ## Plan
 
-- complete database interface
+- add basic redirect interface
 - complete local client
 - add a server implementing an API
 - either automatically (e.g. apistar) or manually add a remote interface to
@@ -17,3 +17,19 @@
 - check out <https://returns.readthedocs.io/en/latest/pages/context.html> and
   <https://fsharpforfunandprofit.com/rop/> for ideas on how to do inversion of
   control (dependency injection) with type safety for Typer
+- tags on everything
+- datestamps on everything
+- multiple shortlinks for reach redirect
+  - I don't know how to model this one in the database:
+    - shortlink table and an index between redirects and shortlinks
+    - json list of shortlinks for each redirect
+    - each redirect row has at least one unique column, so every redirect is
+      different, but it's O(1) to fetch a specific redirect, and you can be
+      more and more specific to retrieve fewer and fewer rows
+    - 
+- link users and redirects:
+  - which users created and modified redirects
+    - deleted redirects
+    - also track user actions on users
+- user permissions
+- permission scoping based on tags
