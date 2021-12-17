@@ -2,14 +2,14 @@
 from typing import Dict, Generic, List, Optional, Type, TypeVar, Union
 
 from fastapi.encoders import jsonable_encoder
-from pydantic import BaseModel as BaseSchema
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from mw_url_shortener.database.models.base import DeclarativeBase
+from mw_url_shortener.schemas.base import BaseInDBSchema, BaseSchema
 
 ModelType = TypeVar("ModelType", bound=DeclarativeBase)
-ObjectSchemaType = TypeVar("ObjectSchemaType", bound=BaseSchema)
+ObjectSchemaType = TypeVar("ObjectSchemaType", bound=BaseInDBSchema)
 CreateSchemaType = TypeVar("CreateSchemaType", bound=BaseSchema)
 UpdateSchemaType = TypeVar("UpdateSchemaType", bound=BaseSchema)
 
@@ -86,5 +86,5 @@ class InterfaceBase(
             object_model = (await async_session.execute(get_by_id)).scalar_one()
             await async_session.delete(object_model)
             object_schema = self.schema.from_orm(object_model)
-            object_schema_with_id = object_schema.update({"id": id})
+            object_schema_with_id = object_schema.copy(update={"id": id})
             return object_schema_with_id
