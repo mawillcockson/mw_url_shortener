@@ -38,10 +38,9 @@ class InterfaceBase(
     ) -> List[ObjectSchemaType]:
         objects: List[ObjectSchemaType] = []
         async with async_session.begin():
-            statement = select(self.model).offset(skip).limit(limit)
-            object_models = (await async_session.execute(statement)).scalars().all()
+            query = select(self.model).offset(skip).limit(limit)
+            object_models = (await async_session.execute(query)).scalars().all()
             for object_model in object_models:
-                breakpoint()
                 objects.append(self.schema.from_orm(object_models))
         return objects
 
