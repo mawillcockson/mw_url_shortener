@@ -28,17 +28,21 @@ class InterfaceUser(InterfaceBase[UserModel, User, UserCreate, UserUpdate]):
             return self.schema.from_orm(user_model)
 
     async def create(
-        self, async_session: AsyncSession, *, object_schema_in: UserCreate
+        self,
+        async_session: AsyncSession,
+        *,
+        create_object_schema: Union[User, UserCreate],
     ) -> User:
-        user_model = UserModel(
-            username=object_schema_in.username,
-            hashed_password=hash_password(object_schema_in.password),
-        )
-        async with async_session.begin():
-            async_session.add(user_model)
-        await async_session.refresh(user_model)
-        await async_session.close()
-        return self.schema.from_orm(user_model)
+        if hasattr(create_object_schema, "password"):
+            password = create_object_schema.password
+            create_data = create_object_schema.dict(exclude={"password"})
+            create_data["hashed_password"] = hash_password(password)
+        else:
+            create_data = create_object_schema.dict()
+
+        new_user_schema = User.parse_obj(create_data)
+        return await super().create(async_session, create_object_schema=new_user_schema)
+
 
     async def update(
         self,
