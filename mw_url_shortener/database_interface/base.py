@@ -25,13 +25,14 @@ class InterfaceBase(
         self.schema = schema
 
     async def get_by_id(self, async_session: AsyncSession, id: int) -> ObjectSchemaType:
-        object_model = (
-            await async_session.execute(select(self.model).where(self.model.id == id))
-        ).scalar_one()
-        assert isinstance(
-            object_model, self.model
-        ), f"expected '{self.model}', got '{type(object_model)}'"
-        return self.schema.from_orm(object_model)
+        async with async_session.begin():
+            object_model = (
+                await async_session.execute(select(self.model).where(self.model.id == id))
+            ).scalar_one()
+            assert isinstance(
+                object_model, self.model
+            ), f"expected '{self.model}', got '{type(object_model)}'"
+            return self.schema.from_orm(object_model)
 
     async def get_multiple(
         self, async_session: AsyncSession, *, skip: int = 0, limit: int = 100
