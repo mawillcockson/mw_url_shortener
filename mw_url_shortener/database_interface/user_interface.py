@@ -49,7 +49,9 @@ class InterfaceUser(InterfaceBase[UserModel, User, UserCreate, UserUpdate]):
     ) -> User:
         if object_update_schema.password is not None:
             hashed_password = hash_password(object_update_schema.password)
-            current_object_schema = current_object_schema.copy(update={"hashed_password": hashed_password})
+            current_object_schema = current_object_schema.copy(
+                update={"hashed_password": hashed_password}
+            )
             object_update_schema = object_update_schema.copy(exclude={"password"})
 
         return await super().update(
@@ -62,7 +64,11 @@ class InterfaceUser(InterfaceBase[UserModel, User, UserCreate, UserUpdate]):
         self, async_session: AsyncSession, *, username: str, password: str
     ) -> Optional[User]:
         async with async_session.begin():
-            user_model = (await async_session.execute(select(UserModel).where(UserModel.username == username))).scalar_one_or_none()
+            user_model = (
+                await async_session.execute(
+                    select(UserModel).where(UserModel.username == username)
+                )
+            ).scalar_one_or_none()
             if user_model is None:
                 return None
             if not verify_password(password, user_model.hashed_password):

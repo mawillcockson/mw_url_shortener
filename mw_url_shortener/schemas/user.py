@@ -3,7 +3,8 @@ from typing import Optional
 from pydantic import ConstrainedStr
 
 from mw_url_shortener.settings import defaults
-from .base import BaseSchema, BaseInDBSchema
+
+from .base import BaseInDBSchema, BaseSchema
 
 
 class Username(ConstrainedStr):
