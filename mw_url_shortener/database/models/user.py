@@ -13,4 +13,4 @@ class UserModel(DeclarativeBase):
     hashed_password = Column(String, nullable=False)
 
     def __repr__(self) -> str:
-        return f"{self.__class__.__name__}(username={self.username!r}, hashed_password={self.hashed_password!r})"
+        return f"{self.__class__.__name__}(id={self.id}, username={self.username!r}, hashed_password={self.hashed_password!r})"
