@@ -26,7 +26,6 @@
     - each redirect row has at least one unique column, so every redirect is
       different, but it's O(1) to fetch a specific redirect, and you can be
       more and more specific to retrieve fewer and fewer rows
-    - 
 - link users and redirects:
   - which users created and modified redirects
     - deleted redirects
