@@ -47,7 +47,7 @@ async def test_authenticate_user(in_memory_database: AsyncSession) -> None:
         in_memory_database, username=username, password=password
     )
     assert user_authenticated
-    assert user_created.username == user_authenticated.username
+    assert user_authenticated == user_created
 
 
 async def test_not_authenticate_user(in_memory_database: AsyncSession) -> None:
@@ -72,7 +72,6 @@ async def test_get_user_by_id(in_memory_database: AsyncSession) -> None:
         in_memory_database, id=user_created.id
     )
     assert user_retrieved
-    assert user_created.username == user_retrieved.username
     assert user_created == user_retrieved
 
 
@@ -100,30 +99,45 @@ async def test_get_two_users(in_memory_database: AsyncSession) -> None:
     assert user_created2 in retrieved_users
 
 
-async def test_update_user(in_memory_database: AsyncSession) -> None:
-    "if a user is modified, does the database return the modified user?"
+async def test_update_user_password(in_memory_database: AsyncSession) -> None:
+    """
+    if a user password is modified, does the database return the modified user?
+    """
     username = random_username()
     password = random_password()
     user_create_schema = UserCreate(username=username, password=password)
     user_created = await database_interface.user.create(
         in_memory_database, create_object_schema=user_create_schema
     )
+
     new_password = random_password()
     user_update_schema = UserUpdate(password=new_password)
+
     await database_interface.user.update(
         in_memory_database,
         current_object_schema=user_created,
         object_update_schema=user_update_schema,
     )
+
     user_retrieved = await database_interface.user.get_by_id(
         in_memory_database, id=user_created.id
     )
+
     assert user_retrieved
-    assert user_created.username == user_retrieved.username
+    assert user_created == user_retrieved
+
+    # affirm authentication fails if the old password is used
+    authentication_with_old_password = await database_interface.user.authenticate(
+        in_memory_database, username=user_retrieved.username, password=password
+    )
+    assert not authentication_with_old_password
+
+    # affirm authentication succeeds when new password is used
     authenticated_user = await database_interface.user.authenticate(
         in_memory_database, username=user_retrieved.username, password=new_password
     )
     assert authenticated_user
+    assert authenticated_user == user_created
 
 
 async def test_delete_user(in_memory_database: AsyncSession) -> None:
