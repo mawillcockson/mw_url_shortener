@@ -1,9 +1,9 @@
 from typing import Optional
 
-from pydantic import BaseModel as BaseSchema
 from pydantic import ConstrainedStr
 
 from mw_url_shortener.settings import defaults
+from .base import BaseSchema, BaseInDBSchema
 
 
 class Username(ConstrainedStr):
@@ -23,8 +23,7 @@ class UserUpdate(UserBase):
     password: Optional[str] = None
 
 
-class UserInDBBase(UserBase):
-    id: Optional[int] = None
+class UserInDBBase(UserBase, BaseInDBSchema):
     username: Username
 
     class Config:
