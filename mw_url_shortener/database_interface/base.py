@@ -41,7 +41,7 @@ class InterfaceBase(
             query = select(self.model).offset(skip).limit(limit)
             object_models = (await async_session.execute(query)).scalars().all()
             for object_model in object_models:
-                objects.append(self.schema.from_orm(object_models))
+                objects.append(self.schema.from_orm(object_model))
         return objects
 
     async def create(
