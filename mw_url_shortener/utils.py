@@ -14,7 +14,14 @@ LARGEST_UNICODE_CODEPOINT_PLUS_ONE = LARGEST_UNICODE_CODEPOINT + 1
 
 
 def unsafe_random_unicode_codepoints(length: int) -> List[int]:
-    "returns `length` random integers in the range [0, maxunicode]"
+    """
+    returns `length` random integers in the range [0, maxunicode]
+
+    these aren't guaranteed to be valid in the order fiven, and are likely to
+    give an error like:
+
+    UnicodeEncodeError: 'utf-8' codec can't encode character '\uddd3' in position 1299: surrogates not allowed
+    """
     return [floor(LARGEST_UNICODE_CODEPOINT_PLUS_ONE * random()) for _ in range(length)]
 
 

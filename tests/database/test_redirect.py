@@ -9,6 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from mw_url_shortener import database_interface
 from mw_url_shortener.schemas.redirect import RedirectCreate, RedirectUpdate, random_short_link
 from mw_url_shortener.settings import defaults
+from mw_url_shortener.utils import unsafe_random_string
 
 
 async def test_create_redirect_defaults(in_memory_database: AsyncSession) -> None:
@@ -37,8 +38,35 @@ async def test_create_redirect_defaults(in_memory_database: AsyncSession) -> Non
     assert created_redirect.body == defaults.redirect_body
 
 
-# create_redirect
-# create_duplicate_redirect
+async def test_create_redirect(in_memory_database: AsyncSession) -> None:
+    "will the redirect have the custom properties set if they're provided?"
+    # use a rediculous number so things break earlier
+    # not too ridiculous so the tests don't take too long
+    length = 100_000
+
+    short_link = random_short_link(length)
+    assert len(short_link) == length
+
+    url = unsafe_random_string(length)
+    assert len(url) == length
+
+    response_status = int(length)
+
+    body = unsafe_random_string(length)
+    # already made sure unsafe_random_string() is making strings of the correct
+    # length
+
+    create_redirect_schema = RedirectCreate(short_link=short_link, url=url, response_status=response_status,body=body)
+
+    created_redirect = await database_interface.redirect.create(in_memory_database, create_object_schema=create_redirect_schema)
+    assert created_redirect
+
+    assert created_redirect.short_link == short_link
+    assert created_redirect.url == url
+    assert created_redirect.response_status == response_status
+    assert created_redirect.body == body
+
+# create_non_unique_short_link
 # redirect_get_by_id
 # redirect_get_by_short_link
 # redirect_get_by_url
