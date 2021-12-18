@@ -137,33 +137,19 @@ def main() -> None:
 
         category = unicode_category(chr(codepoint))
 
-        if category not in unicode_category_ranges:
+        ranges = unicode_category_ranges.get(category, None)
+        if ranges is None:
             unicode_category_ranges[category] = [Range(start=codepoint, end=codepoint)]
             continue
 
-        ranges = unicode_category_ranges[category]
+        last_range = ranges[-1]
+        if codepoint > last_range.end + 1:
+            # the new codepoint is more than 1 away from all existing ranges in the
+            # category, so there's a gap, so a new range has to be defined
+            ranges.append(Range(start=codepoint, end=codepoint))
+            continue
 
-        # since we're counting linearly, this is unlikely to be useful
-        # if any(codepoint in range for range in ranges):
-        #     # codepoint is already inside the range
-        #     print("contained!")
-        #     continue
-
-        for _range in ranges:
-            if _range.end + 1 == codepoint:
-                _range.end = codepoint
-                continue
-            # since we're counting linearly, this won't be used
-            # if _range.start - 1 == codepoint:
-            #     print("got here")
-            #     _range.start = codepoint
-            #     continue
-
-        # no ranges could be extended
-        # the new codepoint is more than 1 away from all existing ranges in the
-        # category, so there's a gap, so a new range has to be defined
-
-        ranges.append(Range(start=codepoint, end=codepoint))
+        last_range.end = codepoint
 
     print(unicode_category_ranges)
     print(
