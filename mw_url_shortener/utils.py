@@ -36,38 +36,36 @@ def unsafe_random_unicode_codepoints(length: int) -> List[int]:
     return [floor(LARGEST_UNICODE_CODEPOINT_PLUS_ONE * random()) for _ in range(length)]
 
 
-def probably_okay_codepoint(codepoint: int) -> bool:
+def probably_okay_codepoint(character: str) -> str:
     """
-    returns True if the codepoint is probably okay to randomly include in a
-    string
+    returns the codepoint if it's probably okay to randomly include in a string
     """
-    if is_unassigned_codepoint(codepoint):
-        return False
-    if is_commonly_mapped_to_nothing(codepoint):
-        return False
-    if is_private_use(codepoint):
-        return False
-    if is_non_character_codepoint(codepoint):
-        return False
-    if is_surrogate(codepoint):
-        return False
-    if is_innappropriate_for_plaintext(codepoint):
-        return False
-    if is_inappropriate_for_canonical_form(codepoint):
-        return False
-    if is_change_display_or_deprecated(codepoint):
-        return False
-    if is_tagging_character(codepoint):
-        return False
-    return True
+    if is_unassigned_codepoint(character):
+        return ""
+    if is_commonly_mapped_to_nothing(character):
+        return ""
+    if is_private_use(character):
+        return ""
+    if is_non_character_codepoint(character):
+        return ""
+    if is_surrogate(character):
+        return ""
+    if is_innappropriate_for_plaintext(character):
+        return ""
+    if is_inappropriate_for_canonical_form(character):
+        return ""
+    if is_change_display_or_deprecated(character):
+        return ""
+    if is_tagging_character(character):
+        return ""
+    return character
 
 
-def probably_okay_codepoint2(codepoint: int) -> bool:
+def probably_okay_codepoint2(character: str) -> bool:
     """
-    returns True if the codepoint is probably okay to randomly include in a
-    string
+    returns the codepoint if it's probably okay to randomly include in a string
     """
-    if unicode_category(codepoint) in {
+    if unicode_category(character) in {
         "Zl",
         "Zp",
         "Cc",
@@ -76,8 +74,8 @@ def probably_okay_codepoint2(codepoint: int) -> bool:
         "Co",
         "Cn",
     }:
-        return False
-    return True
+        return ""
+    return character
 
 
 def unsafe_random_string(length: int) -> str:
