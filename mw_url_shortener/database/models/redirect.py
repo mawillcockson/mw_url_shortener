@@ -12,7 +12,7 @@ class RedirectModel(DeclarativeBase):
     short_link = Column(String, unique=True, nullable=False)
     response_status = Column(Integer, nullable=False)
     url = Column(String, nullable=False)
-    body = Column(String, nullable=False)
+    body = Column(String, nullable=True)
 
     def __repr__(self) -> str:
         return (
