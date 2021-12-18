@@ -25,9 +25,9 @@ class Defaults(BaseSettings):
     max_password_length: PositiveInt = 128
     # https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#redirection_messages
     # 307 indicates the User Agent (browser) must not change the request method
-    response_status: PositiveInt = 307
-    url: str = "https://google.com"
-    case_sensitive: bool = False
+    redirect_response_status: PositiveInt = 307
+    redirect_url: str = "https://google.com"
+    redirect_case_sensitive: bool = False
     short_link_characters: str = ascii_lowercase + digits
     # this website lists the formulae for different types of combinations and
     # permutations:
