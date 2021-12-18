@@ -2,7 +2,7 @@
 settings common to the server and client
 """
 from pathlib import Path
-from string import digits, ascii_lowercase
+from string import ascii_lowercase, digits
 from typing import Optional
 
 import platformdirs
