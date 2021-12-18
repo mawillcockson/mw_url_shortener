@@ -35,6 +35,7 @@ class Defaults(BaseSettings):
     # with the 36 letters and digits, there are 1_679_616 unique permutations
     # of length 4, and 46_656 unique permutations of length 3
     short_link_length: PositiveInt = 4
+    redirect_body: Optional[str] = None
 
     class Config:
         allow_mutation = False
