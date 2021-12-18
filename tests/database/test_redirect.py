@@ -25,9 +25,9 @@ async def test_create_redirect_defaults(in_memory_database: AsyncSession) -> Non
     assert hasattr(created_redirect, "id")
 
     assert hasattr(created_redirect, "short_link")
-    assert len(created_redirect.short_link) == defaults.redirect_short_link_length
+    assert len(created_redirect.short_link) == defaults.short_link_length
     short_link_characters = set(created_redirect.short_link)
-    allowed_characters = set(defaults.redirect_short_link_characters)
+    allowed_characters = set(defaults.short_link_characters)
     assert short_link_characters.issubset(allowed_characters)
 
     assert hasattr(created_redirect, "url")
