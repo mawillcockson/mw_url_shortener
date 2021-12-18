@@ -29,7 +29,7 @@ class RedirectCreate(RedirectBase):
     short_link: str = Field(default_factory=random_short_link)
     response_status: PositiveInt = defaults.redirect_response_status
     url: str = defaults.redirect_url
-    body: str = ""
+    body: Optional[str] = defaults.redirect_body
 
 
 class RedirectUpdate(RedirectBase):
