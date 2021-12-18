@@ -26,49 +26,16 @@ def unsafe_random_unicode_codepoints(length: int) -> List[int]:
     return [floor(LARGEST_UNICODE_CODEPOINT_PLUS_ONE * random()) for _ in range(length)]
 
 
-def probably_okay_codepoint(character: str) -> str:
+def probably_okay_codepoint(character: str) -> bool:
     """
     returns the codepoint if it's probably okay to randomly include in a string
+
+    simply removing characters from U+D800 through to U+DFFF (surrogate codes)
+    seems sufficient:
+    https://datatracker.ietf.org/doc/html/rfc3454.html#section-5.5
+
+    the rest make it slightly easier to display
     """
-    from stringprep import in_table_a1 as is_unassigned_codepoint
-    from stringprep import in_table_b1 as is_commonly_mapped_to_nothing
-    from stringprep import in_table_c3 as is_private_use
-    from stringprep import in_table_c4 as is_non_character_codepoint
-    from stringprep import in_table_c5 as is_surrogate
-    from stringprep import in_table_c6 as is_innappropriate_for_plaintext
-    from stringprep import in_table_c7 as is_inappropriate_for_canonical_form
-    from stringprep import in_table_c8 as is_change_display_or_deprecated
-    from stringprep import in_table_c9 as is_tagging_character
-    from stringprep import in_table_c21_c22 as is_control_character
-
-    if is_unassigned_codepoint(character):
-        return ""
-    if is_commonly_mapped_to_nothing(character):
-        return ""
-    if is_private_use(character):
-        return ""
-    if is_non_character_codepoint(character):
-        return ""
-    if is_surrogate(character):
-        return ""
-    if is_innappropriate_for_plaintext(character):
-        return ""
-    if is_inappropriate_for_canonical_form(character):
-        return ""
-    if is_change_display_or_deprecated(character):
-        return ""
-    if is_tagging_character(character):
-        return ""
-    return character
-
-
-# faster
-def probably_okay_codepoint2(character: str) -> str:
-    """
-    returns the codepoint if it's probably okay to randomly include in a string
-    """
-    from unicodedata import category as unicode_category
-
     # character categories from:
     # https://www.unicode.org/reports/tr44/#GC_Values_Table
     if unicode_category(character) in {
@@ -80,8 +47,8 @@ def probably_okay_codepoint2(character: str) -> str:
         "Co",  # a private-use character
         "Cn",  # a reserved unassigned code point or a noncharacter
     }:
-        return ""
-    return character
+        return False
+    return True
 
 
 def unsafe_random_string(length: int) -> str:
@@ -89,12 +56,14 @@ def unsafe_random_string(length: int) -> str:
     # the documentation for unicodedata and stringprep libraries was useful, as
     # was this stack overflow question:
     # https://stackoverflow.com/q/1477294
-    probably_okay_codepoints: List[int] = []
+    probably_okay_codepoints: List[str] = []
     while len(probably_okay_codepoints) < length:
         number_needed_characters = length - len(probably_okay_codepoints)
         codepoints = unsafe_random_unicode_codepoints(number_needed_characters)
-        probably_okay_codepoints.extend(filter(probably_okay_codepoint, codepoints))
-    return "".join(map(chr, probably_okay_codepoints))
+        probably_okay_codepoints.extend(
+            filter(probably_okay_codepoint, map(chr, codepoints))
+        )
+    return "".join(probably_okay_codepoints)
 
 
 def unsafe_random_string_from_pool(length: int, allowed_characters: str) -> str:
