@@ -7,16 +7,6 @@ import secrets
 import string
 from math import floor
 from random import choices, random
-from stringprep import in_table_a1 as is_unassigned_codepoint
-from stringprep import in_table_b1 as is_commonly_mapped_to_nothing
-from stringprep import in_table_c3 as is_private_use
-from stringprep import in_table_c4 as is_non_character_codepoint
-from stringprep import in_table_c5 as is_surrogate
-from stringprep import in_table_c6 as is_innappropriate_for_plaintext
-from stringprep import in_table_c7 as is_inappropriate_for_canonical_form
-from stringprep import in_table_c8 as is_change_display_or_deprecated
-from stringprep import in_table_c9 as is_tagging_character
-from stringprep import in_table_c21_c22 as is_control_character
 from sys import maxunicode as LARGEST_UNICODE_CODEPOINT
 from typing import List
 from unicodedata import category as unicode_category
@@ -40,6 +30,17 @@ def probably_okay_codepoint(character: str) -> str:
     """
     returns the codepoint if it's probably okay to randomly include in a string
     """
+    from stringprep import in_table_a1 as is_unassigned_codepoint
+    from stringprep import in_table_b1 as is_commonly_mapped_to_nothing
+    from stringprep import in_table_c3 as is_private_use
+    from stringprep import in_table_c4 as is_non_character_codepoint
+    from stringprep import in_table_c5 as is_surrogate
+    from stringprep import in_table_c6 as is_innappropriate_for_plaintext
+    from stringprep import in_table_c7 as is_inappropriate_for_canonical_form
+    from stringprep import in_table_c8 as is_change_display_or_deprecated
+    from stringprep import in_table_c9 as is_tagging_character
+    from stringprep import in_table_c21_c22 as is_control_character
+
     if is_unassigned_codepoint(character):
         return ""
     if is_commonly_mapped_to_nothing(character):
@@ -61,18 +62,23 @@ def probably_okay_codepoint(character: str) -> str:
     return character
 
 
-def probably_okay_codepoint2(character: str) -> bool:
+# faster
+def probably_okay_codepoint2(character: str) -> str:
     """
     returns the codepoint if it's probably okay to randomly include in a string
     """
+    from unicodedata import category as unicode_category
+
+    # character categories from:
+    # https://www.unicode.org/reports/tr44/#GC_Values_Table
     if unicode_category(character) in {
-        "Zl",
-        "Zp",
-        "Cc",
-        "Cf",
-        "Cs",
-        "Co",
-        "Cn",
+        "Zl",  # U+2028 LINE SEPARATOR only
+        "Zp",  # U+2029 PARAGRAPH SEPARATOR only
+        "Cc",  # a C0 or C1 control code
+        "Cf",  # a format control character
+        "Cs",  # a surrogate code point
+        "Co",  # a private-use character
+        "Cn",  # a reserved unassigned code point or a noncharacter
     }:
         return ""
     return character
