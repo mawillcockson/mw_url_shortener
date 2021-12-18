@@ -37,9 +37,9 @@ class RedirectUpdate(RedirectBase):
 
 
 class RedirectInDBBase(RedirectBase, BaseInDBSchema):
+    short_link: str
     response_status: PositiveInt
     url: str
-    body: str
 
     class Config:
         orm_mode = True
