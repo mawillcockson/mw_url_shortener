@@ -52,7 +52,7 @@ class InterfaceBase(
         *,
         create_object_schema: CreateSchemaType,
     ) -> ObjectSchemaType:
-        object_model = self.model(**create_object_schema.dict(exclude_unset=True))
+        object_model = self.model(**create_object_schema.dict())
         async with async_session.begin():
             async_session.add(object_model)
         await async_session.refresh(object_model)
