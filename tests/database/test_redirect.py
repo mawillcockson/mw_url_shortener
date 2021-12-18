@@ -7,10 +7,8 @@ from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from mw_url_shortener import database_interface
-from mw_url_shortener.schemas.redirect import RedirectCreate, RedirectUpdate
-from mw_url_shortener.security import verify_password
+from mw_url_shortener.schemas.redirect import RedirectCreate, RedirectUpdate, random_short_link
 from mw_url_shortener.settings import defaults
-from tests.utils import random_password, random_username
 
 
 async def test_create_redirect_defaults(in_memory_database: AsyncSession) -> None:
