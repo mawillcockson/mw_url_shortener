@@ -16,7 +16,6 @@ from tests.utils import random_password, random_username
 async def test_create_redirect_defaults(in_memory_database: AsyncSession) -> None:
     "if no values are provides, is a redirected created with default values?"
     create_redirect_schema = RedirectCreate()
-    breakpoint()
 
     created_redirect = await database_interface.redirect.create(
         in_memory_database, create_object_schema=create_redirect_schema
