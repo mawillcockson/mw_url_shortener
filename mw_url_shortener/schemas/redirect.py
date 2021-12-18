@@ -27,8 +27,8 @@ class RedirectBase(BaseSchema):
 
 class RedirectCreate(RedirectBase):
     short_link: str = Field(default_factory=random_short_link)
-    response_status: PositiveInt = defaults.response_status
-    url: str = defaults.url
+    response_status: PositiveInt = defaults.redirect_response_status
+    url: str = defaults.redirect_url
     body: str = ""
 
 
