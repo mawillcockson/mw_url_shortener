@@ -7,7 +7,11 @@ from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from mw_url_shortener import database_interface
-from mw_url_shortener.schemas.redirect import RedirectCreate, RedirectUpdate, random_short_link
+from mw_url_shortener.schemas.redirect import (
+    RedirectCreate,
+    RedirectUpdate,
+    random_short_link,
+)
 from mw_url_shortener.settings import defaults
 from mw_url_shortener.utils import unsafe_random_string
 
@@ -56,15 +60,20 @@ async def test_create_redirect(in_memory_database: AsyncSession) -> None:
     # already made sure unsafe_random_string() is making strings of the correct
     # length
 
-    create_redirect_schema = RedirectCreate(short_link=short_link, url=url, response_status=response_status,body=body)
+    create_redirect_schema = RedirectCreate(
+        short_link=short_link, url=url, response_status=response_status, body=body
+    )
 
-    created_redirect = await database_interface.redirect.create(in_memory_database, create_object_schema=create_redirect_schema)
+    created_redirect = await database_interface.redirect.create(
+        in_memory_database, create_object_schema=create_redirect_schema
+    )
     assert created_redirect
 
     assert created_redirect.short_link == short_link
     assert created_redirect.url == url
     assert created_redirect.response_status == response_status
     assert created_redirect.body == body
+
 
 # create_non_unique_short_link
 # redirect_get_by_id
