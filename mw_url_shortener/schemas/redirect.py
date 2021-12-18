@@ -11,6 +11,9 @@ from .base import BaseInDBSchema, BaseSchema
 
 def random_short_link(length: int = defaults.short_link_length) -> str:
     "random short link using allowed characters"
+    # I think this belongs here, because it's part of the definition of a
+    # redirect:
+    # this is THE way short links should be generated
     if length < 1:
         raise ValueError(f"length must be greater than 1, not '{length}'")
     return unsafe_random_string_from_pool(
