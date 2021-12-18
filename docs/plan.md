@@ -32,3 +32,5 @@
     - also track user actions on users
 - user permissions
 - permission scoping based on tags
+- `discoverable` flag
+  - sitemap generator of all `discoverable` links
