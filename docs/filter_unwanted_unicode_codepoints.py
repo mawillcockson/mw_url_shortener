@@ -7,7 +7,7 @@ from unicodedata import category as unicode_category
 LARGEST_UNICODE_CODEPOINT_PLUS_ONE = LARGEST_UNICODE_CODEPOINT + 1
 
 
-def probably_okay_codepoint() -> str:
+def probably_okay_codepoint(_: int) -> str:
     # character categories from:
     # https://www.unicode.org/reports/tr44/#GC_Values_Table
     codepoint = chr(floor(LARGEST_UNICODE_CODEPOINT_PLUS_ONE * random()))
@@ -23,5 +23,4 @@ def unsafe_random_string(length: int) -> str:
     # the documentation for unicodedata and stringprep libraries was useful, as
     # was this stack overflow question:
     # https://stackoverflow.com/q/1477294
-    probably_okay_codepoints = [probably_okay_codepoint() for _ in range(length)]
-    return "".join(probably_okay_codepoints)
+    return "".join(map(probably_okay_codepoint, range(length)))
