@@ -42,6 +42,14 @@ tox = ">=3.24.4"
 pylint = ">=2.11.1"
 anyio = ">=3.3.4" # provides pytest.mark.anyio decorator for async test function support
 
+[tool.poetry.scripts]
+# mw-redir-server = "mw_url_shortener.server.cli:app"
+mw-redir = "mw_url_shortener.client.cli:main"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
 [tool.pytest.ini_options]
 minversion = "6.2.0" # First version to have easily accessible types
 addopts = "--cov=mw_url_shortener --strict-markers"
@@ -63,14 +71,6 @@ extend_skip_glob = ["mw_url_shortener/client/*"]
 
 [tool.black]
 extend_exclude = "mw_url_shortener/client"
-
-[tool.poetry.scripts]
-# mw-redir-server = "mw_url_shortener.server.cli:app"
-mw-redir = "mw_url_shortener.client.cli:app"
-
-[build-system]
-requires = ["poetry-core>=1.0.0"]
-build-backend = "poetry.core.masonry.api"
 
 [tool.mypy]
 files = ["mw_url_shortener", "tests"]
