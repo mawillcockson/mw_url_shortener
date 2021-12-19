@@ -36,16 +36,17 @@ def probably_okay_codepoint(character: str) -> bool:
 
     the rest make it slightly easier to display
     """
-    # character categories listed in:
+    # character categories from:
     # https://www.unicode.org/reports/tr44/#GC_Values_Table
-    # C_ categories are:
-    # Cc: a C0 or C1 control code
-    # Cf: a format control character
-    # Cs: a surrogate code point
-    # Co: a private-use character
-    # Cn: a reserved unassigned code point or a noncharacter
-    category = unicode_category(character)
-    return category[0] != "C"
+    return unicode_category(character) not in {
+        "Zl",  # U+2028 LINE SEPARATOR only
+        "Zp",  # U+2029 PARAGRAPH SEPARATOR only
+        "Cc",  # a C0 or C1 control code
+        "Cf",  # a format control character
+        "Cs",  # a surrogate code point
+        "Co",  # a private-use character
+        "Cn",  # a reserved unassigned code point or a noncharacter
+    }
 
 
 def unsafe_random_string(length: int) -> str:
