@@ -22,9 +22,11 @@ class InterfaceUser(InterfaceBase[UserModel, User, UserCreate, UserUpdate]):
             ).scalar_one_or_none()
             if user_model is None:
                 return None
+
             assert isinstance(
                 user_model, UserModel
             ), f"expected '{UserModel}', got '{type(user_model)}'"
+
             return self.schema.from_orm(user_model)
 
     async def create(
@@ -53,9 +55,8 @@ class InterfaceUser(InterfaceBase[UserModel, User, UserCreate, UserUpdate]):
     ) -> User:
         if update_object_schema.password is not None:
             hashed_password = hash_password(update_object_schema.password)
-            current_object_schema = current_object_schema.copy(
-                update={"hashed_password": hashed_password}
-            )
+            password_data = {"hashed_password": hashed_password}
+            current_object_schema = current_object_schema.copy(update=password_data)
             update_object_schema = update_object_schema.copy(exclude={"password"})
 
         return await super().update(
@@ -75,6 +76,15 @@ class InterfaceUser(InterfaceBase[UserModel, User, UserCreate, UserUpdate]):
             ).scalar_one_or_none()
             if user_model is None:
                 return None
+
+            assert isinstance(
+                user_model, UserModel
+            ), f"expected '{UserModel}', got '{type(user_model)}'"
+
+            assert (
+                user_model.hashed_password
+            ), f"user missing hashed password: {user_model}"
+
             if not verify_password(password, user_model.hashed_password):
                 return None
             return self.schema.from_orm(user_model)
