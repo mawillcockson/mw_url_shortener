@@ -1,18 +1,21 @@
+from math import floor
+from random import random
+from sys import maxunicode as LARGEST_UNICODE_CODEPOINT
 from typing import List
 from unicodedata import category as unicode_category
 
-from mw_url_shortener.utils import unsafe_random_unicode_codepoints
+LARGEST_UNICODE_CODEPOINT_PLUS_ONE = LARGEST_UNICODE_CODEPOINT + 1
 
 
-def probably_okay_codepoint(character: str) -> bool:
+def probably_okay_codepoint() -> str:
     # character categories from:
     # https://www.unicode.org/reports/tr44/#GC_Values_Table
-    category = unicode_category(character)
-    if category[0] == "C":
-        return False
-    if category in ["Zl", "Zp"]:
-        return False
-    return True
+    codepoint = chr(floor(LARGEST_UNICODE_CODEPOINT_PLUS_ONE * random()))
+    category = unicode_category(codepoint)
+    while category[0] == "C":
+        codepoint = chr(floor(LARGEST_UNICODE_CODEPOINT_PLUS_ONE * random()))
+        category = unicode_category(codepoint)
+    return codepoint
 
 
 def unsafe_random_string(length: int) -> str:
@@ -20,11 +23,5 @@ def unsafe_random_string(length: int) -> str:
     # the documentation for unicodedata and stringprep libraries was useful, as
     # was this stack overflow question:
     # https://stackoverflow.com/q/1477294
-    probably_okay_codepoints: List[str] = []
-    while len(probably_okay_codepoints) < length:
-        number_needed_characters = length - len(probably_okay_codepoints)
-        codepoints = unsafe_random_unicode_codepoints(number_needed_characters)
-        probably_okay_codepoints.extend(
-            filter(probably_okay_codepoint, map(chr, codepoints))
-        )
+    probably_okay_codepoints = [probably_okay_codepoint() for _ in range(length)]
     return "".join(probably_okay_codepoints)
