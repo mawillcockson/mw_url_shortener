@@ -26,8 +26,8 @@ class InterfaceBase(
     async def get_by_id(self, async_session: AsyncSession, id: int) -> ObjectSchemaType:
         async with async_session.begin():
             object_model = (
-                await async_session.execute(
-                    select(self.model).where(self.model.id == id)
+                await async_session.execute(select(self.model)).where(
+                    self.model.id == id
                 )
             ).scalar_one()
             assert isinstance(
