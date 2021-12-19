@@ -2,8 +2,10 @@
 """
 does the database interface behave as expected?
 """
+from re import escape
+
 import pytest
-from sqlalchemy.exc import NoResultFound
+from sqlalchemy.exc import IntegrityError, NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from mw_url_shortener import database_interface
@@ -71,7 +73,59 @@ async def test_create_redirect(in_memory_database: AsyncSession) -> None:
     assert created_redirect.body == body
 
 
-# create_non_unique_short_link
+async def test_create_non_unique_short_link(in_memory_database: AsyncSession) -> None:
+    """
+    will the database reject a redirect that has the same short link as another
+    redirect?
+    """
+    short_link = random_short_link()
+    create_redirect_schema = RedirectCreate(short_link=short_link)
+    created_redirect = await database_interface.redirect.create(
+        in_memory_database, create_object_schema=create_redirect_schema
+    )
+
+    with pytest.raises(IntegrityError) as error:
+        created_redirect2 = await database_interface.redirect.create(
+            in_memory_database, create_object_schema=create_redirect_schema
+        )
+    assert error.match(escape("UNIQUE constraint failed"))
+
+
+async def test_create_unique_short_link(in_memory_database: AsyncSession) -> None:
+    "will the database accept two redirects with only a short link different?"
+    short_link = random_short_link(defaults.test_string_length)
+    assert len(short_link) == defaults.test_string_length
+
+    url = unsafe_random_string(defaults.test_string_length)
+    assert len(url) == defaults.test_string_length
+
+    response_status = int(defaults.test_string_length)
+
+    body = unsafe_random_string(defaults.test_string_length)
+    # already made sure unsafe_random_string() is making strings of the correct
+    # length
+
+    first_redirect_schema = RedirectCreate(
+        short_link=short_link, url=url, response_status=response_status, body=body
+    )
+
+    first_redirect = await database_interface.redirect.create(
+        in_memory_database, create_object_schema=first_redirect_schema
+    )
+
+    new_short_link = random_short_link(defaults.test_string_length)
+    second_redirect_schema = first_redirect_schema.copy(update={"short_link": new_short_link})
+
+    second_redirect = await database_interface.redirect.create(in_memory_database, create_object_schema=second_redirect_schema)
+    assert second_redirect
+
+    assert second_redirect.short_link != first_redirect.short_link
+    exclude_attributes = {"id", "short_link"}
+    first_redirect_data_no_short_link = first_redirect.dict(exclude=exclude_attributes)
+    second_redirect_data_no_short_link = second_redirect.dict(exclude=exclude_attributes)
+    assert first_redirect_data_no_short_link == second_redirect_data_no_short_link
+
+
 # redirect_get_by_id
 # redirect_get_by_short_link
 # redirect_get_by_url
@@ -85,45 +139,7 @@ async def test_create_redirect(in_memory_database: AsyncSession) -> None:
 # redirect_remove_by_id
 
 
-# async def test_create_user(in_memory_database: AsyncSession) -> None:
-#     "can a user be added to the database?"
-#     username = random_username()
-#     password = random_password()
-#     create_user_schema = UserCreate(username=username, password=password)
-#     created_user = await database_interface.user.create(
-#         in_memory_database, create_object_schema=create_user_schema
-#     )
-#     assert created_user.username == username
-#     assert hasattr(created_user, "id")
-#     assert created_user.id is not None
-#     assert not hasattr(created_user, "hashed_password")
-#
-#
-# async def test_authenticate_user(in_memory_database: AsyncSession) -> None:
-#     "can an added user's data be used to authenticate the user?"
-#     username = random_username()
-#     password = random_password()
-#     user_create_schema = UserCreate(username=username, password=password)
-#     user_created = await database_interface.user.create(
-#         in_memory_database, create_object_schema=user_create_schema
-#     )
-#     user_authenticated = await database_interface.user.authenticate(
-#         in_memory_database, username=username, password=password
-#     )
-#     assert user_authenticated
-#     assert user_authenticated == user_created
-#
-#
-# async def test_not_authenticate_user(in_memory_database: AsyncSession) -> None:
-#     "will authentication fail for user data not in the database?"
-#     username = random_username()
-#     password = random_password()
-#     user_created = await database_interface.user.authenticate(
-#         in_memory_database, username=username, password=password
-#     )
-#     assert user_created is None
-#
-#
+
 # async def test_get_user_by_id(in_memory_database: AsyncSession) -> None:
 #     "can a previously added user be retrieved by id, and is the data the same?"
 #     username = random_username()
