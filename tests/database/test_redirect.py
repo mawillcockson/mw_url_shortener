@@ -144,8 +144,36 @@ async def redirect_get_by_id(in_memory_database: AsyncSession) -> None:
     )
 
     assert retrieved_redirect == created_redirect
-# redirect_get_by_short_link
-# redirect_get_by_url
+
+
+async def test_redirect_get_by_short_link(in_memory_database: AsyncSession) -> None:
+    create_redirect_schema = RedirectCreate()
+
+    created_redirect = await database_interface.redirect.create(
+        in_memory_database, create_object_schema=create_redirect_schema
+    )
+
+    retrieved_redirect = await database_interface.redirect.get_by_short_link(
+        in_memory_database, short_link=created_redirect.short_link
+    )
+
+    assert retrieved_redirect == created_redirect
+
+
+async def test_redirect_get_by_url(in_memory_database: AsyncSession) -> None:
+    create_redirect_schema = RedirectCreate()
+
+    created_redirect = await database_interface.redirect.create(
+        in_memory_database, create_object_schema=create_redirect_schema
+    )
+
+    retrieved_redirects = await database_interface.redirect.get_by_url(
+        in_memory_database, url=created_redirect.url
+    )
+
+    assert len(retrieved_redirects) == 1
+    assert created_redirect in retrieved_redirects
+    
 # redirect_get_by_response_status
 # redirect_get_by_body
 # redirect_get_two
@@ -154,7 +182,6 @@ async def redirect_get_by_id(in_memory_database: AsyncSession) -> None:
 # redirect_update_response_status
 # redirect_update_body
 # redirect_remove_by_id
-
 
 
 # async def test_get_user_by_id(in_memory_database: AsyncSession) -> None:
