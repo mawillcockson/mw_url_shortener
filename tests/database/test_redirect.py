@@ -203,6 +203,8 @@ async def test_redirect_get_by_body(in_memory_database: AsyncSession) -> None:
         in_memory_database, create_object_schema=create_redirect_schema
     )
 
+    assert created_redirect.body is not None  # for mypy
+
     retrieved_redirects = await database_interface.redirect.get_by_body(
         in_memory_database, body=created_redirect.body
     )

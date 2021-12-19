@@ -43,7 +43,7 @@ class InterfaceRedirect(
         return redirect_schemas
 
     async def get_by_response_status(
-        self, async_session: AsyncSession, *, response_status: str
+        self, async_session: AsyncSession, *, response_status: int
     ) -> List[Redirect]:
         redirect_schemas: List[Redirect] = []
         select_by_response_status = (
