@@ -237,37 +237,50 @@ async def test_get_two_redirects(in_memory_database: AsyncSession) -> None:
     assert second_redirect in retrieved_multiple
 
 
-# redirect_update_short_link
-# redirect_update_url
-# redirect_update_response_status
-# redirect_update_body
+async def test_update_redirect(in_memory_database: AsyncSession) -> None:
+    "if all attributes on a redirect are modified, does the database return them?"
+    short_link = random_short_link(defaults.test_string_length)
+    url = unsafe_random_string(defaults.test_string_length)
+    response_status = int(defaults.test_string_length)
+    body = unsafe_random_string(defaults.test_string_length)
+    create_redirect_schema = RedirectCreate(
+        short_link=short_link, url=url, response_status=response_status, body=body
+    )
+
+    created_redirect = await database_interface.redirect.create(
+        in_memory_database, create_object_schema=create_redirect_schema
+    )
+
+    new_short_link = random_short_link(defaults.test_string_length)
+    assert new_short_link != short_link
+    new_url = unsafe_random_string(defaults.test_string_length)
+    assert new_url != url
+    new_response_status = abs(int(defaults.test_string_length) - 1)
+    assert new_response_status != response_status
+    new_body = unsafe_random_string(defaults.test_string_length)
+    assert new_body != body
+
+    update_redirect_schema = RedirectUpdate(
+        short_link=new_short_link,
+        url=new_url,
+        response_status=new_response_status,
+        body=new_body,
+    )
+
+    updated_redirect = await database_interface.redirect.update(
+        in_memory_database,
+        current_object_schema=created_redirect,
+        update_object_schema=update_redirect_schema,
+    )
+
+    update_data = update_redirect_schema.dict()
+    updated_redirect_data = updated_redirect.dict(exclude={"id"})
+    assert updated_redirect_data == update_data
+
+
 # redirect_remove_by_id
 
 
-# async def test_get_two_users(in_memory_database: AsyncSession) -> None:
-#     "can a previous two users be retrieved simultaneously?"
-#     username1 = random_username()
-#     password1 = random_password()
-#     user_create_schema1 = UserCreate(username=username1, password=password1)
-#     user_created1 = await database_interface.user.create(
-#         in_memory_database, create_object_schema=user_create_schema1
-#     )
-#
-#     username2 = random_username()
-#     password2 = random_password()
-#     user_create_schema2 = UserCreate(username=username2, password=password2)
-#     user_created2 = await database_interface.user.create(
-#         in_memory_database, create_object_schema=user_create_schema2
-#     )
-#
-#     retrieved_users = await database_interface.user.get_multiple(
-#         in_memory_database, skip=0, limit=100
-#     )
-#     assert len(retrieved_users) == 2
-#     assert user_created1 in retrieved_users
-#     assert user_created2 in retrieved_users
-#
-#
 # async def test_update_user_password(in_memory_database: AsyncSession) -> None:
 #     """
 #     if a user password is modified, does the database return the modified user?
