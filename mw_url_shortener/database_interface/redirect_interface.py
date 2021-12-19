@@ -1,10 +1,11 @@
 # mypy: allow_any_expr
+from typing import List
+
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from mw_url_shortener.database.models.redirect import RedirectModel
 from mw_url_shortener.schemas.redirect import Redirect, RedirectCreate, RedirectUpdate
-from typing import List
 
 from .base import InterfaceBase
 
@@ -28,9 +29,13 @@ class InterfaceRedirect(
 
             return self.schema.from_orm(redirect_model)
 
-    async def get_by_url(self, async_session: AsyncSession, *, url: str) -> List[Redirect]:
+    async def get_by_url(
+        self, async_session: AsyncSession, *, url: str
+    ) -> List[Redirect]:
         redirect_schemas: List[Redirect] = []
-        select_by_url = select(self.model).where(self.model.url == url).order_by(self.model.id)
+        select_by_url = (
+            select(self.model).where(self.model.url == url).order_by(self.model.id)
+        )
         async with async_session.begin():
             redirect_models = (await async_session.scalars(select_by_url)).all()
             for redirect_model in redirect_models:
