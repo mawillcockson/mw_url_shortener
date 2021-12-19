@@ -1,6 +1,5 @@
 ## Plan
 
-- add basic redirect interface
 - complete local client
 - add a server implementing an API
 - either automatically (e.g. apistar) or manually add a remote interface to
