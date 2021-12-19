@@ -59,5 +59,18 @@ class InterfaceRedirect(
                 redirect_schemas.append(self.schema.from_orm(redirect_model))
         return redirect_schemas
 
+    async def get_by_body(
+        self, async_session: AsyncSession, *, body: str
+    ) -> List[Redirect]:
+        redirect_schemas: List[Redirect] = []
+        select_by_body = (
+            select(self.model).where(self.model.body == body).order_by(self.model.id)
+        )
+        async with async_session.begin():
+            redirect_models = (await async_session.scalars(select_by_body)).all()
+            for redirect_model in redirect_models:
+                redirect_schemas.append(self.schema.from_orm(redirect_model))
+        return redirect_schemas
+
 
 redirect = InterfaceRedirect(RedirectModel, Redirect)

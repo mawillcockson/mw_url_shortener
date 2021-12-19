@@ -195,7 +195,22 @@ async def test_redirect_get_by_response_status(
     assert created_redirect in retrieved_redirects
 
 
-# redirect_get_by_body
+async def test_redirect_get_by_body(in_memory_database: AsyncSession) -> None:
+    body = unsafe_random_string(defaults.test_string_length)
+    create_redirect_schema = RedirectCreate(body=body)
+
+    created_redirect = await database_interface.redirect.create(
+        in_memory_database, create_object_schema=create_redirect_schema
+    )
+
+    retrieved_redirects = await database_interface.redirect.get_by_body(
+        in_memory_database, body=created_redirect.body
+    )
+
+    assert len(retrieved_redirects) == 1
+    assert created_redirect in retrieved_redirects
+
+
 # redirect_get_two
 # redirect_update_short_link
 # redirect_update_url
