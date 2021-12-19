@@ -1,10 +1,10 @@
 import sys
 from dataclasses import dataclass
-from typing import Dict, List, NamedTuple
+from typing import Dict, List, NamedTuple, Optional, Union
 from unicodedata import category as unicode_category
 
 # From: https://www.unicode.org/reports/tr44/#GC_Values_Table
-UNICODE_CATEGORIES = {
+UNICODE_CATEGORIES: "Dict[str, Dict[str, Union[str, List[Range]]]]" = {
     "Lu": {"long": "Uppercase_Letter", "description": "an uppercase letter"},
     "Ll": {"long": "Lowercase_Letter", "description": "a lowercase letter"},
     "Lt": {
@@ -84,6 +84,12 @@ UNICODE_CATEGORIES = {
     "C": {"long": "Other", "description": "Cc | Cf | Cs | Co | Cn"},
 }
 
+GROUP_CATEGORIES = [
+    category
+    for category in UNICODE_CATEGORIES
+    if len(category) == 1 or category.isupper()
+]
+
 UNICODE_CODEPOINT_START = 0
 UNICODE_CODEPOINT_END = sys.maxunicode
 
@@ -93,11 +99,54 @@ class Range:
     start: int
     end: int
 
-    def __contains__(self, value: int) -> bool:
+    def overlaps(self, other: "Range") -> bool:
+        return other.start in self or other.end in self
+
+    def __add__(self, other: "Range") -> "Range":
+        if other.start in self:
+            return type(self)(start=self.start, end=other.end)
+        if other.end in self:
+            return type(self)(start=other.start, end=self.end)
+        raise ValueError(f"Can't add {self} + {other}")
+
+    def __contains__(self, value: "Union[int, Range]") -> bool:
+        if isinstance(value, type(self)):
+            return value.start >= self.start and value.end <= self.end
         return self.start <= value <= self.end
 
+    def merge(self, other: "Range") -> "Optional[Range]":
+        try:
+            return self + other
+        except ValueError:
+            if other in self:
+                return self
+            if self in other:
+                return other
+
+    def __lt__(self, other: "Range") -> bool:
+        return self.end < other.end
+
+    def __le__(self, other: "Range") -> bool:
+        return self.end <= other.end
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, self.__class__):
+            raise NotImplemented
+        return self.start == other.start and self.end == other.end
+
+    def __ne__(self, other: object) -> bool:
+        if not isinstance(other, self.__class__):
+            raise NotImplemented
+        return self.start != other.start and self.end != other.end
+
+    def __gt__(self, other: "Range") -> bool:
+        return self.end > other.end
+
+    def __ge__(self, other: "Range") -> bool:
+        return self.end >= other.end
+
     def __repr__(self) -> str:
-        return f"<{self.start} - {self.end}>"
+        return f"range({self.start:#08x}, {self.end:#08x})"
 
 
 class Percentage(NamedTuple):
@@ -105,10 +154,13 @@ class Percentage(NamedTuple):
     point: float
 
 
-unicode_category_ranges: Dict[str, List[Range]] = {}
+def print_message(message: str) -> None:
+    print(message, file=sys.stderr)
 
 
 def main() -> None:
+    unicode_category_ranges: Dict[str, List[Range]] = {}
+
     progress_steps: List[Percentage] = []
     step = (UNICODE_CODEPOINT_END - UNICODE_CODEPOINT_START) / 100
     point = step
@@ -132,7 +184,7 @@ def main() -> None:
                 printed_progress = False
 
         if not printed_progress:
-            print(f"{progress_steps[current_percent].percent:.0%}")
+            print_message(f"{progress_steps[current_percent].percent:.0%}")
             printed_progress = True
 
         category = unicode_category(chr(codepoint))
@@ -151,13 +203,48 @@ def main() -> None:
 
         last_range.end = codepoint
 
-    print(unicode_category_ranges)
-    print(
-        "\n".join(
-            f"{category}:\n" + "\n".join(f"  {_range}" for _range in ranges)
-            for category, ranges in unicode_category_ranges.items()
-        )
-    )
+    # print(unicode_category_ranges)
+    # print(
+    #     "\n".join(
+    #         f"{category}:\n" + "\n".join(f"  {_range}" for _range in ranges)
+    #         for category, ranges in unicode_category_ranges.items()
+    #     )
+    # )
+
+    for category, ranges in list(unicode_category_ranges.items()):
+        if category[0] not in unicode_category_ranges:
+            unicode_category_ranges[category[0]] = []
+        unicode_category_ranges[category[0]].extend(ranges)
+
+    unicode_category_ranges["LC"] = [
+        *unicode_category_ranges["Lu"],
+        *unicode_category_ranges["Ll"],
+        *unicode_category_ranges["Lt"],
+    ]
+
+    for group_category in GROUP_CATEGORIES:
+        print_message(f"merging {group_category}...")
+        ranges = unicode_category_ranges[group_category]
+        ranges.sort()
+
+        current_range_index = 0
+        max_range_index = len(ranges) - 1
+        while current_range_index <= max_range_index - 1:
+            current_range = ranges[current_range_index]
+            next_range = ranges[current_range_index + 1]
+
+            current_range_index += 1
+
+            merged_range = current_range.merge(next_range)
+            if merged_range is None:
+                continue
+            ranges.pop(current_range_index + 1)
+            ranges[current_range_index] = merged_range
+
+    for category in UNICODE_CATEGORIES:
+        UNICODE_CATEGORIES[category]["ranges"] = unicode_category_ranges[category]
+
+    print(UNICODE_CATEGORIES)
 
 
 if __name__ == "__main__":
