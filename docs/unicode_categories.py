@@ -1,99 +1,8 @@
 import sys
+from copy import deepcopy
 from dataclasses import dataclass
-from typing import Dict, List, NamedTuple, Optional, Union
+from typing import Dict, List, NamedTuple, Optional, Tuple, TypedDict, Union
 from unicodedata import category as unicode_category
-
-# From: https://www.unicode.org/reports/tr44/#GC_Values_Table
-UNICODE_CATEGORIES: "Dict[str, Dict[str, Union[str, List[Range]]]]" = {
-    "Lu": {"long": "Uppercase_Letter", "description": "an uppercase letter"},
-    "Ll": {"long": "Lowercase_Letter", "description": "a lowercase letter"},
-    "Lt": {
-        "long": "Titlecase_Letter",
-        "description": "a digraphic character, with first part uppercase",
-    },
-    "LC": {"long": "Cased_Letter", "description": "Lu | Ll | Lt"},
-    "Lm": {"long": "Modifier_Letter", "description": "a modifier letter"},
-    "Lo": {
-        "long": "Other_Letter",
-        "description": "other letters, including syllables and ideographs",
-    },
-    "L": {"long": "Letter", "description": "Lu | Ll | Lt | Lm | Lo"},
-    "Mn": {
-        "long": "Nonspacing_Mark",
-        "description": "a nonspacing combining mark (zero advance width)",
-    },
-    "Mc": {
-        "long": "Spacing_Mark",
-        "description": "a spacing combining mark (positive advance width)",
-    },
-    "Me": {"long": "Enclosing_Mark", "description": "an enclosing combining mark"},
-    "M": {"long": "Mark", "description": "Mn | Mc | Me"},
-    "Nd": {"long": "Decimal_Number", "description": "a decimal digit"},
-    "Nl": {"long": "Letter_Number", "description": "a letterlike numeric character"},
-    "No": {"long": "Other_Number", "description": "a numeric character of other type"},
-    "N": {"long": "Number", "description": "Nd | Nl | No"},
-    "Pc": {
-        "long": "Connector_Punctuation",
-        "description": "a connecting punctuation mark, like a tie",
-    },
-    "Pd": {
-        "long": "Dash_Punctuation",
-        "description": "a dash or hyphen punctuation mark",
-    },
-    "Ps": {
-        "long": "Open_Punctuation",
-        "description": "an opening punctuation mark (of a pair)",
-    },
-    "Pe": {
-        "long": "Close_Punctuation",
-        "description": "a closing punctuation mark (of a pair)",
-    },
-    "Pi": {"long": "Initial_Punctuation", "description": "an initial quotation mark"},
-    "Pf": {"long": "Final_Punctuation", "description": "a final quotation mark"},
-    "Po": {
-        "long": "Other_Punctuation",
-        "description": "a punctuation mark of other type",
-    },
-    "P": {"long": "Punctuation", "description": "Pc | Pd | Ps | Pe | Pi | Pf | Po"},
-    "Sm": {"long": "Math_Symbol", "description": "a symbol of mathematical use"},
-    "Sc": {"long": "Currency_Symbol", "description": "a currency sign"},
-    "Sk": {
-        "long": "Modifier_Symbol",
-        "description": "a non-letterlike modifier symbol",
-    },
-    "So": {"long": "Other_Symbol", "description": "a symbol of other type"},
-    "S": {"long": "Symbol", "description": "Sm | Sc | Sk | So"},
-    "Zs": {
-        "long": "Space_Separator",
-        "description": "a space character (of various non-zero widths)",
-    },
-    "Zl": {"long": "Line_Separator", "description": "U+2028 LINE SEPARATOR only"},
-    "Zp": {
-        "long": "Paragraph_Separator",
-        "description": "U+2029 PARAGRAPH SEPARATOR only",
-    },
-    "Z": {"long": "Separator", "description": "Zs | Zl | Zp"},
-    "Cc": {"long": "Control", "description": "a C0 or C1 control code"},
-    "Cf": {"long": "Format", "description": "a format control character"},
-    "Cs": {"long": "Surrogate", "description": "a surrogate code point"},
-    "Co": {"long": "Private_Use", "description": "a private-use character"},
-    "Cn": {
-        "long": "Unassigned",
-        "description": "a reserved unassigned code point or a noncharacter",
-    },
-    "C": {"long": "Other", "description": "Cc | Cf | Cs | Co | Cn"},
-}
-
-GROUP_CATEGORIES = [
-    category
-    for category in UNICODE_CATEGORIES
-    if len(category) == 1 or category.isupper()
-]
-
-UNWANTED_CATEGORIES = ["Zl", "Zp", "C"]
-
-UNICODE_CODEPOINT_START = 0
-UNICODE_CODEPOINT_END = sys.maxunicode
 
 
 @dataclass
@@ -112,9 +21,9 @@ class Range:
         raise ValueError(f"Can't add {self} + {other}")
 
     def __contains__(self, value: "Union[int, Range]") -> bool:
-        if isinstance(value, type(self)):
-            return value.start >= self.start and value.end <= self.end
-        return self.start <= value <= self.end
+        if isinstance(value, int):
+            return self.start <= value <= self.end
+        return value.start >= self.start and value.end <= self.end
 
     def merge(self, other: "Range") -> "Optional[Range]":
         try:
@@ -124,6 +33,7 @@ class Range:
                 return self
             if self in other:
                 return other
+        return None
 
     def __lt__(self, other: "Range") -> bool:
         return self.end < other.end
@@ -151,6 +61,220 @@ class Range:
         return f"range({self.start:#08x}, {self.end:#08x})"
 
 
+class Category(TypedDict):
+    long: str
+    description: str
+    ranges: List[Range]
+
+
+UnicodeCategories = Dict[str, Category]
+
+# From: https://www.unicode.org/reports/tr44/#GC_Values_Table
+UNICODE_CATEGORIES: UnicodeCategories = {
+    "Lu": {
+        "long": "Uppercase_Letter",
+        "description": "an uppercase letter",
+        "ranges": [],
+    },
+    "Ll": {
+        "long": "Lowercase_Letter",
+        "description": "a lowercase letter",
+        "ranges": [],
+    },
+    "Lt": {
+        "long": "Titlecase_Letter",
+        "description": "a digraphic character, with first part uppercase",
+        "ranges": [],
+    },
+    "LC": {
+        "long": "Cased_Letter",
+        "description": "Lu | Ll | Lt",
+        "ranges": [],
+    },
+    "Lm": {
+        "long": "Modifier_Letter",
+        "description": "a modifier letter",
+        "ranges": [],
+    },
+    "Lo": {
+        "long": "Other_Letter",
+        "description": "other letters, including syllables and ideographs",
+        "ranges": [],
+    },
+    "L": {
+        "long": "Letter",
+        "description": "Lu | Ll | Lt | Lm | Lo",
+        "ranges": [],
+    },
+    "Mn": {
+        "long": "Nonspacing_Mark",
+        "description": "a nonspacing combining mark (zero advance width)",
+        "ranges": [],
+    },
+    "Mc": {
+        "long": "Spacing_Mark",
+        "description": "a spacing combining mark (positive advance width)",
+        "ranges": [],
+    },
+    "Me": {
+        "long": "Enclosing_Mark",
+        "description": "an enclosing combining mark",
+        "ranges": [],
+    },
+    "M": {
+        "long": "Mark",
+        "description": "Mn | Mc | Me",
+        "ranges": [],
+    },
+    "Nd": {
+        "long": "Decimal_Number",
+        "description": "a decimal digit",
+        "ranges": [],
+    },
+    "Nl": {
+        "long": "Letter_Number",
+        "description": "a letterlike numeric character",
+        "ranges": [],
+    },
+    "No": {
+        "long": "Other_Number",
+        "description": "a numeric character of other type",
+        "ranges": [],
+    },
+    "N": {
+        "long": "Number",
+        "description": "Nd | Nl | No",
+        "ranges": [],
+    },
+    "Pc": {
+        "long": "Connector_Punctuation",
+        "description": "a connecting punctuation mark, like a tie",
+        "ranges": [],
+    },
+    "Pd": {
+        "long": "Dash_Punctuation",
+        "description": "a dash or hyphen punctuation mark",
+        "ranges": [],
+    },
+    "Ps": {
+        "long": "Open_Punctuation",
+        "description": "an opening punctuation mark (of a pair)",
+        "ranges": [],
+    },
+    "Pe": {
+        "long": "Close_Punctuation",
+        "description": "a closing punctuation mark (of a pair)",
+        "ranges": [],
+    },
+    "Pi": {
+        "long": "Initial_Punctuation",
+        "description": "an initial quotation mark",
+        "ranges": [],
+    },
+    "Pf": {
+        "long": "Final_Punctuation",
+        "description": "a final quotation mark",
+        "ranges": [],
+    },
+    "Po": {
+        "long": "Other_Punctuation",
+        "description": "a punctuation mark of other type",
+        "ranges": [],
+    },
+    "P": {
+        "long": "Punctuation",
+        "description": "Pc | Pd | Ps | Pe | Pi | Pf | Po",
+        "ranges": [],
+    },
+    "Sm": {
+        "long": "Math_Symbol",
+        "description": "a symbol of mathematical use",
+        "ranges": [],
+    },
+    "Sc": {
+        "long": "Currency_Symbol",
+        "description": "a currency sign",
+        "ranges": [],
+    },
+    "Sk": {
+        "long": "Modifier_Symbol",
+        "description": "a non-letterlike modifier symbol",
+        "ranges": [],
+    },
+    "So": {
+        "long": "Other_Symbol",
+        "description": "a symbol of other type",
+        "ranges": [],
+    },
+    "S": {
+        "long": "Symbol",
+        "description": "Sm | Sc | Sk | So",
+        "ranges": [],
+    },
+    "Zs": {
+        "long": "Space_Separator",
+        "description": "a space character (of various non-zero widths)",
+        "ranges": [],
+    },
+    "Zl": {
+        "long": "Line_Separator",
+        "description": "U+2028 LINE SEPARATOR only",
+        "ranges": [],
+    },
+    "Zp": {
+        "long": "Paragraph_Separator",
+        "description": "U+2029 PARAGRAPH SEPARATOR only",
+        "ranges": [],
+    },
+    "Z": {
+        "long": "Separator",
+        "description": "Zs | Zl | Zp",
+        "ranges": [],
+    },
+    "Cc": {
+        "long": "Control",
+        "description": "a C0 or C1 control code",
+        "ranges": [],
+    },
+    "Cf": {
+        "long": "Format",
+        "description": "a format control character",
+        "ranges": [],
+    },
+    "Cs": {
+        "long": "Surrogate",
+        "description": "a surrogate code point",
+        "ranges": [],
+    },
+    "Co": {
+        "long": "Private_Use",
+        "description": "a private-use character",
+        "ranges": [],
+    },
+    "Cn": {
+        "long": "Unassigned",
+        "description": "a reserved unassigned code point or a noncharacter",
+        "ranges": [],
+    },
+    "C": {
+        "long": "Other",
+        "description": "Cc | Cf | Cs | Co | Cn",
+        "ranges": [],
+    },
+}
+
+GROUP_CATEGORIES = [
+    category
+    for category in UNICODE_CATEGORIES
+    if len(category) == 1 or category.isupper()
+]
+
+UNWANTED_CATEGORIES = ["Zl", "Zp", "C"]
+
+UNICODE_CODEPOINT_START = 0
+UNICODE_CODEPOINT_END = sys.maxunicode
+
+
 class Percentage(NamedTuple):
     percent: float
     point: float
@@ -160,7 +284,7 @@ def print_message(message: str) -> None:
     print(message, file=sys.stderr)
 
 
-def main() -> None:
+def main() -> UnicodeCategories:
     unicode_category_ranges: Dict[str, List[Range]] = {}
 
     progress_steps: List[Percentage] = []
@@ -243,17 +367,42 @@ def main() -> None:
             ranges.pop(current_range_index + 1)
             ranges[current_range_index] = merged_range
 
-    for category in UNICODE_CATEGORIES:
-        UNICODE_CATEGORIES[category]["ranges"] = unicode_category_ranges[category]
+    categories = deepcopy(UNICODE_CATEGORIES)
+    for category in categories:
+        categories[category]["ranges"] = unicode_category_ranges[category]
 
-    if len(sys.argv) > 0 and "unwanted" in sys.argv:
-        for category in list(UNICODE_CATEGORIES):
-            if category not in UNWANTED_CATEGORIES:
-                del UNICODE_CATEGORIES[category]
+    return categories
 
-    print("UNICODE_CATEGORIES = ", end="")
-    print(UNICODE_CATEGORIES)
+
+class Count(NamedTuple):
+    # mypy complains if an attribute is named "count"
+    how_many: int
+    category: str
+
+    def __str__(self) -> str:
+        return f"{self.category: <2}: {self.how_many:,}"
+
+
+def sort_categories_by_count(categories: UnicodeCategories) -> List[Count]:
+    categories_and_counts: List[Tuple[int, str]] = []
+    for category in categories:
+        ranges = categories[category]["ranges"]
+        count = sum(len(range(_range.start, _range.end + 1)) for _range in ranges)
+        categories_and_counts.append((count, category))
+
+    categories_and_counts.sort()
+    return [
+        Count(category=category, how_many=count)
+        for count, category in categories_and_counts
+    ]
 
 
 if __name__ == "__main__":
-    main()
+    categories = main()
+    if len(sys.argv) > 0 and "unwanted" in sys.argv:
+        for category in list(categories):
+            if category not in UNWANTED_CATEGORIES:
+                del categories[category]
+
+    print("UNICODE_CATEGORIES = ", end="")
+    print(categories)
