@@ -1,6 +1,10 @@
 ## Plan
 
 - complete local client
+  - client configuration should be able to be specified through a config file, or on the command line
+  - the cli should be the same, whether working on a local database, or with a remote API
+  - the client should create confirm before creating a database, if the file doesn't exist  
+    if the file does exist, and it's not a readable database, an error should be displayed
 - add a server implementing an API
 - either automatically (e.g. apistar) or manually add a remote interface to
   mimic the database interface
