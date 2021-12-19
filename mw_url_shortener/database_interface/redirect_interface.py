@@ -42,5 +42,22 @@ class InterfaceRedirect(
                 redirect_schemas.append(self.schema.from_orm(redirect_model))
         return redirect_schemas
 
+    async def get_by_response_status(
+        self, async_session: AsyncSession, *, response_status: str
+    ) -> List[Redirect]:
+        redirect_schemas: List[Redirect] = []
+        select_by_response_status = (
+            select(self.model)
+            .where(self.model.response_status == response_status)
+            .order_by(self.model.id)
+        )
+        async with async_session.begin():
+            redirect_models = (
+                await async_session.scalars(select_by_response_status)
+            ).all()
+            for redirect_model in redirect_models:
+                redirect_schemas.append(self.schema.from_orm(redirect_model))
+        return redirect_schemas
+
 
 redirect = InterfaceRedirect(RedirectModel, Redirect)
