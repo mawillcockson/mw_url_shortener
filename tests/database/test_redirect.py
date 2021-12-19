@@ -114,19 +114,36 @@ async def test_create_unique_short_link(in_memory_database: AsyncSession) -> Non
     )
 
     new_short_link = random_short_link(defaults.test_string_length)
-    second_redirect_schema = first_redirect_schema.copy(update={"short_link": new_short_link})
+    second_redirect_schema = first_redirect_schema.copy(
+        update={"short_link": new_short_link}
+    )
 
-    second_redirect = await database_interface.redirect.create(in_memory_database, create_object_schema=second_redirect_schema)
+    second_redirect = await database_interface.redirect.create(
+        in_memory_database, create_object_schema=second_redirect_schema
+    )
     assert second_redirect
 
     assert second_redirect.short_link != first_redirect.short_link
     exclude_attributes = {"id", "short_link"}
     first_redirect_data_no_short_link = first_redirect.dict(exclude=exclude_attributes)
-    second_redirect_data_no_short_link = second_redirect.dict(exclude=exclude_attributes)
+    second_redirect_data_no_short_link = second_redirect.dict(
+        exclude=exclude_attributes
+    )
     assert first_redirect_data_no_short_link == second_redirect_data_no_short_link
 
 
-# redirect_get_by_id
+async def redirect_get_by_id(in_memory_database: AsyncSession) -> None:
+    create_redirect_schema = RedirectCreate()
+
+    created_redirect = await database_interface.redirect.create(
+        in_memory_database, create_object_schema=create_redirect_schema
+    )
+
+    retrieved_redirect = await database_interface.redirect.get_by_id(
+        in_memory_database, id=created_redirect.id
+    )
+
+    assert retrieved_redirect == created_redirect
 # redirect_get_by_short_link
 # redirect_get_by_url
 # redirect_get_by_response_status
