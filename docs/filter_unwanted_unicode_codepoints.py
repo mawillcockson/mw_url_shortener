@@ -1,31 +1,26 @@
-import math
-import sys
-from itertools import chain
-from random import random as _random
 from typing import List
+from unicodedata import category as unicode_category
 
-from unwanted_unicode_category_ranges import UNICODE_CATEGORIES as UNWANTED_CATEGORIES
+from mw_url_shortener.utils import unsafe_random_unicode_codepoints
 
-UNWANTED_CODEPOINT_RANGES = list(
-        chain.from_iterable(
-            d["ranges"] for d in UNWANTED_CATEGORIES.values()
-        )
-    )
+
+def probably_okay_codepoint(character: str) -> bool:
+    # character categories from:
+    # https://www.unicode.org/reports/tr44/#GC_Values_Table
+    category = unicode_category(character)
+    return category[0] == "C"
 
 
 def unsafe_random_string(length: int) -> str:
-    unwanted_codepoint_ranges = UNWANTED_CODEPOINT_RANGES
-    LARGEST_UNICODE_CODEPOINT_PLUS_ONE = sys.maxunicode + 1
-    floor = math.floor
-    random = _random
-
-    probably_okay_codepoints: "List[str]" = []
-    def valid_codepoint(_: int) -> str:
-        codepoint = floor(LARGEST_UNICODE_CODEPOINT_PLUS_ONE * random())
-        while True:
-            for _range in unwanted_codepoint_ranges:
-                if codepoint in _range:
-                    codepoint = floor(LARGEST_UNICODE_CODEPOINT_PLUS_ONE * random())
-        return chr(codepoint)
-
-    return "".join(map(valid_codepoint, range(length)))
+    "returns a string of `length` random unicode characters (probably)"
+    # the documentation for unicodedata and stringprep libraries was useful, as
+    # was this stack overflow question:
+    # https://stackoverflow.com/q/1477294
+    probably_okay_codepoints: List[str] = []
+    while len(probably_okay_codepoints) < length:
+        number_needed_characters = length - len(probably_okay_codepoints)
+        codepoints = unsafe_random_unicode_codepoints(number_needed_characters)
+        probably_okay_codepoints.extend(
+            filter(probably_okay_codepoint, map(chr, codepoints))
+        )
+    return "".join(probably_okay_codepoints)
