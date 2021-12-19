@@ -8,3 +8,6 @@ class BaseSchema(BaseModel):
 
 class BaseInDBSchema(BaseSchema):
     id: int
+
+    class Config:
+        orm_mode = True

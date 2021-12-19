@@ -27,9 +27,6 @@ class UserUpdate(UserBase):
 class UserInDBBase(UserBase, BaseInDBSchema):
     username: Username
 
-    class Config:
-        orm_mode = True
-
 
 class User(UserInDBBase):
     pass

@@ -44,9 +44,6 @@ class RedirectInDBBase(RedirectBase, BaseInDBSchema):
     response_status: PositiveInt
     url: str
 
-    class Config:
-        orm_mode = True
-
 
 class Redirect(RedirectInDBBase):
     pass
