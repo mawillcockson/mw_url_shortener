@@ -8,7 +8,11 @@ def probably_okay_codepoint(character: str) -> bool:
     # character categories from:
     # https://www.unicode.org/reports/tr44/#GC_Values_Table
     category = unicode_category(character)
-    return not (category[0] == "C" or category in ["Zl", "Zp"])
+    if category[0] == "C":
+        return False
+    if category in ["Zl", "Zp"]:
+        return False
+    return True
 
 
 def unsafe_random_string(length: int) -> str:
