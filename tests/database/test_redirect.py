@@ -211,7 +211,32 @@ async def test_redirect_get_by_body(in_memory_database: AsyncSession) -> None:
     assert created_redirect in retrieved_redirects
 
 
-# redirect_get_two
+async def test_get_two_redirects(in_memory_database: AsyncSession) -> None:
+    "can a previous two redirects be retrieved simultaneously?"
+    first_short_link = random_short_link(defaults.test_string_length)
+    second_short_link = random_short_link(defaults.test_string_length)
+
+    first_redirect_schema = RedirectCreate(short_link=first_short_link)
+    second_redirect_schema = RedirectCreate(short_link=second_short_link)
+
+    first_redirect = await database_interface.redirect.create(
+        in_memory_database, create_object_schema=first_redirect_schema
+    )
+    second_redirect = await database_interface.redirect.create(
+        in_memory_database, create_object_schema=second_redirect_schema
+    )
+
+    assert first_redirect != second_redirect
+
+    retrieved_multiple = await database_interface.redirect.get_multiple(
+        in_memory_database, skip=0, limit=100
+    )
+
+    assert len(retrieved_multiple) == 2
+    assert first_redirect in retrieved_multiple
+    assert second_redirect in retrieved_multiple
+
+
 # redirect_update_short_link
 # redirect_update_url
 # redirect_update_response_status
@@ -219,21 +244,6 @@ async def test_redirect_get_by_body(in_memory_database: AsyncSession) -> None:
 # redirect_remove_by_id
 
 
-# async def test_get_user_by_id(in_memory_database: AsyncSession) -> None:
-#     "can a previously added user be retrieved by id, and is the data the same?"
-#     username = random_username()
-#     password = random_password()
-#     user_create_schema = UserCreate(username=username, password=password)
-#     user_created = await database_interface.user.create(
-#         in_memory_database, create_object_schema=user_create_schema
-#     )
-#     user_retrieved = await database_interface.user.get_by_id(
-#         in_memory_database, id=user_created.id
-#     )
-#     assert user_retrieved
-#     assert user_created == user_retrieved
-#
-#
 # async def test_get_two_users(in_memory_database: AsyncSession) -> None:
 #     "can a previous two users be retrieved simultaneously?"
 #     username1 = random_username()
