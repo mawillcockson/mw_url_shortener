@@ -6,18 +6,15 @@ from typing import List
 
 from unwanted_unicode_category_ranges import UNICODE_CATEGORIES as UNWANTED_CATEGORIES
 
-UNWANTED_CODEPOINTS = set(
-    chain.from_iterable(
-        list(_range)
-        for _range in chain.from_iterable(
+UNWANTED_CODEPOINT_RANGES = list(
+        chain.from_iterable(
             d["ranges"] for d in UNWANTED_CATEGORIES.values()
         )
     )
-)
 
 
 def unsafe_random_string(length: int) -> str:
-    unwanted_codepoints = UNWANTED_CODEPOINTS
+    unwanted_codepoint_ranges = UNWANTED_CODEPOINT_RANGES
     LARGEST_UNICODE_CODEPOINT_PLUS_ONE = sys.maxunicode + 1
     floor = math.floor
     random = _random
@@ -25,8 +22,10 @@ def unsafe_random_string(length: int) -> str:
     probably_okay_codepoints: "List[str]" = []
     def valid_codepoint(_: int) -> str:
         codepoint = floor(LARGEST_UNICODE_CODEPOINT_PLUS_ONE * random())
-        while codepoint in unwanted_codepoints:
-            codepoint = floor(LARGEST_UNICODE_CODEPOINT_PLUS_ONE * random())
+        while True:
+            for _range in unwanted_codepoint_ranges:
+                if codepoint in _range:
+                    codepoint = floor(LARGEST_UNICODE_CODEPOINT_PLUS_ONE * random())
         return chr(codepoint)
 
     return "".join(map(valid_codepoint, range(length)))
