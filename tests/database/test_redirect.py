@@ -278,74 +278,25 @@ async def test_update_redirect(in_memory_database: AsyncSession) -> None:
     assert updated_redirect_data == update_data
 
 
-# redirect_remove_by_id
+async def test_redirect_remove_by_id(in_memory_database: AsyncSession) -> None:
+    "if a redirect is deleted, can their data no longer be found in the database?"
+    create_redirect_schema = RedirectCreate()
 
+    created_redirect = await database_interface.redirect.create(
+        in_memory_database, create_object_schema=create_redirect_schema
+    )
 
-# async def test_update_user_password(in_memory_database: AsyncSession) -> None:
-#     """
-#     if a user password is modified, does the database return the modified user?
-#     """
-#     username = random_username()
-#     password = random_password()
-#     user_create_schema = UserCreate(username=username, password=password)
-#     user_created = await database_interface.user.create(
-#         in_memory_database, create_object_schema=user_create_schema
-#     )
-#
-#     new_password = random_password()
-#     user_update_schema = UserUpdate(password=new_password)
-#
-#     await database_interface.user.update(
-#         in_memory_database,
-#         current_object_schema=user_created,
-#         update_object_schema=user_update_schema,
-#     )
-#
-#     user_retrieved = await database_interface.user.get_by_id(
-#         in_memory_database, id=user_created.id
-#     )
-#
-#     assert user_retrieved
-#     assert user_created == user_retrieved
-#
-#     # affirm authentication fails if the old password is used
-#     authentication_with_old_password = await database_interface.user.authenticate(
-#         in_memory_database, username=user_retrieved.username, password=password
-#     )
-#     assert not authentication_with_old_password
-#
-#     # affirm authentication succeeds when new password is used
-#     authenticated_user = await database_interface.user.authenticate(
-#         in_memory_database, username=user_retrieved.username, password=new_password
-#     )
-#     assert authenticated_user
-#     assert authenticated_user == user_created
-#
-#
-# async def test_delete_user(in_memory_database: AsyncSession) -> None:
-#     "if a user is deleted, can their data no longer be found in the database?"
-#     # create user
-#     username = random_username()
-#     password = random_password()
-#     user_create_schema = UserCreate(username=username, password=password)
-#     user_created = await database_interface.user.create(
-#         in_memory_database,
-#         create_object_schema=user_create_schema,
-#     )
-#
-#     # affirm user is in database
-#     user_retrieved = await database_interface.user.get_by_id(
-#         in_memory_database, user_created.id
-#     )
-#     # roundtripping with get_by_id() is tested more thoroughly elsewhere, no
-#     # need to test it again here
-#     assert user_retrieved
-#
-#     deleted_user = await database_interface.user.remove_by_id(
-#         in_memory_database, id=user_retrieved.id
-#     )
-#     assert deleted_user == user_created
-#     with pytest.raises(NoResultFound):
-#         await database_interface.user.get_by_id(
-#             in_memory_database, id=user_retrieved.id
-#         )
+    retrieved_redirect = await database_interface.redirect.get_by_id(
+        in_memory_database, id=created_redirect.id
+    )
+    assert retrieved_redirect == created_redirect
+
+    removed_redirect = await database_interface.redirect.remove_by_id(
+        in_memory_database, id=created_redirect.id
+    )
+    assert removed_redirect == created_redirect
+
+    with pytest.raises(NoResultFound):
+        _ = await database_interface.redirect.get_by_id(
+            in_memory_database, id=created_redirect.id
+        )
