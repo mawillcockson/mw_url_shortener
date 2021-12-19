@@ -36,6 +36,9 @@ class Defaults(BaseSettings):
     # of length 4, and 46_656 unique permutations of length 3
     short_link_length: PositiveInt = 4
     redirect_body: Optional[str] = None
+    # use a ridiculous number so things break earlier
+    # not too ridiculous so the tests don't take too long
+    test_string_length: PositiveInt = 100_000
 
     class Config:
         allow_mutation = False

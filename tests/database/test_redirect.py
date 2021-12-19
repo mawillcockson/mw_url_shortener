@@ -44,19 +44,15 @@ async def test_create_redirect_defaults(in_memory_database: AsyncSession) -> Non
 
 async def test_create_redirect(in_memory_database: AsyncSession) -> None:
     "will the redirect have the custom properties set if they're provided?"
-    # use a rediculous number so things break earlier
-    # not too ridiculous so the tests don't take too long
-    length = 100_000
+    short_link = random_short_link(defaults.test_string_length)
+    assert len(short_link) == defaults.test_string_length
 
-    short_link = random_short_link(length)
-    assert len(short_link) == length
+    url = unsafe_random_string(defaults.test_string_length)
+    assert len(url) == defaults.test_string_length
 
-    url = unsafe_random_string(length)
-    assert len(url) == length
+    response_status = int(defaults.test_string_length)
 
-    response_status = int(length)
-
-    body = unsafe_random_string(length)
+    body = unsafe_random_string(defaults.test_string_length)
     # already made sure unsafe_random_string() is making strings of the correct
     # length
 
