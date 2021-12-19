@@ -90,6 +90,8 @@ GROUP_CATEGORIES = [
     if len(category) == 1 or category.isupper()
 ]
 
+UNWANTED_CATEGORIES = ["Zl", "Zp", "C"]
+
 UNICODE_CODEPOINT_START = 0
 UNICODE_CODEPOINT_END = sys.maxunicode
 
@@ -244,6 +246,12 @@ def main() -> None:
     for category in UNICODE_CATEGORIES:
         UNICODE_CATEGORIES[category]["ranges"] = unicode_category_ranges[category]
 
+    if len(sys.argv) > 0 and "unwanted" in sys.argv:
+        for category in list(UNICODE_CATEGORIES):
+            if category not in UNWANTED_CATEGORIES:
+                del UNICODE_CATEGORIES[category]
+
+    print("UNICODE_CATEGORIES = ", end="")
     print(UNICODE_CATEGORIES)
 
 
