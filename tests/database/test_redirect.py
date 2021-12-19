@@ -147,7 +147,8 @@ async def redirect_get_by_id(in_memory_database: AsyncSession) -> None:
 
 
 async def test_redirect_get_by_short_link(in_memory_database: AsyncSession) -> None:
-    create_redirect_schema = RedirectCreate()
+    short_link = random_short_link(defaults.test_string_length)
+    create_redirect_schema = RedirectCreate(short_link=short_link)
 
     created_redirect = await database_interface.redirect.create(
         in_memory_database, create_object_schema=create_redirect_schema
