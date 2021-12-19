@@ -23,9 +23,10 @@ def unsafe_random_string(length: int) -> str:
     random = _random
 
     probably_okay_codepoints: "List[str]" = []
-    for _ in range(length):
+    def valid_codepoint(_: int) -> str:
         codepoint = floor(LARGEST_UNICODE_CODEPOINT_PLUS_ONE * random())
         while codepoint in unwanted_codepoints:
             codepoint = floor(LARGEST_UNICODE_CODEPOINT_PLUS_ONE * random())
-        probably_okay_codepoints.append(chr(codepoint))
-    return "".join(probably_okay_codepoints)
+        return chr(codepoint)
+
+    return "".join(map(valid_codepoint, range(length)))
