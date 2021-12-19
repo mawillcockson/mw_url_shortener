@@ -23,15 +23,9 @@ def unsafe_random_string(length: int) -> str:
     random = _random
 
     probably_okay_codepoints: "List[str]" = []
-    current_length = len(probably_okay_codepoints)
-    while current_length < length:
-        probably_okay_codepoints.extend(
-            chr(codepoint)
-            for codepoint in [
-                floor(LARGEST_UNICODE_CODEPOINT_PLUS_ONE * random())
-                for _ in range(length - current_length)
-            ]
-            if codepoint not in unwanted_codepoints
-        )
-        current_length = len(probably_okay_codepoints)
+    for _ in range(length):
+        codepoint = floor(LARGEST_UNICODE_CODEPOINT_PLUS_ONE * random())
+        while codepoint in unwanted_codepoints:
+            codepoint = floor(LARGEST_UNICODE_CODEPOINT_PLUS_ONE * random())
+        probably_okay_codepoints.append(chr(codepoint))
     return "".join(probably_okay_codepoints)
