@@ -66,15 +66,15 @@ atomic = true
 # Add an explicitly defined source path (modules within src paths have their
 # imports automatically catorgorized as first_party)
 src_paths = ["mw_url_shortener", "tests"]
-# https://pycqa.github.io/isort/docs/configuration/options.html#extend-skip-glob
-extend_skip_glob = ["mw_url_shortener/client/*"]
+# # https://pycqa.github.io/isort/docs/configuration/options.html#extend-skip-glob
+# extend_skip_glob = ["mw_url_shortener/client/*"]
 
 [tool.black]
-extend_exclude = "mw_url_shortener/client"
+# extend_exclude = "mw_url_shortener/client"
 
 [tool.mypy]
 files = ["mw_url_shortener", "tests"]
-exclude = "client"
+# exclude = "client"  # is an re-module regex
 strict = true
 ##### enabled by strict in v0.790
 # # Warn about unused '[mypy-<pattern>]' config sections
