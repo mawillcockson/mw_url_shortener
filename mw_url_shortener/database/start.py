@@ -1,7 +1,7 @@
 from pathlib import Path
 
 import inject
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
+from sqlalchemy.ext.asyncio import AsyncSession as AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 
 from mw_url_shortener.settings import Settings
@@ -46,6 +46,5 @@ def create_database_file(path: Path) -> Path:
     return path
 
 
-async def inject_async_session(binder: inject.Binder, settings: Settings) -> None:
-    async_session = await make_session(settings.database_url)
+def inject_async_session(binder: inject.Binder, *, async_session: AsyncSession) -> None:
     binder.bind(AsyncSession, async_session)

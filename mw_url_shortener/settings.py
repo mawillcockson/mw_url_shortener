@@ -41,10 +41,7 @@ class Defaults(BaseSettings):
     database_path: Path = Path("/var/db/redirects.sqlite")
     database_dialect: str = "sqlite"
     database_driver: str = "aiosqlite"
-    database_url_scheme: str = f"{database_dialect}+{database_driver}"
     database_url_joiner: str = ":///"
-    database_url_leader: str = f"{database_url_scheme}{database_url_joiner}"
-    database_url: str = f"{database_url_leader}{database_path}"
     max_username_length: PositiveInt = 30
     max_password_length: PositiveInt = 128
     # https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#redirection_messages
@@ -64,67 +61,17 @@ class Defaults(BaseSettings):
     # not too ridiculous so the tests don't take too long
     test_string_length: PositiveInt = 100_000
 
-    @validator("database_url_scheme")
-    def database_url_scheme_check(
-        cls: "Defaults", value: str, values: Dict[str, Union[Path, str]]
-    ) -> str:
-        if not isinstance(value, str):
-            raise TypeError(f"expected str, got '{type(value)}'")
+    @property
+    def database_url_scheme(self) -> str:
+        return f"{self.database_dialect}+{self.database_driver}"
+        
+    @property
+    def database_url_leader(self) -> str:
+        return f"{self.database_url_scheme}{self.database_url_joiner}"
 
-        database_dialect = values["database_dialect"]
-        assert isinstance(database_dialect, str)
-        database_driver = values["database_driver"]
-        assert isinstance(database_driver, str)
-
-        calculated_database_url_scheme = f"{database_dialect}+{database_driver}"
-
-        if not value == calculated_database_url_scheme:
-            warnings.warn(
-                f"database_url_scheme expected to be {calculated_database_url_scheme!r}, but got {value!r}"
-            )
-
-        return calculated_database_url_scheme
-
-    @validator("database_url_leader")
-    def database_url_leader_check(
-        cls: "Defaults", value: str, values: Dict[str, Union[Path, str]]
-    ) -> str:
-        if not isinstance(value, str):
-            raise TypeError(f"expected str, got '{type(value)}'")
-
-        database_url_scheme = values["database_url_scheme"]
-        assert isinstance(database_url_scheme, str)
-        database_url_joiner = values["database_url_joiner"]
-        assert isinstance(database_url_joiner, str)
-
-        calculated_database_url_leader = f"{database_url_scheme}{database_url_joiner}"
-
-        if not value == calculated_database_url_leader:
-            warnings.warn(
-                f"database_url_leader expected to be {calculated_database_url_leader!r}, but got {value!r}"
-            )
-
-        return calculated_database_url_leader
-
-    @validator("database_url")
-    def database_url_check(
-        cls: "Defaults", value: str, values: Dict[str, Union[Path, str]]
-    ) -> str:
-        if not isinstance(value, str):
-            raise TypeError(f"expected str, got '{type(value)}'")
-
-        database_url_leader = values["database_url_leader"]
-        assert isinstance(database_url_leader, str)
-        database_path = values["database_path"]
-        assert isinstance(database_path, Path)
-
-        calculated_database_url = f"{database_url_leader}{str(database_path)}"
-        if not value == calculated_database_url:
-            warnings.warn(
-                f"database_url expected to be {calculated_database_url!r}, but got {value!r}"
-            )
-
-        return calculated_database_url
+    @property
+    def database_url(self) -> str:
+        return f"{self.database_url_leader}{self.database_path}"
 
     class Config:
         json_loads = json_loads

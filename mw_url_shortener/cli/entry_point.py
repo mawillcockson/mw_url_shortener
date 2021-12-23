@@ -11,6 +11,7 @@ import typer
 
 from mw_url_shortener import __version__
 from mw_url_shortener.settings import Settings, defaults
+from mw_url_shortener.dependency_injection import initialize_depency_injection, reconfigure_dependency_injection, AsyncLoopType
 
 app = typer.Typer()
 
@@ -37,11 +38,18 @@ def callback(
     # skip everything if doing cli completion, or there's no subcommand
     if ctx.resilient_parsing or ctx.invoked_subcommand is None:
         return
+    
+    from mw_url_shortener.database.start import make_session, inject_async_session, create_database_file
+    if not database_path.exists():
+        database_path = create_database_file(database_path)
 
-    settings = Settings(database_path=database_path)
+    settings = inject.instance(Settings)
+    settings.database_path = database_path
 
-    configure = partial(configure_depency_injection, settings=settings)
-    inject.configure(configure)
+    loop = inject.instance(AsyncLoopType)
+
+    async_session = asyncio.run_coroutine_threadsafe(make_session(settings.database_url), loop=loop).result()
+    reconfigure_dependency_injection([partial(inject_async_session, async_session=async_session)])
 
 
 class Style(Enum):
@@ -103,17 +111,6 @@ def show_configuration(style: Style = typer.Option("text")) -> None:
         typer.echo(f"{key}: {settings_data[key]}")
 
 
-def configure_depency_injection(
-    binder: inject.Binder,
-    *,
-    settings: Settings,
-    configurators: List[inject.BinderCallable] = [],
-) -> None:
-    for configurator in configurators:
-        binder.install(configurator)
-    binder.bind(Settings, settings)
-
-
 def main() -> None:
     """
     main entry point
@@ -123,6 +120,8 @@ def main() -> None:
     app.add_typer(user.app, name="user")
 
     async def run_typer(app: typer.Typer) -> None:
-        return app()
+        initialize_depency_injection()
+
+        return await asyncio.get_running_loop().run_in_executor(None, app)
 
     asyncio.run(run_typer(app))
