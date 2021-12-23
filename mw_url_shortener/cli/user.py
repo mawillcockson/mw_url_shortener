@@ -9,7 +9,6 @@ app = typer.Typer()
 
 @app.command()
 def create(
-    ctx: typer.Context,
     username: str = typer.Option(..., prompt=True),
     password: str = typer.Option(
         ..., prompt=True, confirmation_prompt=True, hide_input=True
@@ -28,3 +27,8 @@ def create(
     async def wrapper(async_session_awaitable: "Awaitable[AsyncSession]", func) -> None:
         async_session = await async_session_awaitable
         return await func(async_session_awaitable)
+
+
+# update
+# remove_by_id
+# search

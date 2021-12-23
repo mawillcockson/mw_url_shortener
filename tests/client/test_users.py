@@ -14,7 +14,7 @@ runner = CliRunner()
 
 # NOTE:BUG isort can't handle the below syntax
 
-# def test_create_user(on_disk_database: Path) -> None:
+# async def test_create_user(on_disk_database: Path) -> None:
 #     "can a user be created and read back?"
 #     test_username = random_username()
 #     test_password = random_password()

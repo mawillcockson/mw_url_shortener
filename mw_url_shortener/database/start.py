@@ -1,7 +1,10 @@
 from pathlib import Path
 
+import inject
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
+
+from mw_url_shortener.settings import Settings
 
 from .models.base import DeclarativeBase
 
@@ -28,6 +31,8 @@ def create_database_file(path: Path) -> Path:
     will only create a new file; an existing file can be opened with
     make_session()
     """
+    import sqlite3
+
     if path.exists():
         # raise FileExistsError(f"will not overwite already existing path: '{path}'")
         return path
@@ -39,3 +44,8 @@ def create_database_file(path: Path) -> Path:
         connection.execute("DROP TABLE DB;")
 
     return path
+
+
+async def inject_async_session(binder: inject.Binder, settings: Settings) -> None:
+    async_session = await make_session(settings.database_url)
+    binder.bind(AsyncSession, async_session)
