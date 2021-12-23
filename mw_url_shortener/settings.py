@@ -3,10 +3,10 @@ settings common to the server and client
 """
 from pathlib import Path
 from string import ascii_lowercase, digits
-from typing import Optional
+from typing import Callable, Optional
 
 import platformdirs
-from pydantic import BaseSettings, PositiveInt
+from pydantic import BaseSettings, Extra, Json, PositiveInt
 
 from . import APP_AUTHOR, APP_NAME, __version__
 
@@ -45,6 +45,25 @@ class Defaults(BaseSettings):
     test_string_length: PositiveInt = 100_000
 
     class Config:
+        try:
+            import orjson
+        except ImportError:
+            import json
+
+            json_loads = json.loads
+            json_dumps = json.dumps
+        else:
+            json_loads = orjson.loads
+
+            def orjson_dumps(v: Json, *, default: Callable[[Json], str]):
+                """
+                orjson.dumps returns bytes, to match standard json.dumps we need to decode
+
+                from:
+                https://pydantic-docs.helpmanual.io/usage/exporting_models/#custom-json-deserialisation
+                """
+                return orjson.dumps(v, default=default).decode()
+
         allow_mutation = False
 
 
