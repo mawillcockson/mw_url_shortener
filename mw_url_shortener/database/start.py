@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 
@@ -17,3 +19,23 @@ async def make_session(database_url: str) -> "sessionmaker[AsyncSession]":
 
     async_sessionmaker = sessionmaker(engine, expire_on_commit=True, class_=AsyncSession)  # type: ignore
     return async_sessionmaker
+
+
+def create_database_file(path: Path) -> Path:
+    """
+    initialize a file for use with the database engine
+
+    will only create a new file; an existing file can be opened with
+    make_session()
+    """
+    if path.exists():
+        # raise FileExistsError(f"will not overwite already existing path: '{path}'")
+        return path
+
+    # Taken from:
+    # https://github.com/kvesteri/sqlalchemy-utils/blob/b262d2d33a2ff6cb3b3dbabb25680d4686c7c18a/sqlalchemy_utils/functions/database.py#L591-L593
+    with sqlite3.connect(str(path)) as connection:
+        connection.execute("CREATE TABLE DB(id int);")
+        connection.execute("DROP TABLE DB;")
+
+    return path
