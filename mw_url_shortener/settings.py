@@ -19,8 +19,12 @@ class Defaults(BaseSettings):
         )
     )
     database_path: Path = Path("/var/db/redirects.sqlite")
-    database_url_scheme: str = "sqlite+aiosqlite"
-    database_url: str = f"{database_url_scheme}:///{database_path}"
+    database_dialect: str = "sqlite"
+    database_driver: str = "aiosqlite"
+    database_url_scheme: str = f"{database_dialect}+{database_driver}"
+    database_url_joiner: str = ":///"
+    database_url_leader: str = f"{database_url_scheme}{database_url_joiner}"
+    database_url: str = f"{database_url_leader}{database_path}"
     max_username_length: PositiveInt = 30
     max_password_length: PositiveInt = 128
     # https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#redirection_messages
@@ -45,3 +49,10 @@ class Defaults(BaseSettings):
 
 
 defaults = Defaults()
+
+
+class Settings(Defaults):
+    class Config:
+        allow_mutation = True
+        env_prefix = APP_NAME.upper() + "__"
+        extras = Extra.forbid
