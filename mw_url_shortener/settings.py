@@ -46,23 +46,26 @@ class Defaults(BaseSettings):
 
     class Config:
         try:
-            import orjson
+            import orjson as __orjson
         except ImportError:
-            import json
+            import json as __json
 
-            json_loads = json.loads
-            json_dumps = json.dumps
+            json_loads = __json.loads  # type: ignore
+            json_dumps = __json.dumps  # type: ignore
         else:
-            json_loads = orjson.loads
+            json_loads = __orjson.loads  # type: ignore
 
-            def orjson_dumps(v: Json, *, default: Callable[[Json], str]):
+            @staticmethod
+            def __orjson_dumps(v: Json, *, default: Callable[[Json], str]) -> str:
                 """
                 orjson.dumps returns bytes, to match standard json.dumps we need to decode
 
                 from:
                 https://pydantic-docs.helpmanual.io/usage/exporting_models/#custom-json-deserialisation
                 """
-                return orjson.dumps(v, default=default).decode()
+                return __orjson.dumps(v, default=default).decode()  # type: ignore
+
+            json_dumps = __orjson_dumps  # type: ignore
 
         allow_mutation = False
 
