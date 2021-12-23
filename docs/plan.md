@@ -19,7 +19,8 @@
   more](https://github.com/mawillcockson/mw_url_shortener/commit/6a492a1c090f082f399aa851537bd0a402355be5))
 - check out <https://returns.readthedocs.io/en/latest/pages/context.html> and
   <https://fsharpforfunandprofit.com/rop/> for ideas on how to do inversion of
-  control (dependency injection) with type safety for Typer
+  control (dependency injection) with type safety for Typer (as well as
+  <https://github.com/tiangolo/typer/issues/80#issuecomment-950349503>)
 - tags on everything
 - datestamps on everything
 - multiple shortlinks for reach redirect
