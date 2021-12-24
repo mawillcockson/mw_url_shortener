@@ -2,10 +2,9 @@
 import inject
 import typer
 
+from mw_url_shortener.interfaces import Resource, UserInterface, open_resource, run_sync
 from mw_url_shortener.schemas.user import UserCreate
 from mw_url_shortener.settings import OutputStyle, Settings
-
-from .interfaces import UserInterface
 
 
 def create(
@@ -17,7 +16,11 @@ def create(
     create_user_schema = UserCreate(username=username, password=password)
 
     user = inject.instance(UserInterface)
-    created_user = user.create(create_user_schema)
+    resource = inject.instance(Resource)
+    with open_resource(resource) as opened_resource:
+        created_user = run_sync(
+            user.create(opened_resource, create_object_schema=create_user_schema)
+        )
 
     settings = inject.instance(Settings)
     if settings.output_style == OutputStyle.json:
