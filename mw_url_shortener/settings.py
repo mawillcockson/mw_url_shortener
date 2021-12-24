@@ -22,14 +22,14 @@ except ImportError:
 else:
     json_loads = orjson.loads  # type: ignore
 
-    def json_dumps(v: Json, *, default: Callable[[Json], str]) -> str:
+    def json_dumps(v: Json, *, default: Callable[[Json], str]) -> str:  # type: ignore
         """
         orjson.dumps returns bytes, to match standard json.dumps we need to decode
 
         from:
         https://pydantic-docs.helpmanual.io/usage/exporting_models/#custom-json-deserialisation
         """
-        return orjson.dumps(v, default=default).decode()  # type: ignore
+        return orjson.dumps(v, default=default).decode()
 
 
 class OutputStyle(Enum):
@@ -90,8 +90,8 @@ class Defaults(BaseSettings):
         return f"{self.database_url_leader}{self.database_path}"
 
     class Config:
-        json_loads = json_loads
-        json_dumps = json_dumps
+        json_loads = json_loads  # type: ignore
+        json_dumps = json_dumps  # type: ignore
         allow_mutation = False
 
 
