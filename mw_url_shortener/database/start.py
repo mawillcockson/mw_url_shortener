@@ -24,7 +24,7 @@ async def make_session(database_url: str) -> "sessionmaker[AsyncSession]":
     return async_sessionmaker
 
 
-def create_database_file(path: Path) -> Path:
+def ensure_database_file(path: Path) -> Path:
     """
     initialize a file for use with the database engine
 

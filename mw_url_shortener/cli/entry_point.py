@@ -39,9 +39,9 @@ def callback(
     if ctx.resilient_parsing or ctx.invoked_subcommand is None:
         return
     
-    from mw_url_shortener.database.start import make_session, inject_async_session, create_database_file
+    from mw_url_shortener.database.start import make_session, inject_async_session, ensure_database_file
     if not database_path.exists():
-        database_path = create_database_file(database_path)
+        database_path = ensure_database_file(database_path)
 
     settings = inject.instance(Settings)
     settings.database_path = database_path
