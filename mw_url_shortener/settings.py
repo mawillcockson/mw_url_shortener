@@ -32,11 +32,17 @@ else:
         return orjson.dumps(v, default=default).decode()  # type: ignore
 
 
-class Style(Enum):
+class OutputStyle(Enum):
     "styles in which to print configuration"
     json = "json"
     text = "text"
     # ini = "ini"
+
+
+class CliMode(Enum):
+    "whether the cli interacts with a local database, or a remote API"
+    local_database = "local_database"
+    remote_api = "remote_api"
 
 
 class Defaults(BaseSettings):
@@ -68,12 +74,13 @@ class Defaults(BaseSettings):
     # use a ridiculous number so things break earlier
     # not too ridiculous so the tests don't take too long
     test_string_length: PositiveInt = 100_000
-    output_style: Style = Style.text
+    output_style: OutputStyle = OutputStyle.text
+    cli_mode: Optional[CliMode] = None
 
     @property
     def database_url_scheme(self) -> str:
         return f"{self.database_dialect}+{self.database_driver}"
-        
+
     @property
     def database_url_leader(self) -> str:
         return f"{self.database_url_scheme}{self.database_url_joiner}"
