@@ -1,15 +1,16 @@
 from pathlib import Path
 
 import inject
-from sqlalchemy.ext.asyncio import AsyncSession as AsyncSession, create_async_engine
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.ext.asyncio import AsyncSession as AsyncSession
+from sqlalchemy.ext.asyncio import create_async_engine
+from sqlalchemy.orm import sessionmaker as sessionmaker
 
 from mw_url_shortener.settings import Settings
 
 from .models.base import DeclarativeBase
 
 
-async def make_session(database_url: str) -> "sessionmaker[AsyncSession]":
+async def make_sessionmaker(database_url: str) -> "sessionmaker[AsyncSession]":
     "creates the main way to talk to the database"
     engine = create_async_engine(database_url, echo=True, future=True)
 
@@ -29,7 +30,7 @@ def ensure_database_file(path: Path) -> Path:
     initialize a file for use with the database engine
 
     will only create a new file; an existing file can be opened with
-    make_session()
+    make_sessionmaker()
     """
     import sqlite3
 
@@ -46,5 +47,7 @@ def ensure_database_file(path: Path) -> Path:
     return path
 
 
-def inject_async_session(binder: inject.Binder, *, async_session: AsyncSession) -> None:
-    binder.bind(AsyncSession, async_session)
+def inject_async_session(
+    binder: inject.Binder, *, async_sessionmaker: "sessionmaker[AsyncSession]"
+) -> None:
+    binder.bind("sessionmaker[AsyncSession]", async_session)
