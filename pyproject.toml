@@ -172,6 +172,12 @@ plugins = [
     "sqlalchemy.ext.mypy.plugin",
 ]
 
+[[tool.mypy.overrides]]
+module = ["mw_url_shortener.cli.*"]
+# NOTE:TYPES Settings, and any class derived from pydantic.BaseModel has Any in
+# it's class call signature
+allow_any_expr = true
+
 #[[tool.mypy.overrides]]
 #module = ["tests.conftest.*", "tests.test_mw_url_shortener.*"]
 ## NOTE:BUG pytest-dev/pytest#7448
