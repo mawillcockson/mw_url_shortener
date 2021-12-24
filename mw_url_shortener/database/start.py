@@ -47,7 +47,7 @@ def ensure_database_file(path: Path) -> Path:
     return path
 
 
-def inject_async_session(
+def inject_async_sessionmaker(
     binder: inject.Binder, *, async_sessionmaker: "sessionmaker[AsyncSession]"
 ) -> None:
     binder.bind("sessionmaker[AsyncSession]", async_sessionmaker)
