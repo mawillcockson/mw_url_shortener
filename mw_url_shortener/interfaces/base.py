@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Generic, TypeVar
+from typing import TYPE_CHECKING, Generic, TypeVar, Union
 
 from mw_url_shortener.schemas.base import BaseInDBSchema, BaseSchema
 
@@ -7,7 +7,8 @@ if TYPE_CHECKING:
 
     from mw_url_shortener.database.start import AsyncSession, sessionmaker
 
-ResourceType = TypeVar("ResourceType", "sessionmaker[AsyncSession]", "AsyncClient")
+Resource = Union["sessionmaker[AsyncSession]", "AsyncClient"]
+ResourceType = TypeVar("ResourceType", bound=Resource)
 ObjectSchemaType = TypeVar("ObjectSchemaType", bound=BaseInDBSchema)
 CreateSchemaType = TypeVar("CreateSchemaType", bound=BaseSchema)
 UpdateSchemaType = TypeVar("UpdateSchemaType", bound=BaseSchema)
