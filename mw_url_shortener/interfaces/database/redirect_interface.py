@@ -2,30 +2,28 @@
 from typing import List
 
 from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from mw_url_shortener.database.models.redirect import RedirectModel
+from mw_url_shortener.database.start import AsyncSession
 from mw_url_shortener.schemas.redirect import Redirect, RedirectCreate, RedirectUpdate
 
-from .base import InterfaceBase
+from .base import DBInterfaceBase
 
 
-class InterfaceRedirect(
-    InterfaceBase[RedirectModel, Redirect, RedirectCreate, RedirectUpdate]
-):
+class InterfaceRedirect(DBInterfaceBase[Redirect, RedirectCreate, RedirectUpdate]):
     async def get_by_short_link(
         self, async_session: AsyncSession, *, short_link: str
     ) -> Redirect:
         async with async_session.begin():
             redirect_model = (
                 await async_session.execute(
-                    select(self.model).where(self.model.short_link == short_link)
+                    select(RedirectModel).where(RedirectModel.short_link == short_link)
                 )
             ).scalar_one()
 
             assert isinstance(
-                redirect_model, self.model
-            ), f"expected '{self.model}', got '{type(redirect_model)}'"
+                redirect_model, RedirectModel
+            ), f"expected '{RedirectModel}', got '{type(redirect_model)}'"
 
             return self.schema.from_orm(redirect_model)
 
@@ -34,7 +32,9 @@ class InterfaceRedirect(
     ) -> List[Redirect]:
         redirect_schemas: List[Redirect] = []
         select_by_url = (
-            select(self.model).where(self.model.url == url).order_by(self.model.id)
+            select(RedirectModel)
+            .where(RedirectModel.url == url)
+            .order_by(RedirectModel.id)
         )
         async with async_session.begin():
             redirect_models = (await async_session.scalars(select_by_url)).all()
@@ -47,9 +47,9 @@ class InterfaceRedirect(
     ) -> List[Redirect]:
         redirect_schemas: List[Redirect] = []
         select_by_response_status = (
-            select(self.model)
-            .where(self.model.response_status == response_status)
-            .order_by(self.model.id)
+            select(RedirectModel)
+            .where(RedirectModel.response_status == response_status)
+            .order_by(RedirectModel.id)
         )
         async with async_session.begin():
             redirect_models = (
@@ -64,7 +64,9 @@ class InterfaceRedirect(
     ) -> List[Redirect]:
         redirect_schemas: List[Redirect] = []
         select_by_body = (
-            select(self.model).where(self.model.body == body).order_by(self.model.id)
+            select(RedirectModel)
+            .where(RedirectModel.body == body)
+            .order_by(RedirectModel.id)
         )
         async with async_session.begin():
             redirect_models = (await async_session.scalars(select_by_body)).all()

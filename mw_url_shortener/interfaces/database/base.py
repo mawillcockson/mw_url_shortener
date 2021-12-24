@@ -2,19 +2,21 @@
 from typing import Dict, Generic, List, Optional, Type, TypeVar, Union
 
 from sqlalchemy import select, update
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from mw_url_shortener.database.models.base import DeclarativeBase
-from mw_url_shortener.schemas.base import BaseInDBSchema, BaseSchema
+from mw_url_shortener.database.start import AsyncSession
+from mw_url_shortener.interfaces.base import (
+    CreateSchemaType,
+    InterfaceBase,
+    ObjectSchemaType,
+    UpdateSchemaType,
+)
 
 ModelType = TypeVar("ModelType", bound=DeclarativeBase)
-ObjectSchemaType = TypeVar("ObjectSchemaType", bound=BaseInDBSchema)
-CreateSchemaType = TypeVar("CreateSchemaType", bound=BaseSchema)
-UpdateSchemaType = TypeVar("UpdateSchemaType", bound=BaseSchema)
 
 
-class InterfaceBase(
-    Generic[ModelType, ObjectSchemaType, CreateSchemaType, UpdateSchemaType]
+class DBInterfaceBase(
+    InterfaceBase[ObjectSchemaType, CreateSchemaType, UpdateSchemaType],
 ):
     def __init__(self, model: Type[ModelType], schema: Type[ObjectSchemaType]):
         """

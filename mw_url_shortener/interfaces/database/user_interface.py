@@ -2,15 +2,16 @@
 from typing import Any, Dict, Optional, Union
 
 from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from mw_url_shortener.database.models.user import UserModel
-from mw_url_shortener.database_interface.base import InterfaceBase
+from mw_url_shortener.database.start import AsyncSession
 from mw_url_shortener.schemas.user import User, UserCreate, UserUpdate
 from mw_url_shortener.security import hash_password, verify_password
 
+from .base import DBInterfaceBase
 
-class InterfaceUser(InterfaceBase[UserModel, User, UserCreate, UserUpdate]):
+
+class InterfaceUser(DBInterfaceBase[User, UserCreate, UserUpdate]):
     async def get_by_username(
         self, async_session: AsyncSession, *, username: str
     ) -> Optional[User]:
