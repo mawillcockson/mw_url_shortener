@@ -38,3 +38,5 @@
 - permission scoping based on tags
 - `discoverable` flag
   - sitemap generator of all `discoverable` links
+- make interface errors json-encodeable, surface errors in cli with --json option as json
+- add cli `write-configuration` command that reads from the `--config-path` option if it exists, overrides the configuration with options from cli, and writes the configuration back to the `--config-path` option, in json-style (pretty printing would be nice)
