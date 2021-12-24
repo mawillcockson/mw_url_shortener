@@ -2,6 +2,7 @@
 settings common to the server and client
 """
 import warnings
+from enum import Enum
 from pathlib import Path
 from string import ascii_lowercase, digits
 from typing import Callable, Dict, Optional, Union
@@ -29,6 +30,13 @@ else:
         https://pydantic-docs.helpmanual.io/usage/exporting_models/#custom-json-deserialisation
         """
         return orjson.dumps(v, default=default).decode()  # type: ignore
+
+
+class Style(Enum):
+    "styles in which to print configuration"
+    json = "json"
+    text = "text"
+    # ini = "ini"
 
 
 class Defaults(BaseSettings):
@@ -60,6 +68,7 @@ class Defaults(BaseSettings):
     # use a ridiculous number so things break earlier
     # not too ridiculous so the tests don't take too long
     test_string_length: PositiveInt = 100_000
+    output_style: Style = Style.text
 
     @property
     def database_url_scheme(self) -> str:

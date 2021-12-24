@@ -2,7 +2,7 @@
 import inject
 import typer
 
-from mw_url_shortener.settings import Settings
+from mw_url_shortener.settings import Settings, Style
 from asyncio import BaseEventLoop as AsyncLoopType
 import asyncio
 from mw_url_shortener.database_interface import user
@@ -33,16 +33,13 @@ def create(
     created_user = asyncio.run_coroutine_threadsafe(call(), loop=loop).result()
 
     # if settings.print_json:
-    if True:
+    if settings.output_style == Style.json:
         typer.echo(created_user.json())
+        return
 
-    # # should instead use python-inject in the database_interface to provide
-    # # AsyncSession, and pass the async_session_awaitable as the first task to
-    # # run in a queue, and then the awaitable that performs the user creation as
-    # # the second task
-    # async def wrapper(async_session_awaitable: "Awaitable[AsyncSession]", func) -> None:
-    #     async_session = await async_session_awaitable
-    #     return await func(async_session_awaitable)
+    typer.echo(f"""successfully created user
+id: {created_user.id}
+username: {created_user.username}""")
 
 
 # update

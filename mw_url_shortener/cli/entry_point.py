@@ -1,7 +1,6 @@
 "the main cli entrypoint"
 import asyncio
 import sys
-from enum import Enum
 from functools import partial
 from pathlib import Path
 from typing import List, Optional
@@ -10,7 +9,7 @@ import inject
 import typer
 
 from mw_url_shortener import __version__
-from mw_url_shortener.settings import Settings, defaults
+from mw_url_shortener.settings import Settings, defaults, Style
 from mw_url_shortener.dependency_injection import initialize_depency_injection, reconfigure_dependency_injection, AsyncLoopType
 
 app = typer.Typer()
@@ -27,6 +26,7 @@ def version(flag: bool) -> None:
 def callback(
     ctx: typer.Context,
     # config: Path = typer.Option(defaults.config_path),
+    output_style: Style = typer.Option(defaults.output_style.value),
     database_path: Path = typer.Option(defaults.database_path),
     version: Optional[bool] = typer.Option(
         None, "--version", callback=version, is_eager=True
@@ -38,7 +38,7 @@ def callback(
     # skip everything if doing cli completion, or there's no subcommand
     if ctx.resilient_parsing or ctx.invoked_subcommand is None:
         return
-    
+
     from mw_url_shortener.database.start import make_session, inject_async_session, ensure_database_file
     if not database_path.exists():
         database_path = ensure_database_file(database_path)
@@ -50,13 +50,6 @@ def callback(
 
     async_session = asyncio.run_coroutine_threadsafe(make_session(settings.database_url), loop=loop).result()
     reconfigure_dependency_injection([partial(inject_async_session, async_session=async_session)])
-
-
-class Style(Enum):
-    "styles in which to print configuration"
-    json = "json"
-    text = "text"
-    # ini = "ini"
 
 
 # should output style be a global option, so that the tests can use pydantic
