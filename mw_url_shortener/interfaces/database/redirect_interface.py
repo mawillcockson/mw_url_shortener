@@ -4,13 +4,17 @@ from typing import List
 from sqlalchemy import select
 
 from mw_url_shortener.database.models.redirect import RedirectModel
-from mw_url_shortener.database.start import AsyncSession
+from mw_url_shortener.database.start import AsyncSession, sessionmaker
 from mw_url_shortener.schemas.redirect import Redirect, RedirectCreate, RedirectUpdate
 
+from ..redirect_interface import RedirectInterface
 from .base import DBInterfaceBase
 
 
-class InterfaceRedirect(DBInterfaceBase[Redirect, RedirectCreate, RedirectUpdate]):
+class RedirectDBInterface(
+    DBInterfaceBase[Redirect, RedirectCreate, RedirectUpdate],
+    RedirectInterface["sessionmaker[AsyncSession]"],
+):
     async def get_by_short_link(
         self, async_session: AsyncSession, *, short_link: str
     ) -> Redirect:
@@ -75,4 +79,4 @@ class InterfaceRedirect(DBInterfaceBase[Redirect, RedirectCreate, RedirectUpdate
         return redirect_schemas
 
 
-redirect = InterfaceRedirect(RedirectModel, Redirect)
+redirect = RedirectDBInterface(RedirectModel, Redirect)

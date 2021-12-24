@@ -16,7 +16,12 @@ ModelType = TypeVar("ModelType", bound=DeclarativeBase)
 
 
 class DBInterfaceBase(
-    "InterfaceBase[sessionmaker[AsyncSession], ObjectSchemaType, CreateSchemaType, UpdateSchemaType]",
+    InterfaceBase[
+        "sessionmaker[AsyncSession]",
+        ObjectSchemaType,
+        CreateSchemaType,
+        UpdateSchemaType,
+    ],
 ):
     def __init__(self, model: Type[ModelType], schema: Type[ObjectSchemaType]):
         """

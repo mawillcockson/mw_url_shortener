@@ -4,14 +4,18 @@ from typing import Any, Dict, Optional, Union
 from sqlalchemy import select
 
 from mw_url_shortener.database.models.user import UserModel
-from mw_url_shortener.database.start import AsyncSession
+from mw_url_shortener.database.start import AsyncSession, sessionmaker
 from mw_url_shortener.schemas.user import User, UserCreate, UserUpdate
 from mw_url_shortener.security import hash_password, verify_password
 
+from ..user_interface import UserInterface
 from .base import DBInterfaceBase
 
 
-class InterfaceUser(DBInterfaceBase[User, UserCreate, UserUpdate]):
+class UserDBInterface(
+    DBInterfaceBase[User, UserCreate, UserUpdate],
+    UserInterface["sessionmaker[AsyncSession]"],
+):
     async def get_by_username(
         self, async_session: AsyncSession, *, username: str
     ) -> Optional[User]:
@@ -91,4 +95,4 @@ class InterfaceUser(DBInterfaceBase[User, UserCreate, UserUpdate]):
             return self.schema.from_orm(user_model)
 
 
-user = InterfaceUser(UserModel, User)
+user = UserDBInterface(UserModel, User)
