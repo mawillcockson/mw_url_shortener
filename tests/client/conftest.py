@@ -1,5 +1,6 @@
 from typing import AsyncIterator
 
+import inject
 import pytest
 from typer.testing import CliRunner
 
