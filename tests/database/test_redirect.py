@@ -6,9 +6,9 @@ from re import escape
 
 import pytest
 from sqlalchemy.exc import IntegrityError, NoResultFound
-from sqlalchemy.ext.asyncio import AsyncSession
 
-from mw_url_shortener import database_interface
+from mw_url_shortener.database.start import AsyncSession
+from mw_url_shortener.interfaces import database as database_interface
 from mw_url_shortener.schemas.redirect import (
     RedirectCreate,
     RedirectUpdate,
