@@ -4,9 +4,9 @@ does the database interface behave as expected?
 """
 import pytest
 from sqlalchemy.exc import NoResultFound
-from sqlalchemy.ext.asyncio import AsyncSession
 
-from mw_url_shortener import database_interface
+from mw_url_shortener.database.start import AsyncSession
+from mw_url_shortener.interfaces import database as database_interface
 from mw_url_shortener.schemas.user import UserCreate, UserUpdate
 from mw_url_shortener.security import verify_password
 from tests.utils import random_password, random_username
