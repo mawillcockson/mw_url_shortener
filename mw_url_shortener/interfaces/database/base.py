@@ -4,7 +4,7 @@ from typing import Dict, Generic, List, Optional, Type, TypeVar, Union
 from sqlalchemy import select, update
 
 from mw_url_shortener.database.models.base import DeclarativeBase
-from mw_url_shortener.database.start import AsyncSession
+from mw_url_shortener.database.start import AsyncSession, sessionmaker
 from mw_url_shortener.interfaces.base import (
     CreateSchemaType,
     InterfaceBase,
@@ -16,7 +16,7 @@ ModelType = TypeVar("ModelType", bound=DeclarativeBase)
 
 
 class DBInterfaceBase(
-    InterfaceBase[ObjectSchemaType, CreateSchemaType, UpdateSchemaType],
+    "InterfaceBase[sessionmaker[AsyncSession], ObjectSchemaType, CreateSchemaType, UpdateSchemaType]",
 ):
     def __init__(self, model: Type[ModelType], schema: Type[ObjectSchemaType]):
         """
