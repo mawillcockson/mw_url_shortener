@@ -11,10 +11,12 @@ from mw_url_shortener.dependency_injection import (
     AsyncLoopType,
     reconfigure_dependency_injection,
 )
+from mw_url_shortener.interfaces import UserInterface
+from mw_url_shortener.interfaces import database as database_interface
+from mw_url_shortener.interfaces import inject_interface, inject_resource
 from mw_url_shortener.settings import CliMode, Settings, defaults
 
-from . import user
-from .interfaces import UserInterface, inject_interface
+from .user import app as user_app
 
 
 def callback(
@@ -35,15 +37,19 @@ def callback(
     async_sessionmaker_injector = partial(
         inject_async_sessionmaker, async_sessionmaker=async_sessionmaker
     )
+    resource_injector = partial(inject_resource, resource=async_sessionmaker)
 
-    interface = UserInterface(resource=async_sessionmaker)
     interface_injector = partial(
-        inject_interface, interface_type=UserInterface, interface=interface
+        inject_interface,
+        interface_type=UserInterface,
+        interface=database_interface.user,
     )
 
-    reconfigure_dependency_injection([async_sessionmaker_injector, interface_injector])
+    reconfigure_dependency_injection(
+        [async_sessionmaker_injector, resource_injector, interface_injector]
+    )
 
 
 app = typer.Typer(callback=callback)
 
-app.add_typer(user.app, name="user")
+app.add_typer(user_app, name="user")
