@@ -16,7 +16,7 @@ from mw_url_shortener.dependency_injection import (
 )
 from mw_url_shortener.settings import OutputStyle, Settings, defaults
 
-from . import local_subcommand
+from .local_subcommand import app as local_app
 
 
 def version(flag: bool) -> None:
@@ -33,7 +33,7 @@ def callback(
     version: Optional[bool] = typer.Option(
         None, "--version", callback=version, is_eager=True
     ),
-):
+) -> None:
     """
     implements global options for all cli subcommands
     """
@@ -69,7 +69,7 @@ def show_configuration(style: OutputStyle = typer.Option("text")) -> None:
 
 app = typer.Typer(callback=callback)
 app.command()(show_configuration)
-app.add_typer(local_subcommand.app, name="local")
+app.add_typer(local_app, name="local")
 
 
 def main() -> None:
