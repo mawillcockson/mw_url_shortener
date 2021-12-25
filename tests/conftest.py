@@ -1,4 +1,3 @@
-# mypy: allow_any_expr
 import sqlite3
 from pathlib import Path
 from typing import AsyncIterator

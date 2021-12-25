@@ -178,6 +178,16 @@ module = ["mw_url_shortener.cli.*"]
 # it's class call signature
 allow_any_expr = true
 
+[[tool.mypy.overrides]]
+module = ["tests.conftest", "tests.*.conftest"]
+# NOTE:TYPES @pytest.fixture contains Any
+allow_any_expr = true
+
+[[tool.mypy.overrides]]
+module = ["tests.*"]
+# NOTE:TYPES many uses of pydantic.BaseModel and typer.testing.CliRunner have Any
+allow_any_expr = true
+
 #[[tool.mypy.overrides]]
 #module = ["tests.conftest.*", "tests.test_mw_url_shortener.*"]
 ## NOTE:BUG pytest-dev/pytest#7448
