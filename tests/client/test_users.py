@@ -2,23 +2,25 @@
 do all cli commands dealing with users work correctly?
 """
 import asyncio
+from functools import partial
 from pathlib import Path
 
 from sqlalchemy import and_, select
 from typer.testing import CliRunner
 
 from mw_url_shortener.cli.entry_point import app
+from mw_url_shortener.schemas.user import User
 
 from ..utils import random_password, random_username
+from .utils import run_test_client
 
 
-async def test_create_user(on_disk_database: Path, cli_test_client: CliRunner) -> None:
+def test_create_user(on_disk_database: Path, cli_test_client: CliRunner) -> None:
     "can a user be created and read back?"
     test_username = random_username()
     test_password = random_password()
 
-    result = await asyncio.get_running_loop().run_in_executor(
-        None,
+    test_command = partial(
         cli_test_client.invoke,
         app,
         [
@@ -34,9 +36,7 @@ async def test_create_user(on_disk_database: Path, cli_test_client: CliRunner) -
             test_password,
         ],
     )
+    result = run_test_client(test_command)
     assert result.exit_code == 0
-    assert (
-        f"user '{test_username}' created with id '{expected_user_id}'" in result.stdout
-    )
-
-    retrieved_user = await database_interface.user.get_by_id()
+    created_user = User.parse_raw(result.stdout)
+    assert created_user
