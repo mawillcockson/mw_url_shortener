@@ -94,6 +94,14 @@ Also, it would be especially cool if the generator could be pickled, so that it 
 
 For now, I'm going to optimistically hope that I don't need to do any of that, but I will add in a check that will give up after 10 failed attempts. I want to make this configurable once I figure out the configuration situation.
 
+There's also the direction of treating the string of characters using a particular, fixed character set, as an integer. <https://github.com/benoit-pierre/plover_stroke/blob/cc20c8d45ad70d0292b019c159e4b22be837b414/plover_stroke.py> as a good example of how to do this efficiently.
+
+The database would probably still store the textual representation, to make adding or removing characters (or changing the character set in any way) easy, but if it stored integers, it would be trivial and intuitive to asses how many short codes are available.
+
+Otherwise, filtering the short codes for ones with the characterset, and doing some simple combinatorics to figure out how many possible combinations their are, would quickly produce the same answer, while also making sure future changes to the character set don't affect previous links.
+
+It could still be possible to generate short codes by treating the character set as a representation of an integer: `ABCDEFGH` are the same as `01234567`, which is octal. Instead of concatenating randomly chosen characters, find the largest integer encodeable with the character set, and pick a number in that range.
+
 ### Integrate with fail2ban
 
 Being able to at least ban an address that's generating a lot of 404s would be nice. Same thing for attempts at brute-forcing the api authentication.
