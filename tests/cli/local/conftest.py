@@ -30,6 +30,8 @@ async def run_test_command(
 ) -> TestCommandRunner:
     async def runner(app: Typer, arguments: List[str]) -> Result:
         test_command = partial(cli_test_client.invoke, app, arguments)
+        assert "configurators" not in locals()
+        assert "configurators" not in globals()
         initialize_depency_injection()
 
         with capsys.disabled():
