@@ -41,9 +41,11 @@ async def test_create_user(
         ],
     )
 
-    assert on_disk_database.exists()
+    initial_database_size = on_disk_database.stat().st_size
 
     result = await run_test_command(test_command)
     assert result.exit_code == 0
     created_user = User.parse_raw(result.stdout)
     assert created_user
+    # assert the database was used?
+    assert on_disk_database.stat().st_size > initial_database_size
