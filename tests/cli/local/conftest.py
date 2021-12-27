@@ -1,10 +1,12 @@
 import asyncio
-from typing import Awaitable, Callable, Iterator
+from functools import partial
+from typing import Awaitable, Callable, Iterator, List
 
 import inject
 import pytest
-from click.testing import Result as Result
+from click.testing import Result
 from pytest import CaptureFixture
+from typer import Typer
 from typer.testing import CliRunner
 
 from mw_url_shortener.dependency_injection import initialize_depency_injection
@@ -17,14 +19,17 @@ def cli_test_client() -> Iterator[CliRunner]:
     inject.clear()
 
 
-TestCommand = Callable[[], Result]
+TestCommandRunner = Callable[[Typer, List[str]], Awaitable[Result]]
 
 
 @pytest.fixture
-def run_test_command(
+async def run_test_command(
     capsys: CaptureFixture[str],
-) -> Callable[[TestCommand], Awaitable[Result]]:
-    async def runner(test_command: TestCommand) -> Result:
+    cli_test_client: CliRunner,
+    anyio_backend: str,
+) -> TestCommandRunner:
+    async def runner(app: Typer, arguments: List[str]) -> Result:
+        test_command = partial(cli_test_client.invoke, app, arguments)
         initialize_depency_injection()
 
         with capsys.disabled():
