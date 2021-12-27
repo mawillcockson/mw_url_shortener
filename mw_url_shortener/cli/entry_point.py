@@ -16,6 +16,7 @@ from mw_url_shortener.dependency_injection import (
 )
 from mw_url_shortener.settings import OutputStyle, Settings, defaults
 
+from .common_subcommands import show_configuration
 from .local_subcommand import app as local_app
 
 
@@ -43,28 +44,6 @@ def callback(
 
     settings = inject.instance(Settings)
     settings.output_style = output_style
-
-
-def show_configuration(style: OutputStyle = typer.Option("text")) -> None:
-    "print the configuration all other subcommands will use"
-    settings = inject.instance(Settings)
-    if style == OutputStyle.json:
-        json_settings = settings.json()
-        typer.echo(json_settings)
-        return
-
-    settings_data = settings.dict(
-        exclude={
-            "database_dialect",
-            "database_driver",
-            "database_url_scheme",
-            "database_url_joiner",
-            "database_url_leader",
-            "test_string_length",
-        }
-    )
-    for key in settings_data:
-        typer.echo(f"{key}: {settings_data[key]}")
 
 
 app = typer.Typer(callback=callback)

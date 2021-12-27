@@ -16,6 +16,7 @@ from mw_url_shortener.interfaces import database as database_interface
 from mw_url_shortener.interfaces import inject_interface, inject_resource
 from mw_url_shortener.settings import CliMode, Settings, defaults
 
+from .common_subcommands import show_configuration
 from .user import app as user_app
 
 
@@ -51,5 +52,6 @@ def callback(
 
 
 app = typer.Typer(callback=callback)
+app.command()(show_configuration)
 
 app.add_typer(user_app, name="user")
