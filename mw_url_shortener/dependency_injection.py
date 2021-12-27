@@ -27,6 +27,7 @@ def inject_loop(binder: inject.Binder, *, loop: AsyncLoopType) -> None:
 def initialize_depency_injection(
     configurators: List[inject.BinderCallable] = [],
 ) -> None:
+    assert len(configurators) == 0, str(configurators)
     settings = Settings()
     configurators.append(partial(inject_settings, settings=settings))
 
@@ -34,7 +35,6 @@ def initialize_depency_injection(
     configurators.append(partial(inject_loop, loop=loop))
 
     def config(binder: inject.Binder) -> None:
-        assert len(configurators) == 2, str(configurators)
         for configurator in configurators:
             binder.install(configurator)
 
