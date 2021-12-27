@@ -46,11 +46,12 @@ class CliMode(Enum):
 
 
 class Defaults(BaseSettings):
-    config_path: Path = Path(
+    config_dir: Path = Path(
         platformdirs.user_config_dir(
             appname=APP_NAME, appauthor=APP_AUTHOR, version=__version__, roaming=True
         )
     )
+    config_path: Path = config_dir / "config.json"
     # NOTE:FEAT redirects.sqlite should be in a more "typical" location
     database_path: Path = Path("/var/db/redirects.sqlite")
     database_dialect: str = "sqlite"
