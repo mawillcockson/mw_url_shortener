@@ -1,4 +1,3 @@
-# mypy: allow_any_expr
 """
 does the database interface behave as expected?
 """
