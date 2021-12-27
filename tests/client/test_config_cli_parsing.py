@@ -11,8 +11,11 @@ from typer.testing import CliRunner
 from mw_url_shortener.cli.entry_point import OutputStyle, app
 from mw_url_shortener.settings import Settings, defaults
 
+from .conftest import TestCommand
+
 
 async def test_database_path(
+    anyio_backend: str,
     tmp_path: Path,
     run_test_command: Callable[[TestCommand], Result],
     cli_test_client: CliRunner,
@@ -34,7 +37,7 @@ async def test_database_path(
     )
 
     result = await run_test_command(test_command)
-    assert result.exit_code == 0
+    assert result.exit_code == 0, f"result: {result}"
 
     expected_settings = defaults.copy(update={"database_path": str(database_path)})
     settings = Settings.parse_raw(result.stdout)
