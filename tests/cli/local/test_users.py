@@ -9,7 +9,7 @@ from mw_url_shortener.cli.entry_point import app
 from mw_url_shortener.database.start import AsyncSession, make_sessionmaker
 from mw_url_shortener.interfaces import database as database_interface
 from mw_url_shortener.schemas.user import User
-from mw_url_shortener.settings import Settings
+from mw_url_shortener.settings import OutputStyle, Settings
 from tests.utils import random_password, random_username
 
 from .conftest import TestCommandRunner
@@ -26,7 +26,8 @@ async def test_create_user(
     result = await run_test_command(
         app,
         [
-            "--output-style=json",
+            "--output-style",
+            OutputStyle.json.value,
             "local",
             "--database-path",
             str(on_disk_database),
