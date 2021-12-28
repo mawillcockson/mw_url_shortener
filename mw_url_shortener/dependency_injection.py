@@ -25,14 +25,14 @@ def inject_loop(binder: inject.Binder, *, loop: AsyncLoopType) -> None:
 
 
 def initialize_dependency_injection(
-    configurators: List[inject.BinderCallable] = [],
+    configurators: List[inject.BinderCallable] = set(),
 ) -> None:
     assert len(configurators) == 0, str(configurators)
     settings = Settings()
-    configurators.append(partial(inject_settings, settings=settings))
+    configurators.add(partial(inject_settings, settings=settings))
 
     loop = asyncio.get_running_loop()
-    configurators.append(partial(inject_loop, loop=loop))
+    configurators.add(partial(inject_loop, loop=loop))
 
     def config(binder: inject.Binder) -> None:
         for configurator in configurators:
