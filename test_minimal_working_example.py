@@ -111,21 +111,6 @@ async def test_create_user(
     )
 
     assert result.exit_code == 0, f"result: {result}"
-    created_user = User.parse_raw(result.stdout)
-    assert created_user
-
-    # I think this uses too many of the implementation details, but I also
-    # think it's maybe okay to do, to confirm that the correct database is
-    # being used
-    settings = inject.instance(Settings)
-    database_url_end = settings.database_url_joiner + str(on_disk_database)
-    assert settings.database_url.endswith(database_url_end)
-    async_sessionmaker = await make_sessionmaker(settings.database_url)
-    async with async_sessionmaker() as async_session:
-        retrieved_user = await database_interface.user.get_by_id(
-            async_session, id=created_user.id
-        )
-    assert retrieved_user == created_user
 
 
 async def test_database_path(
@@ -146,12 +131,3 @@ async def test_database_path(
             "show-configuration",
         ],
     )
-
-    assert result.exit_code == 0, f"result: {result}"
-
-    expected_settings = defaults.copy(update={"database_path": str(database_path)})
-    settings = Settings.parse_raw(result.stdout)
-    assert settings == expected_settings
-
-    # make sure no local files were modified
-    assert not database_path.exists()
