@@ -3,6 +3,7 @@ minimal working example to reproduce the bug of the mysteriously appearing value
 """
 import asyncio
 import sqlite3
+from asyncio import BaseEventLoop as AsyncLoopType
 from functools import partial
 from pathlib import Path
 from typing import AsyncIterator, Awaitable, Callable, Iterator, List
@@ -17,10 +18,34 @@ from typer.testing import CliRunner
 
 from mw_url_shortener.cli.entry_point import app
 from mw_url_shortener.database.start import AsyncSession, make_sessionmaker
-from mw_url_shortener.dependency_injection import initialize_dependency_injection
 from mw_url_shortener.interfaces import database as database_interface
 from mw_url_shortener.schemas.user import User
 from mw_url_shortener.settings import OutputStyle, Settings, defaults
+
+
+def inject_settings(binder: inject.Binder, *, settings: Settings) -> None:
+    binder.bind(Settings, settings)
+
+
+def inject_loop(binder: inject.Binder, *, loop: AsyncLoopType) -> None:
+    binder.bind(AsyncLoopType, loop)
+
+
+def initialize_dependency_injection(
+    configurators: List[inject.BinderCallable] = [],
+) -> None:
+    assert len(configurators) == 0, str(configurators)
+    settings = Settings()
+    configurators.append(partial(inject_settings, settings=settings))
+
+    loop = asyncio.get_running_loop()
+    configurators.append(partial(inject_loop, loop=loop))
+
+    def config(binder: inject.Binder) -> None:
+        for configurator in configurators:
+            binder.install(configurator)
+
+    inject.configure(config)
 
 
 @pytest.fixture
