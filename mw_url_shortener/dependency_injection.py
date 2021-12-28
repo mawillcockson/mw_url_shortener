@@ -10,7 +10,7 @@ from mw_url_shortener.settings import Settings
 __all__ = [
     "inject_settings",
     "inject_loop",
-    "initialize_depency_injection",
+    "initialize_dependency_injection",
     "reconfigure_dependency_injection",
     "AsyncLoopType",
 ]
@@ -24,7 +24,7 @@ def inject_loop(binder: inject.Binder, *, loop: AsyncLoopType) -> None:
     binder.bind(AsyncLoopType, loop)
 
 
-def initialize_depency_injection(
+def initialize_dependency_injection(
     configurators: List[inject.BinderCallable] = [],
 ) -> None:
     assert len(configurators) == 0, str(configurators)

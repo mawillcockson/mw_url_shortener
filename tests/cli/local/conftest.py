@@ -9,7 +9,7 @@ from pytest import CaptureFixture
 from typer import Typer
 from typer.testing import CliRunner
 
-from mw_url_shortener.dependency_injection import initialize_depency_injection
+from mw_url_shortener.dependency_injection import initialize_dependency_injection
 
 
 @pytest.fixture
@@ -32,7 +32,7 @@ async def run_test_command(
         test_command = partial(cli_test_client.invoke, app, arguments)
         assert "configurators" not in locals()
         assert "configurators" not in globals()
-        initialize_depency_injection()
+        initialize_dependency_injection()
 
         with capsys.disabled():
             return await asyncio.get_running_loop().run_in_executor(None, test_command)

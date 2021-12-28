@@ -11,7 +11,7 @@ import typer
 from mw_url_shortener import __version__
 from mw_url_shortener.dependency_injection import (
     AsyncLoopType,
-    initialize_depency_injection,
+    initialize_dependency_injection,
     reconfigure_dependency_injection,
 )
 from mw_url_shortener.settings import OutputStyle, Settings, defaults
@@ -57,7 +57,7 @@ def main() -> None:
     """
 
     async def run_typer(app: typer.Typer) -> None:
-        initialize_depency_injection()
+        initialize_dependency_injection()
 
         return await asyncio.get_running_loop().run_in_executor(None, app)
 
