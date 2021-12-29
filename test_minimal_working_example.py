@@ -2,58 +2,24 @@
 minimal working example to reproduce the bug of the mysteriously appearing values
 """
 import asyncio
-import sqlite3
 from asyncio import BaseEventLoop as AsyncLoopType
 from functools import partial
 from pathlib import Path
-from typing import AsyncIterator, Awaitable, Callable, Iterator, List
+from typing import Awaitable, Callable, Iterator, List
 
 import inject
 import pytest
 import typer
 from click.testing import Result
 from pytest import CaptureFixture
-from sqlalchemy import Column, Integer
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
-from sqlalchemy.ext.declarative import as_declarative
-from sqlalchemy.orm import sessionmaker
 from typer import Typer
 from typer.testing import CliRunner
 
-
-@as_declarative()
-class DeclarativeBase:
-    "base class for ORM models"
-    id = Column(Integer, primary_key=True)
-
-
-IN_MEMORY_URL = "sqlite+aiosqlite:///:memory:"
 app = typer.Typer()
 
 
 class Settings:
     "dummy substitute"
-
-
-async def make_sessionmaker() -> "sessionmaker[AsyncSession]":
-    "creates the main way to talk to the database"
-    engine = create_async_engine(IN_MEMORY_URL, echo=True, future=True)
-
-    # Q: should the database be created if it doesn't exist?
-    # A: this should be done at the client layer, using a function provided
-    # here to "initialize" a database file
-
-    async with engine.begin() as connection:
-        await connection.run_sync(DeclarativeBase.metadata.create_all)  # type: ignore
-
-    async_sessionmaker = sessionmaker(engine, expire_on_commit=True, class_=AsyncSession)  # type: ignore
-    return async_sessionmaker
-
-
-def inject_async_sessionmaker(
-    binder: inject.Binder, *, async_sessionmaker: "sessionmaker[AsyncSession]"
-) -> None:
-    binder.bind("sessionmaker[AsyncSession]", async_sessionmaker)
 
 
 def inject_settings(binder: inject.Binder, *, settings: Settings) -> None:
@@ -119,12 +85,7 @@ async def test_command_first_time(
 ) -> None:
     "can a user be created and read back?"
 
-    result = await run_test_command(
-        app,
-        [],
-    )
-
-    assert result.exit_code == 0, f"result: {result}"
+    result = await run_test_command(app, [])
 
 
 async def test_command_second_time(
@@ -134,7 +95,4 @@ async def test_command_second_time(
     "is the database path accepted as a command-line parameter?"
     database_path = tmp_path / "temporary_database.sqlite"
 
-    result = await run_test_command(
-        app,
-        [],
-    )
+    result = await run_test_command(app, [])
