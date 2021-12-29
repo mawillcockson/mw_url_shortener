@@ -31,6 +31,9 @@ def callback(
     settings.cli_mode = CliMode.local_database
     settings.database_path = database_path
 
+    if ctx.invoked_subcommand == SHOW_CONFIGURATION_COMMAND_NAME:
+        return
+
     loop = inject.instance(AsyncLoopType)
     async_sessionmaker = asyncio.run_coroutine_threadsafe(
         make_sessionmaker(settings.database_url), loop=loop
