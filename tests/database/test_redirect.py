@@ -395,7 +395,12 @@ async def test_search_redirect_by_everything(in_memory_database: AsyncSession) -
 
     retrieved_redirects = await database_interface.redirect.search(
         in_memory_database,
-        short_link=short_link,
+        # NOTE::FUTURE short_link has a UNIQUE constraint in the database
+        # currently.
+        # When this is removed, searching by short_link will be meaningfully
+        # different from get_by_short_link or get_by_id.
+        #
+        # short_link=short_link,
         url=url,
         response_status=response_status,
         body=body,
