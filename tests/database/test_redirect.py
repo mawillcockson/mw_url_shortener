@@ -350,12 +350,17 @@ async def test_search_redirect_by_everything(in_memory_database: AsyncSession) -
     )
     assert desired_redirect
 
-    similar_redirect_schema1 = RedirectCreate(
+    redirect_different_short_link_schema = RedirectCreate(
         short_link=different_short_link1,
         url=url,
         response_status=response_status,
         body=body,
     )
+
+    redirect_different_short_link = await database_interface.redirect.create(
+        in_memory_database, create_object_schema=redirect_different_short_link_schema
+    )
+    assert redirect_different_short_link != desired_redirect
 
     similar_redirect_schema2 = RedirectCreate(
         short_link=different_short_link2,
@@ -378,9 +383,8 @@ async def test_search_redirect_by_everything(in_memory_database: AsyncSession) -
         body=different_body,
     )
 
-    similar_redirects: List[Redirect] = []
+    other_similar_redirects: List[Redirect] = []
     for similar_redirect_schema in [
-        similar_redirect_schema1,
         similar_redirect_schema2,
         similar_redirect_schema3,
         similar_redirect_schema4,
@@ -389,9 +393,11 @@ async def test_search_redirect_by_everything(in_memory_database: AsyncSession) -
             in_memory_database, create_object_schema=similar_redirect_schema
         )
         assert similar_redirect
-        similar_redirects.append(similar_redirect)
+        other_similar_redirects.append(similar_redirect)
 
-    assert desired_redirect not in similar_redirects
+    # affirm desired redirect is different in at least some way from each other
+    # similar redirect
+    assert desired_redirect not in other_similar_redirects
 
     retrieved_redirects = await database_interface.redirect.search(
         in_memory_database,
@@ -405,5 +411,6 @@ async def test_search_redirect_by_everything(in_memory_database: AsyncSession) -
         response_status=response_status,
         body=body,
     )
-    assert len(retrieved_redirects) == 1, str(retrieved_redirects)
+    assert len(retrieved_redirects) == 2, str(retrieved_redirects)
     assert desired_redirect in retrieved_redirects
+    assert redirect_different_short_link in retrieved_redirects
