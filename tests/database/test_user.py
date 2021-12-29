@@ -74,6 +74,32 @@ async def test_get_user_by_id(in_memory_database: AsyncSession) -> None:
     assert user_created == user_retrieved
 
 
+async def test_get_user_by_username(in_memory_database: AsyncSession) -> None:
+    """
+    can a previously added user be retrieved by username, and is the data the
+    same?
+    """
+    username1 = random_username()
+    password1 = random_password()
+    user_create_schema1 = UserCreate(username=username1, password=password1)
+    user_created1 = await database_interface.user.create(
+        in_memory_database, create_object_schema=user_create_schema1
+    )
+
+    username2 = random_username()
+    password2 = random_password()
+    user_create_schema2 = UserCreate(username=username2, password=password2)
+    user_created2 = await database_interface.user.create(
+        in_memory_database, create_object_schema=user_create_schema2
+    )
+
+    retrieved_user1 = await database_interface.user.get_by_username(
+        in_memory_database, username=username1
+    )
+    assert retrieved_user1
+    assert retrieved_user1 == user_created1
+
+
 async def test_get_two_users(in_memory_database: AsyncSession) -> None:
     "can a previous two users be retrieved simultaneously?"
     username1 = random_username()
@@ -139,7 +165,7 @@ async def test_update_user_password(in_memory_database: AsyncSession) -> None:
     assert authenticated_user == user_created
 
 
-async def test_delete_user(in_memory_database: AsyncSession) -> None:
+async def test_delete_user_by_id(in_memory_database: AsyncSession) -> None:
     "if a user is deleted, can their data no longer be found in the database?"
     # create user
     username = random_username()
