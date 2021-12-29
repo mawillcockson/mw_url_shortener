@@ -13,13 +13,21 @@ import pytest
 import typer
 from click.testing import Result
 from pytest import CaptureFixture
+from sqlalchemy import Column, Integer
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
+from sqlalchemy.ext.declarative import as_declarative
 from sqlalchemy.orm import sessionmaker
 from typer import Typer
 from typer.testing import CliRunner
 
-from mw_url_shortener.database.models.base import DeclarativeBase
 from mw_url_shortener.interfaces import database as database_interface
+
+
+@as_declarative()
+class DeclarativeBase:
+    "base class for ORM models"
+    id = Column(Integer, primary_key=True)
+
 
 IN_MEMORY_URL = "sqlite+aiosqlite:///:memory:"
 app = typer.Typer()
@@ -27,6 +35,7 @@ app = typer.Typer()
 
 class Settings:
     "dummy substitute"
+
 
 @app.callback()
 def callback(ctx: typer.Context) -> None:
