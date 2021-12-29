@@ -56,3 +56,4 @@
   from lowest to highest
 - the client should have to confirm before creating a database, if the file doesn't exist
   - if the file does exist, and it's not a readable database, an error should be displayed
+- wrangle logging
