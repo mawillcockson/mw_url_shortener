@@ -62,7 +62,6 @@ async def test_create_user(
     assert retrieved_user == created_user
 
 
-@pytest.mark.xfail(reason="not implemented")
 async def test_get_by_id(
     on_disk_database: Path,
     run_test_command: CommandRunner,

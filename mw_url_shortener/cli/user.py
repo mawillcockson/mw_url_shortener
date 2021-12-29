@@ -34,9 +34,31 @@ username: {created_user.username}"""
     )
 
 
+def get_by_id(id: int = typer.Argument(...)) -> None:
+    if id < 0:
+        typer.echo(f"'id' must be 0 or greater; got '{id}'")
+        raise typer.Exit(code=1)
+
+    user = inject.instance(UserInterface)
+    resource = inject.instance(Resource)
+    with open_resource(resource) as opened_resource:
+        retrieved_user = run_sync(user.get_by_id(opened_resource, id=id))
+
+    settings = inject.instance(Settings)
+    if settings.output_style == OutputStyle.json:
+        typer.echo(retrieved_user.json())
+        return
+
+    typer.echo(
+        f"""id: {retrieved_user.id}
+username: {retrieved_user.username}"""
+    )
+
+
 # update
 # remove_by_id
 # search
 
 app = typer.Typer()
 app.command()(create)
+app.command()(get_by_id)
