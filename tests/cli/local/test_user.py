@@ -4,6 +4,7 @@ do all cli commands dealing with users work correctly?
 from pathlib import Path
 
 import inject
+import pytest
 
 from mw_url_shortener.cli.entry_point import app
 from mw_url_shortener.database.start import AsyncSession, make_sessionmaker
@@ -56,3 +57,58 @@ async def test_create_user(
             async_session, id=created_user.id
         )
     assert retrieved_user == created_user
+
+
+@pytest.mark.xfail(reason="not implemented")
+async def test_search_user_by_id(
+    on_disk_database: Path,
+    run_test_command: TestCommandRunner,
+) -> None:
+    "can a user be created and read back?"
+    test_username = random_username()
+    test_password = random_password()
+
+    create_result = await run_test_command(
+        app,
+        [
+            "--output-style",
+            OutputStyle.json.value,
+            "local",
+            "--database-path",
+            str(on_disk_database),
+            "user",
+            "create",
+            "--username",
+            test_username,
+            "--password",
+            test_password,
+        ],
+    )
+
+    assert create_result.exit_code == 0, f"result: {create_result}"
+    created_user = User.parse_raw(create_result.stdout)
+    assert created_user
+
+    search_result = await run_test_command(
+        app,
+        [
+            "--output-style",
+            OutputStyle.json.value,
+            "local",
+            "--database-path",
+            str(on_disk_database),
+            "user",
+            "search",
+            "--id",
+            str(created_user.id),
+        ],
+    )
+
+    assert search_result.exit_code == 0, f"search result: {search_result}"
+    retrieved_user = User.parse_raw(search_result.stdout)
+    assert retrieved_user
+    assert retrieved_user == created_user
+
+
+# search_by_username
+# search_by_everything
