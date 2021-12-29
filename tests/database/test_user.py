@@ -6,7 +6,7 @@ from sqlalchemy.exc import NoResultFound
 
 from mw_url_shortener.database.start import AsyncSession
 from mw_url_shortener.interfaces import database as database_interface
-from mw_url_shortener.schemas.user import UserCreate, UserUpdate
+from mw_url_shortener.schemas.user import User, UserCreate, UserUpdate
 from mw_url_shortener.security import verify_password
 from tests.utils import random_password, random_username
 
@@ -192,3 +192,45 @@ async def test_delete_user_by_id(in_memory_database: AsyncSession) -> None:
         await database_interface.user.get_by_id(
             in_memory_database, id=user_retrieved.id
         )
+
+
+async def test_search_by_everything(in_memory_database: AsyncSession) -> None:
+    """
+    if a few similar users are in the database, can a specific one be
+    retrieved?
+    """
+    username = random_username()
+    other_username1 = random_username()
+    other_username2 = random_username()
+    # affirm all are unique
+    assert len({username, other_username1, other_username2}) == 3
+
+    password = random_password()
+    other_password = random_password()
+    assert password != other_password
+
+    desired_user_schema = UserCreate(username=username, password=password)
+
+    desired_user = await database_interface.user.create(
+        in_memory_database, create_object_schema=desired_user_schema
+    )
+    assert desired_user
+
+    other_user_schema1 = UserCreate(username=other_username1, password=password)
+    other_user_schema2 = UserCreate(username=other_username2, password=other_password)
+
+    other_users: List[User] = []
+    for other_user_schema in [other_user_schema1, other_user_schema2]:
+        other_user = await database_interface.user.create(
+            in_memory_database, create_object_schema=other_user_schema
+        )
+        assert other_user
+        other_users.append(other_user)
+
+    assert desired_user not in other_users
+
+    retrieved_users = await database_interface.user.search(
+        in_memory_database, username=username
+    )
+    assert len(retrieved_users) == 1, str(retrieved_users)
+    assert desired_user in retrieved_users

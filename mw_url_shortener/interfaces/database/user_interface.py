@@ -1,5 +1,5 @@
 # mypy: allow_any_expr
-from typing import Any, Dict, Optional, Union
+from typing import Any, Dict, List, Optional, Union
 
 from sqlalchemy import select
 
@@ -93,6 +93,33 @@ class UserDBInterface(
             if not verify_password(password, user_model.hashed_password):
                 return None
             return self.schema.from_orm(user_model)
+
+    async def search(
+        self,
+        async_session: AsyncSession,
+        *,
+        skip: int = 0,
+        limit: int = 100,
+        id: Optional[int] = None,
+        username: Optional[str] = None,
+    ) -> List[User]:
+        query = select(UserModel)
+
+        if id is not None:
+            query = query.where(UserModel.id == id)
+        if username is not None:
+            query = query.where(UserModel.username == username)
+
+        query = query.offset(skip).limit(limit).order_by(UserModel.id)
+
+        user_schemas: List[User] = []
+        async with async_session.begin():
+            user_models = (await async_session.scalars(query)).all()
+
+            for user_model in user_models:
+                user_schema = self.schema.from_orm(user_model)
+                user_schemas.append(user_schema)
+        return user_schemas
 
 
 user = UserDBInterface(UserModel, User)
