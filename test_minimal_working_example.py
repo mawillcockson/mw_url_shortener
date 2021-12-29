@@ -18,14 +18,6 @@ from typer.testing import CliRunner
 app = typer.Typer()
 
 
-class Settings:
-    "dummy substitute"
-
-
-def inject_settings(binder: inject.Binder, *, settings: Settings) -> None:
-    binder.bind(Settings, settings)
-
-
 def inject_loop(binder: inject.Binder, *, loop: AsyncLoopType) -> None:
     binder.bind(AsyncLoopType, loop)
 
@@ -34,9 +26,6 @@ def initialize_dependency_injection(
     configurators: List[inject.BinderCallable] = [],
 ) -> None:
     assert len(configurators) == 0, str(configurators)
-    settings = Settings()
-    configurators.append(partial(inject_settings, settings=settings))
-
     loop = asyncio.get_running_loop()
     configurators.append(partial(inject_loop, loop=loop))
 
