@@ -31,53 +31,6 @@ class RedirectDBInterface(
 
             return self.schema.from_orm(redirect_model)
 
-    async def get_by_url(
-        self, async_session: AsyncSession, *, url: str
-    ) -> List[Redirect]:
-        redirect_schemas: List[Redirect] = []
-        select_by_url = (
-            select(RedirectModel)
-            .where(RedirectModel.url == url)
-            .order_by(RedirectModel.id)
-        )
-        async with async_session.begin():
-            redirect_models = (await async_session.scalars(select_by_url)).all()
-            for redirect_model in redirect_models:
-                redirect_schemas.append(self.schema.from_orm(redirect_model))
-        return redirect_schemas
-
-    async def get_by_response_status(
-        self, async_session: AsyncSession, *, response_status: int
-    ) -> List[Redirect]:
-        redirect_schemas: List[Redirect] = []
-        select_by_response_status = (
-            select(RedirectModel)
-            .where(RedirectModel.response_status == response_status)
-            .order_by(RedirectModel.id)
-        )
-        async with async_session.begin():
-            redirect_models = (
-                await async_session.scalars(select_by_response_status)
-            ).all()
-            for redirect_model in redirect_models:
-                redirect_schemas.append(self.schema.from_orm(redirect_model))
-        return redirect_schemas
-
-    async def get_by_body(
-        self, async_session: AsyncSession, *, body: str
-    ) -> List[Redirect]:
-        redirect_schemas: List[Redirect] = []
-        select_by_body = (
-            select(RedirectModel)
-            .where(RedirectModel.body == body)
-            .order_by(RedirectModel.id)
-        )
-        async with async_session.begin():
-            redirect_models = (await async_session.scalars(select_by_body)).all()
-            for redirect_model in redirect_models:
-                redirect_schemas.append(self.schema.from_orm(redirect_model))
-        return redirect_schemas
-
     async def search(
         self,
         async_session: AsyncSession,

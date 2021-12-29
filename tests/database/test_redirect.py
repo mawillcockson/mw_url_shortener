@@ -170,7 +170,7 @@ async def test_redirect_get_by_url(in_memory_database: AsyncSession) -> None:
         in_memory_database, create_object_schema=create_redirect_schema
     )
 
-    retrieved_redirects = await database_interface.redirect.get_by_url(
+    retrieved_redirects = await database_interface.redirect.search(
         in_memory_database, url=created_redirect.url
     )
 
@@ -188,7 +188,7 @@ async def test_redirect_get_by_response_status(
         in_memory_database, create_object_schema=create_redirect_schema
     )
 
-    retrieved_redirects = await database_interface.redirect.get_by_response_status(
+    retrieved_redirects = await database_interface.redirect.search(
         in_memory_database, response_status=created_redirect.response_status
     )
 
@@ -206,7 +206,7 @@ async def test_redirect_get_by_body(in_memory_database: AsyncSession) -> None:
 
     assert created_redirect.body is not None  # for mypy
 
-    retrieved_redirects = await database_interface.redirect.get_by_body(
+    retrieved_redirects = await database_interface.redirect.search(
         in_memory_database, body=created_redirect.body
     )
 
