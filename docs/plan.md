@@ -1,10 +1,16 @@
 ## Plan
 
+- `mw_url_shortener.interfaces.database.redirect_interface` should not have
+  separate `get_by_` methods, now that a generic `search` is implemented
+  - a `search` isn't useful for `user` right now, since the only publicly
+    exposed, non-unique field is `username`, and there's already a
+    `get_by_username`, though that should be changed to `search_by_username`,
+    which can be made a generic `search`, so there's fewer changes when other
+    fields are eventually added
 - complete local client
-  - client configuration should be able to be specified through a config file, or on the command line
+  - add `local` subcommands for `search`, `remove_by_id` and `update_by_id` for `user`
+  - mirror `local` subcommands for `redirect`
   - the cli should be the same, whether working on a local database, or with a remote API
-  - the client should create confirm before creating a database, if the file doesn't exist  
-    if the file does exist, and it's not a readable database, an error should be displayed
 - add a server implementing an API
 - either automatically (e.g. apistar) or manually add a remote interface to
   mimic the database interface
@@ -14,6 +20,8 @@
 
 
 ### Extras
+- client configuration should be able to be specified through a config file,
+  which should be overridden by individual values on the command-line
 - obscure passwords (plain and hashed) with `pydantic.SecretStr` and others
   ([this commit message explains
   more](https://github.com/mawillcockson/mw_url_shortener/commit/6a492a1c090f082f399aa851537bd0a402355be5))
@@ -39,4 +47,12 @@
 - `discoverable` flag
   - sitemap generator of all `discoverable` links
 - make interface errors json-encodeable, surface errors in cli with --json option as json
-- add cli `write-configuration` command that reads from the `--config-path` option if it exists, overrides the configuration with options from cli, and writes the configuration back to the `--config-path` option, in json-style (pretty printing would be nice)
+- add cli `write-configuration` command that reads from the `--config-path`
+  option if it exists, overrides the configuration with options from cli, and
+  writes the configuration back to the `--config-path` option, in json-style
+  (pretty printing would be nice)
+- server shoud be able to take configuration through config file, environment
+  variables, and command line, with that also being the order of precedence
+  from lowest to highest
+- the client should have to confirm before creating a database, if the file doesn't exist
+  - if the file does exist, and it's not a readable database, an error should be displayed
