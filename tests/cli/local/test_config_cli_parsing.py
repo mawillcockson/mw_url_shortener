@@ -6,12 +6,12 @@ from pathlib import Path
 from mw_url_shortener.cli.entry_point import app
 from mw_url_shortener.settings import OutputStyle, Settings, defaults
 
-from .conftest import TestCommandRunner
+from .conftest import CommandRunner
 
 
 async def test_database_path(
     tmp_path: Path,
-    run_test_command: TestCommandRunner,
+    run_test_command: CommandRunner,
 ) -> None:
     "is the database path accepted as a command-line parameter?"
     database_path = tmp_path / "temporary_database.sqlite"

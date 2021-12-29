@@ -14,12 +14,12 @@ from mw_url_shortener.schemas.user import User
 from mw_url_shortener.settings import OutputStyle, Settings
 from tests.utils import random_password, random_username
 
-from .conftest import TestCommandRunner
+from .conftest import CommandRunner
 
 
 async def test_create_user(
     on_disk_database: Path,
-    run_test_command: TestCommandRunner,
+    run_test_command: CommandRunner,
 ) -> None:
     "can a user be created and read back?"
     test_username = random_username()
@@ -40,6 +40,7 @@ async def test_create_user(
             "--password",
             test_password,
         ],
+        False,
     )
 
     assert result.exit_code == 0, f"result: {result}"
@@ -63,7 +64,7 @@ async def test_create_user(
 @pytest.mark.xfail(reason="not implemented")
 async def test_get_by_id(
     on_disk_database: Path,
-    run_test_command: TestCommandRunner,
+    run_test_command: CommandRunner,
 ) -> None:
     "can a user be retrieved by id?"
     test_username = random_username()
@@ -113,7 +114,7 @@ async def test_get_by_id(
 @pytest.mark.xfail(reason="not implemented")
 async def test_search_by_username(
     on_disk_database: Path,
-    run_test_command: TestCommandRunner,
+    run_test_command: CommandRunner,
 ) -> None:
     "can a specific user be retrieved?"
     username = random_username()

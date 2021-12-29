@@ -1,6 +1,6 @@
 import asyncio
 from functools import partial
-from typing import Awaitable, Callable, Iterator, List
+from typing import Awaitable, Callable, Iterator, List, Protocol
 
 import inject
 import pytest
@@ -19,7 +19,13 @@ def cli_test_client() -> Iterator[CliRunner]:
     inject.clear()
 
 
-TestCommandRunner = Callable[[Typer, List[str]], Awaitable[Result]]
+class CommandRunner(Protocol):
+    "from: https://stackoverflow.com/a/68392079"
+
+    def __call__(
+        self, app: Typer, arguments: List[str], clear_injection: bool = True, /
+    ) -> Awaitable[Result]:
+        ...
 
 
 @pytest.fixture
@@ -27,8 +33,10 @@ async def run_test_command(
     capsys: CaptureFixture[str],
     cli_test_client: CliRunner,
     anyio_backend: str,
-) -> TestCommandRunner:
-    async def runner(app: Typer, arguments: List[str]) -> Result:
+) -> CommandRunner:
+    async def runner(
+        app: Typer, arguments: List[str], clear_injection: bool = True
+    ) -> Result:
         test_command = partial(cli_test_client.invoke, app, arguments)
         initialize_dependency_injection()
 
@@ -37,7 +45,8 @@ async def run_test_command(
                 None, test_command
             )
 
-        inject.clear()
+        if clear_injection:
+            inject.clear()
         return result
 
     return runner
