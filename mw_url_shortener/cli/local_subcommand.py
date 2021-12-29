@@ -23,8 +23,8 @@ from .user import app as user_app
 def callback(
     ctx: typer.Context,
     database_path: Path = typer.Option(defaults.database_path),
-    log_database: bool = typer.Option(
-        defaults.log_database, help="show output from the database interactions"
+    log_db_access: bool = typer.Option(
+        defaults.log_db_access, help="show output from the database interactions"
     ),
 ) -> None:
     if ctx.resilient_parsing or ctx.invoked_subcommand is None or "--help" in sys.argv:
@@ -33,14 +33,14 @@ def callback(
     settings = inject.instance(Settings)
     settings.cli_mode = CliMode.local_database
     settings.database_path = database_path
-    settings.log_database = log_database
+    settings.log_db_access = log_db_access
 
     if ctx.invoked_subcommand == SHOW_CONFIGURATION_COMMAND_NAME:
         return
 
     loop = inject.instance(AsyncLoopType)
     async_sessionmaker = asyncio.run_coroutine_threadsafe(
-        make_sessionmaker(settings.database_url), loop=loop
+        make_sessionmaker(settings.database_url, echo=log_db_access), loop=loop
     ).result()
     async_sessionmaker_injector = partial(
         inject_async_sessionmaker, async_sessionmaker=async_sessionmaker
