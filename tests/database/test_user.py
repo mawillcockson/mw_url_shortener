@@ -1,6 +1,8 @@
 """
 does the database interface behave as expected?
 """
+from typing import List
+
 import pytest
 from sqlalchemy.exc import NoResultFound
 

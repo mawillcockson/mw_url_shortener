@@ -3,6 +3,7 @@ do all cli commands dealing with users work correctly?
 """
 import json
 from pathlib import Path
+from typing import List
 
 import inject
 import pytest
