@@ -2,6 +2,7 @@
 does the database interface behave as expected?
 """
 from re import escape
+from typing import List
 
 import pytest
 from sqlalchemy.exc import IntegrityError, NoResultFound
@@ -310,8 +311,23 @@ async def test_search_redirect_by_everything(in_memory_database: AsyncSession) -
     retrieved?
     """
     short_link = random_short_link(defaults.test_string_length)
-    different_short_link = random_short_link(defaults.test_string_length)
-    assert short_link != different_short_link
+    different_short_link1 = random_short_link(defaults.test_string_length)
+    different_short_link2 = random_short_link(defaults.test_string_length)
+    different_short_link3 = random_short_link(defaults.test_string_length)
+    different_short_link4 = random_short_link(defaults.test_string_length)
+    # affirm that all the short links are unique from each other
+    assert (
+        len(
+            {
+                short_link,
+                different_short_link1,
+                different_short_link2,
+                different_short_link3,
+                different_short_link4,
+            }
+        )
+        == 5
+    )
 
     url = unsafe_random_string(defaults.test_string_length)
     different_url = unsafe_random_string(defaults.test_string_length)
@@ -330,33 +346,33 @@ async def test_search_redirect_by_everything(in_memory_database: AsyncSession) -
     )
 
     desired_redirect = await database_interface.redirect.create(
-        in_memory_database, create_object_schema=create_redirect_schema
+        in_memory_database, create_object_schema=desired_redirect_schema
     )
     assert desired_redirect
 
     similar_redirect_schema1 = RedirectCreate(
-        short_link=different_short_link,
+        short_link=different_short_link1,
         url=url,
         response_status=response_status,
         body=body,
     )
 
     similar_redirect_schema2 = RedirectCreate(
-        short_link=short_link,
+        short_link=different_short_link2,
         url=different_url,
         response_status=response_status,
         body=body,
     )
 
     similar_redirect_schema3 = RedirectCreate(
-        short_link=short_link,
+        short_link=different_short_link3,
         url=url,
         response_status=different_response_status,
         body=body,
     )
 
     similar_redirect_schema4 = RedirectCreate(
-        short_link=short_link,
+        short_link=different_short_link4,
         url=url,
         response_status=response_status,
         body=different_body,
