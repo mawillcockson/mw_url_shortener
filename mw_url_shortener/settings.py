@@ -90,6 +90,11 @@ class Defaults(BaseSettings):
     def database_url(self) -> str:
         return f"{self.database_url_leader}{self.database_path}"
 
+    @property
+    def version(self) -> str:
+        "app version should not be modifiable"
+        return __version__
+
     class Config:
         json_loads = json_loads  # type: ignore
         json_dumps = json_dumps  # type: ignore
