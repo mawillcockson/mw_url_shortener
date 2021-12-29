@@ -20,8 +20,6 @@ from sqlalchemy.orm import sessionmaker
 from typer import Typer
 from typer.testing import CliRunner
 
-from mw_url_shortener.interfaces import database as database_interface
-
 
 @as_declarative()
 class DeclarativeBase:
@@ -35,39 +33,6 @@ app = typer.Typer()
 
 class Settings:
     "dummy substitute"
-
-
-@app.callback()
-def callback(ctx: typer.Context) -> None:
-    if ctx.resilient_parsing or ctx.invoked_subcommand is None:
-        return
-
-    loop = inject.instance(AsyncLoopType)
-    async_sessionmaker = asyncio.run_coroutine_threadsafe(
-        make_sessionmaker(), loop=loop
-    ).result()
-    async_sessionmaker_injector = partial(
-        inject_async_sessionmaker, async_sessionmaker=async_sessionmaker
-    )
-
-    reconfigure_dependency_injection([async_sessionmaker_injector])
-
-
-@app.command()
-def create() -> None:
-    async_sessionmaker = inject.instance("sessionmaker[AsyncSession]")
-    with open_resource(async_sessionmaker) as opened_resource:
-        created_user = run_sync(
-            database_interface.user.create(
-                opened_resource, create_object_schema=create_user_schema
-            )
-        )
-
-
-@app.command()
-def show() -> None:
-    settings = inject.instance(Settings)
-    typer.echo(settings)
 
 
 async def make_sessionmaker() -> "sessionmaker[AsyncSession]":
@@ -149,15 +114,7 @@ def anyio_backend() -> str:
     return "asyncio"
 
 
-@pytest.fixture
-async def on_disk_database(tmp_path: Path, anyio_backend: str) -> Path:
-    tmp_db = tmp_path / "on_disk_database"
-    _ = await make_sessionmaker()
-    return tmp_db
-
-
-async def test_command1(
-    on_disk_database: Path,
+async def test_command_first_time(
     run_test_command: TestCommandRunner,
 ) -> None:
     "can a user be created and read back?"
@@ -170,7 +127,7 @@ async def test_command1(
     assert result.exit_code == 0, f"result: {result}"
 
 
-async def test_command2(
+async def test_command_second_time(
     tmp_path: Path,
     run_test_command: TestCommandRunner,
 ) -> None:
