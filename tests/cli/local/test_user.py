@@ -1,6 +1,7 @@
 """
 do all cli commands dealing with users work correctly?
 """
+import json
 from pathlib import Path
 
 import inject
@@ -60,11 +61,11 @@ async def test_create_user(
 
 
 @pytest.mark.xfail(reason="not implemented")
-async def test_search_user_by_id(
+async def test_get_by_id(
     on_disk_database: Path,
     run_test_command: TestCommandRunner,
 ) -> None:
-    "can a user be created and read back?"
+    "can a user be retrieved by id?"
     test_username = random_username()
     test_password = random_password()
 
@@ -89,6 +90,82 @@ async def test_search_user_by_id(
     created_user = User.parse_raw(create_result.stdout)
     assert created_user
 
+    result = await run_test_command(
+        app,
+        [
+            "--output-style",
+            OutputStyle.json.value,
+            "local",
+            "--database-path",
+            str(on_disk_database),
+            "user",
+            "get-by-id",
+            str(created_user.id),
+        ],
+    )
+
+    assert result.exit_code == 0, f"search result: {result}"
+    retrieved_user = User.parse_raw(result.stdout)
+    assert retrieved_user
+    assert retrieved_user == created_user
+
+
+@pytest.mark.xfail(reason="not implemented")
+async def test_search_by_username(
+    on_disk_database: Path,
+    run_test_command: TestCommandRunner,
+) -> None:
+    "can a specific user be retrieved?"
+    username = random_username()
+    other_username = random_username()
+    assert username != other_username
+
+    password = random_password()
+
+    first_create_result = await run_test_command(
+        app,
+        [
+            "--output-style",
+            OutputStyle.json.value,
+            "local",
+            "--database-path",
+            str(on_disk_database),
+            "user",
+            "create",
+            "--username",
+            str(username),
+            "--password",
+            str(password),
+        ],
+    )
+    assert (
+        first_create_result.exit_code == 0
+    ), f"first create result: {first_create_result}"
+    desired_user = User.parse_raw(first_create_result.stdout)
+    assert desired_user
+
+    other_create_result = await run_test_command(
+        app,
+        [
+            "--output-style",
+            OutputStyle.json.value,
+            "local",
+            "--database-path",
+            str(on_disk_database),
+            "user",
+            "create",
+            "--username",
+            str(other_username),
+            "--password",
+            str(password),
+        ],
+    )
+    assert (
+        other_create_result.exit_code == 0
+    ), f"other create result: {other_create_result}"
+    other_user = User.parse_raw(other_create_result.stdout)
+    assert other_user != desired_user
+
     search_result = await run_test_command(
         app,
         [
@@ -99,16 +176,17 @@ async def test_search_user_by_id(
             str(on_disk_database),
             "user",
             "search",
-            "--id",
-            str(created_user.id),
+            "--username",
+            str(username),
         ],
     )
-
     assert search_result.exit_code == 0, f"search result: {search_result}"
-    retrieved_user = User.parse_raw(search_result.stdout)
-    assert retrieved_user
-    assert retrieved_user == created_user
+    search_data = json.loads(search_result.stdout)
+    assert isinstance(search_data, list), f"search data: {search_data}"
 
+    retrieved_users: List[User] = []
+    for user_data in search_data:
+        user = User.parse_obj(user_data)
 
-# search_by_username
-# search_by_everything
+    assert len(retrieved_users) == 1
+    assert desired_user in retrieved_users
