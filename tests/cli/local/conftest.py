@@ -33,7 +33,9 @@ async def run_test_command(
         initialize_dependency_injection()
 
         with capsys.disabled():
-            result = await asyncio.get_running_loop().run_in_executor(None, test_command)
+            result = await asyncio.get_running_loop().run_in_executor(
+                None, test_command
+            )
 
         inject.clear()
         return result
