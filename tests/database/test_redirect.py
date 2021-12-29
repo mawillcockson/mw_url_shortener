@@ -9,6 +9,7 @@ from sqlalchemy.exc import IntegrityError, NoResultFound
 from mw_url_shortener.database.start import AsyncSession
 from mw_url_shortener.interfaces import database as database_interface
 from mw_url_shortener.schemas.redirect import (
+    Redirect,
     RedirectCreate,
     RedirectUpdate,
     random_short_link,
@@ -301,3 +302,87 @@ async def test_redirect_remove_by_id(in_memory_database: AsyncSession) -> None:
         _ = await database_interface.redirect.get_by_id(
             in_memory_database, id=created_redirect.id
         )
+
+
+async def test_search_redirect_by_everything(in_memory_database: AsyncSession) -> None:
+    """
+    if many similar redirects are in the database, can a specific one be
+    retrieved?
+    """
+    short_link = random_short_link(defaults.test_string_length)
+    different_short_link = random_short_link(defaults.test_string_length)
+    assert short_link != different_short_link
+
+    url = unsafe_random_string(defaults.test_string_length)
+    different_url = unsafe_random_string(defaults.test_string_length)
+    assert url != different_url
+
+    response_status = 1
+    different_response_status = 2
+    assert response_status != different_response_status
+
+    body = unsafe_random_string(defaults.test_string_length)
+    different_body = unsafe_random_string(defaults.test_string_length)
+    assert body != different_body
+
+    desired_redirect_schema = RedirectCreate(
+        short_link=short_link, url=url, response_status=response_status, body=body
+    )
+
+    desired_redirect = await database_interface.redirect.create(
+        in_memory_database, create_object_schema=create_redirect_schema
+    )
+    assert desired_redirect
+
+    similar_redirect_schema1 = RedirectCreate(
+        short_link=different_short_link,
+        url=url,
+        response_status=response_status,
+        body=body,
+    )
+
+    similar_redirect_schema2 = RedirectCreate(
+        short_link=short_link,
+        url=different_url,
+        response_status=response_status,
+        body=body,
+    )
+
+    similar_redirect_schema3 = RedirectCreate(
+        short_link=short_link,
+        url=url,
+        response_status=different_response_status,
+        body=body,
+    )
+
+    similar_redirect_schema4 = RedirectCreate(
+        short_link=short_link,
+        url=url,
+        response_status=response_status,
+        body=different_body,
+    )
+
+    similar_redirects: List[Redirect] = []
+    for similar_redirect_schema in [
+        similar_redirect_schema1,
+        similar_redirect_schema2,
+        similar_redirect_schema3,
+        similar_redirect_schema4,
+    ]:
+        similar_redirect = await database_interface.redirect.create(
+            in_memory_database, create_object_schema=similar_redirect_schema
+        )
+        assert similar_redirect
+        similar_redirects.append(similar_redirect)
+
+    assert desired_redirect not in similar_redirects
+
+    retrieved_redirects = await database_interface.redirect.search(
+        in_memory_database,
+        short_link=short_link,
+        url=url,
+        response_status=response_status,
+        body=body,
+    )
+    assert len(retrieved_redirects) == 1, str(retrieved_redirects)
+    assert desired_redirect in retrieved_redirects
