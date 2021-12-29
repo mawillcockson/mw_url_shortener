@@ -8,9 +8,9 @@ from functools import partial
 from pathlib import Path
 from typing import AsyncIterator, Awaitable, Callable, Iterator, List
 
-import typer
 import inject
 import pytest
+import typer
 from click.testing import Result
 from pytest import CaptureFixture
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
@@ -20,10 +20,13 @@ from typer.testing import CliRunner
 
 from mw_url_shortener.database.models.base import DeclarativeBase
 from mw_url_shortener.interfaces import database as database_interface
-from mw_url_shortener.settings import Settings
 
+IN_MEMORY_URL = "sqlite+aiosqlite:///:memory:"
 app = typer.Typer()
 
+
+class Settings:
+    "dummy substitute"
 
 @app.callback()
 def callback(ctx: typer.Context) -> None:
@@ -32,7 +35,7 @@ def callback(ctx: typer.Context) -> None:
 
     loop = inject.instance(AsyncLoopType)
     async_sessionmaker = asyncio.run_coroutine_threadsafe(
-        make_sessionmaker(settings.database_url), loop=loop
+        make_sessionmaker(), loop=loop
     ).result()
     async_sessionmaker_injector = partial(
         inject_async_sessionmaker, async_sessionmaker=async_sessionmaker
@@ -55,12 +58,12 @@ def create() -> None:
 @app.command()
 def show() -> None:
     settings = inject.instance(Settings)
-    typer.echo(settings.json())
+    typer.echo(settings)
 
 
-async def make_sessionmaker(database_url: str) -> "sessionmaker[AsyncSession]":
+async def make_sessionmaker() -> "sessionmaker[AsyncSession]":
     "creates the main way to talk to the database"
-    engine = create_async_engine(database_url, echo=True, future=True)
+    engine = create_async_engine(IN_MEMORY_URL, echo=True, future=True)
 
     # Q: should the database be created if it doesn't exist?
     # A: this should be done at the client layer, using a function provided
@@ -140,7 +143,7 @@ def anyio_backend() -> str:
 @pytest.fixture
 async def on_disk_database(tmp_path: Path, anyio_backend: str) -> Path:
     tmp_db = tmp_path / "on_disk_database"
-    _ = await make_sessionmaker("sqlite+aiosqlite:///" + str(tmp_db))
+    _ = await make_sessionmaker()
     return tmp_db
 
 
