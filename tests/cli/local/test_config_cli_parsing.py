@@ -30,11 +30,8 @@ async def test_database_path(
 
     assert result.exit_code == 0, f"result: {result}"
 
-    expected_settings = defaults.copy(update={"database_path": str(database_path)})
-    expected_settings_data = expected_settings.dict()
     settings = Settings.parse_raw(result.stdout)
-    settings_data = settings.dict()
-    assert settings_data == expected_settings_data
+    assert settings.database_path == database_path
 
     # make sure no local files were modified
     assert not database_path.exists()
