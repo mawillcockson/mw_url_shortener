@@ -40,13 +40,6 @@ def initialize_dependency_injection(
     inject.configure(config)
 
 
-@pytest.fixture
-def cli_test_client() -> Iterator[CliRunner]:
-    inject.clear()
-    yield CliRunner()
-    inject.clear()
-
-
 TestCommandRunner = Callable[[Typer, List[str]], Awaitable[Result]]
 
 
@@ -59,10 +52,10 @@ def anyio_backend() -> str:
 
 async def test_command_first_time(
     capsys: CaptureFixture[str],
-    cli_test_client: CliRunner,
     anyio_backend: str,
 ) -> None:
     "can a user be created and read back?"
+    cli_test_client = CliRunner()
     test_command = partial(cli_test_client.invoke, app, ["--help"])
     initialize_dependency_injection()
 
@@ -71,14 +64,11 @@ async def test_command_first_time(
 
 
 async def test_command_second_time(
-    tmp_path: Path,
     capsys: CaptureFixture[str],
-    cli_test_client: CliRunner,
     anyio_backend: str,
 ) -> None:
     "is the database path accepted as a command-line parameter?"
-    database_path = tmp_path / "temporary_database.sqlite"
-
+    cli_test_client = CliRunner()
     test_command = partial(cli_test_client.invoke, app, ["--help"])
     initialize_dependency_injection()
 
