@@ -16,7 +16,7 @@ from mw_url_shortener.dependency_injection import (
 )
 from mw_url_shortener.settings import OutputStyle, Settings, defaults
 
-from .common_subcommands import show_configuration
+from .common_subcommands import SHOW_CONFIGURATION_COMMAND_NAME, show_configuration
 from .local_subcommand import app as local_app
 
 
@@ -47,7 +47,7 @@ def callback(
 
 
 app = typer.Typer(callback=callback)
-app.command()(show_configuration)
+app.command(name=SHOW_CONFIGURATION_COMMAND_NAME)(show_configuration)
 app.add_typer(local_app, name="local")
 
 

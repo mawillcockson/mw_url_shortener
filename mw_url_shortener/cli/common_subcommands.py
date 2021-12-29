@@ -3,6 +3,8 @@ import typer
 
 from mw_url_shortener.settings import OutputStyle, Settings
 
+SHOW_CONFIGURATION_COMMAND_NAME: str = "show-configuration"
+
 
 def show_configuration() -> None:
     "print the configuration all other subcommands will use"
