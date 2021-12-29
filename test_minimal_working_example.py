@@ -121,7 +121,7 @@ async def test_command_first_time(
 
     result = await run_test_command(
         app,
-        ["command2"],
+        [],
     )
 
     assert result.exit_code == 0, f"result: {result}"
@@ -136,5 +136,5 @@ async def test_command_second_time(
 
     result = await run_test_command(
         app,
-        ["command2"],
+        [],
     )
