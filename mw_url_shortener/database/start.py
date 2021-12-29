@@ -10,9 +10,11 @@ from mw_url_shortener.settings import Settings
 from .models.base import DeclarativeBase
 
 
-async def make_sessionmaker(database_url: str) -> "sessionmaker[AsyncSession]":
+async def make_sessionmaker(
+    database_url: str, echo: bool = True
+) -> "sessionmaker[AsyncSession]":
     "creates the main way to talk to the database"
-    engine = create_async_engine(database_url, echo=True, future=True)
+    engine = create_async_engine(database_url, echo=echo, future=True)
 
     # Q: should the database be created if it doesn't exist?
     # A: this should be done at the client layer, using a function provided

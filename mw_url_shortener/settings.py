@@ -77,6 +77,7 @@ class Defaults(BaseSettings):
     test_string_length: PositiveInt = 100_000
     output_style: OutputStyle = OutputStyle.text
     cli_mode: Optional[CliMode] = None
+    log_database: bool = False
 
     @property
     def database_url_scheme(self) -> str:

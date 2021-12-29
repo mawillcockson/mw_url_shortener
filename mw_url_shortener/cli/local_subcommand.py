@@ -23,6 +23,9 @@ from .user import app as user_app
 def callback(
     ctx: typer.Context,
     database_path: Path = typer.Option(defaults.database_path),
+    log_database: bool = typer.Option(
+        defaults.log_database, help="show output from the database interactions"
+    ),
 ) -> None:
     if ctx.resilient_parsing or ctx.invoked_subcommand is None or "--help" in sys.argv:
         return
@@ -30,6 +33,7 @@ def callback(
     settings = inject.instance(Settings)
     settings.cli_mode = CliMode.local_database
     settings.database_path = database_path
+    settings.log_database = log_database
 
     if ctx.invoked_subcommand == SHOW_CONFIGURATION_COMMAND_NAME:
         return
