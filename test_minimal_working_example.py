@@ -17,6 +17,10 @@ from typer.testing import CliRunner
 
 app = typer.Typer()
 
+@app.command()
+def command() -> None:
+    "dummy command"
+
 
 def inject_loop(binder: inject.Binder, *, loop: AsyncLoopType) -> None:
     binder.bind(AsyncLoopType, loop)
@@ -47,22 +51,6 @@ TestCommandRunner = Callable[[Typer, List[str]], Awaitable[Result]]
 
 
 @pytest.fixture
-async def run_test_command(
-    capsys: CaptureFixture[str],
-    cli_test_client: CliRunner,
-    anyio_backend: str,
-) -> TestCommandRunner:
-    async def runner(app: Typer, arguments: List[str]) -> Result:
-        test_command = partial(cli_test_client.invoke, app, arguments)
-        initialize_dependency_injection()
-
-        with capsys.disabled():
-            return await asyncio.get_running_loop().run_in_executor(None, test_command)
-
-    return runner
-
-
-@pytest.fixture
 def anyio_backend() -> str:
     "declares the backend to use for all async tests"
     # SQLAlchemy uses a sqlite DBAPI (aiosqlite) that depends upon asyncio
@@ -70,18 +58,29 @@ def anyio_backend() -> str:
 
 
 async def test_command_first_time(
-    run_test_command: TestCommandRunner,
+    capsys: CaptureFixture[str],
+    cli_test_client: CliRunner,
+    anyio_backend: str,
 ) -> None:
     "can a user be created and read back?"
+    test_command = partial(cli_test_client.invoke, app, ["--help"])
+    initialize_dependency_injection()
 
-    result = await run_test_command(app, [])
+    with capsys.disabled():
+        return await asyncio.get_running_loop().run_in_executor(None, test_command)
 
 
 async def test_command_second_time(
     tmp_path: Path,
-    run_test_command: TestCommandRunner,
+    capsys: CaptureFixture[str],
+    cli_test_client: CliRunner,
+    anyio_backend: str,
 ) -> None:
     "is the database path accepted as a command-line parameter?"
     database_path = tmp_path / "temporary_database.sqlite"
 
-    result = await run_test_command(app, [])
+    test_command = partial(cli_test_client.invoke, app, ["--help"])
+    initialize_dependency_injection()
+
+    with capsys.disabled():
+        return await asyncio.get_running_loop().run_in_executor(None, test_command)
