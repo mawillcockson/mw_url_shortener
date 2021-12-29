@@ -25,8 +25,11 @@ def inject_loop(binder: inject.Binder, *, loop: AsyncLoopType) -> None:
 
 
 def initialize_dependency_injection(
-    configurators: List[inject.BinderCallable] = [],
+    configurators: Optional[List[inject.BinderCallable]] = None,
 ) -> None:
+    if configurators is None:
+        configurators = []
+
     settings = Settings()
     configurators.append(partial(inject_settings, settings=settings))
 
@@ -41,11 +44,14 @@ def initialize_dependency_injection(
 
 
 def reconfigure_dependency_injection(
-    configurators: List[inject.BinderCallable] = [],
+    configurators: Optional[List[inject.BinderCallable]] = None,
     *,
     settings: Optional[Settings] = None,
     loop: Optional[AsyncLoopType] = None
 ) -> None:
+    if configurators is None:
+        configurators = []
+
     if settings is None:
         settings = inject.instance(Settings)
     configurators.append(partial(inject_settings, settings=settings))
