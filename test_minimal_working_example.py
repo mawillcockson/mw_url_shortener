@@ -8,18 +8,75 @@ from functools import partial
 from pathlib import Path
 from typing import AsyncIterator, Awaitable, Callable, Iterator, List
 
+import typer
 import inject
 import pytest
 from click.testing import Result
 from pytest import CaptureFixture
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
+from sqlalchemy.orm import sessionmaker
 from typer import Typer
 from typer.testing import CliRunner
 
-from mw_url_shortener.cli.entry_point import app
-from mw_url_shortener.database.start import AsyncSession, make_sessionmaker
+from mw_url_shortener.database.models.base import DeclarativeBase
 from mw_url_shortener.interfaces import database as database_interface
-from mw_url_shortener.settings import OutputStyle, Settings, defaults
+from mw_url_shortener.settings import Settings
+
+app = typer.Typer()
+
+
+@app.callback()
+def callback(ctx: typer.Context) -> None:
+    if ctx.resilient_parsing or ctx.invoked_subcommand is None:
+        return
+
+    loop = inject.instance(AsyncLoopType)
+    async_sessionmaker = asyncio.run_coroutine_threadsafe(
+        make_sessionmaker(settings.database_url), loop=loop
+    ).result()
+    async_sessionmaker_injector = partial(
+        inject_async_sessionmaker, async_sessionmaker=async_sessionmaker
+    )
+
+    reconfigure_dependency_injection([async_sessionmaker_injector])
+
+
+@app.command()
+def create() -> None:
+    async_sessionmaker = inject.instance("sessionmaker[AsyncSession]")
+    with open_resource(async_sessionmaker) as opened_resource:
+        created_user = run_sync(
+            database_interface.user.create(
+                opened_resource, create_object_schema=create_user_schema
+            )
+        )
+
+
+@app.command()
+def show() -> None:
+    settings = inject.instance(Settings)
+    typer.echo(settings.json())
+
+
+async def make_sessionmaker(database_url: str) -> "sessionmaker[AsyncSession]":
+    "creates the main way to talk to the database"
+    engine = create_async_engine(database_url, echo=True, future=True)
+
+    # Q: should the database be created if it doesn't exist?
+    # A: this should be done at the client layer, using a function provided
+    # here to "initialize" a database file
+
+    async with engine.begin() as connection:
+        await connection.run_sync(DeclarativeBase.metadata.create_all)  # type: ignore
+
+    async_sessionmaker = sessionmaker(engine, expire_on_commit=True, class_=AsyncSession)  # type: ignore
+    return async_sessionmaker
+
+
+def inject_async_sessionmaker(
+    binder: inject.Binder, *, async_sessionmaker: "sessionmaker[AsyncSession]"
+) -> None:
+    binder.bind("sessionmaker[AsyncSession]", async_sessionmaker)
 
 
 def inject_settings(binder: inject.Binder, *, settings: Settings) -> None:
@@ -87,7 +144,7 @@ async def on_disk_database(tmp_path: Path, anyio_backend: str) -> Path:
     return tmp_db
 
 
-async def test_create_user(
+async def test_command1(
     on_disk_database: Path,
     run_test_command: TestCommandRunner,
 ) -> None:
@@ -95,24 +152,13 @@ async def test_create_user(
 
     result = await run_test_command(
         app,
-        [
-            "--output-style=json",
-            "local",
-            "--database-path",
-            str(on_disk_database),
-            "user",
-            "create",
-            "--username",
-            "test",
-            "--password",
-            "test",
-        ],
+        ["command2"],
     )
 
     assert result.exit_code == 0, f"result: {result}"
 
 
-async def test_database_path(
+async def test_command2(
     tmp_path: Path,
     run_test_command: TestCommandRunner,
 ) -> None:
@@ -121,12 +167,5 @@ async def test_database_path(
 
     result = await run_test_command(
         app,
-        [
-            "--output-style",
-            OutputStyle.json.value,
-            "local",
-            "--database-path",
-            str(database_path),
-            "show-configuration",
-        ],
+        ["command2"],
     )
