@@ -1,76 +1,26 @@
 """
-minimal working example to reproduce the bug of the mysteriously appearing values
+it's the mutable default parameter:
+
+https://towardsdatascience.com/python-pitfall-mutable-default-arguments-9385e8265422
 """
-import asyncio
-from asyncio import BaseEventLoop as AsyncLoopType
-from functools import partial
-from pathlib import Path
-from typing import Awaitable, Callable, Iterator, List
-
-import inject
-import pytest
-import typer
-from click.testing import Result
-from pytest import CaptureFixture
-from typer import Typer
-from typer.testing import CliRunner
-
-app = typer.Typer()
-
-@app.command()
-def command() -> None:
-    "dummy command"
+from typing import List
 
 
-def inject_loop(binder: inject.Binder, *, loop: AsyncLoopType) -> None:
-    binder.bind(AsyncLoopType, loop)
+def function_with_mutable_default_parameter(
+    items: List[str] = [],
+) -> List[str]:
+    items.append("item1")
+
+    return items
 
 
-def initialize_dependency_injection(
-    configurators: List[inject.BinderCallable] = [],
-) -> None:
-    assert len(configurators) == 0, str(configurators)
-    loop = asyncio.get_running_loop()
-    configurators.append(partial(inject_loop, loop=loop))
+def test_call_without_parameters() -> None:
+    items = function_with_mutable_default_parameter()
 
-    def config(binder: inject.Binder) -> None:
-        for configurator in configurators:
-            binder.install(configurator)
-
-    inject.configure(config)
+    assert len(items) == 1
 
 
-TestCommandRunner = Callable[[Typer, List[str]], Awaitable[Result]]
+def test_second_time_just_to_be_sure() -> None:
+    items = function_with_mutable_default_parameter()
 
-
-@pytest.fixture
-def anyio_backend() -> str:
-    "declares the backend to use for all async tests"
-    # SQLAlchemy uses a sqlite DBAPI (aiosqlite) that depends upon asyncio
-    return "asyncio"
-
-
-async def test_command_first_time(
-    capsys: CaptureFixture[str],
-    anyio_backend: str,
-) -> None:
-    "can a user be created and read back?"
-    cli_test_client = CliRunner()
-    test_command = partial(cli_test_client.invoke, app, ["--help"])
-    initialize_dependency_injection()
-
-    with capsys.disabled():
-        return await asyncio.get_running_loop().run_in_executor(None, test_command)
-
-
-async def test_command_second_time(
-    capsys: CaptureFixture[str],
-    anyio_backend: str,
-) -> None:
-    "is the database path accepted as a command-line parameter?"
-    cli_test_client = CliRunner()
-    test_command = partial(cli_test_client.invoke, app, ["--help"])
-    initialize_dependency_injection()
-
-    with capsys.disabled():
-        return await asyncio.get_running_loop().run_in_executor(None, test_command)
+    assert len(items) == 1, f"somehow got more than 1 item!\n{items}"
