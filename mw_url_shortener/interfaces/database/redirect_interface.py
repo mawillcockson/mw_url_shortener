@@ -1,5 +1,5 @@
 # mypy: allow_any_expr
-from typing import List
+from typing import List, Optional
 
 from sqlalchemy import select
 
@@ -74,6 +74,35 @@ class RedirectDBInterface(
         )
         async with async_session.begin():
             redirect_models = (await async_session.scalars(select_by_body)).all()
+            for redirect_model in redirect_models:
+                redirect_schemas.append(self.schema.from_orm(redirect_model))
+        return redirect_schemas
+
+    async def search(
+        self,
+        async_session: AsyncSession,
+        *,
+        skip: int = 0,
+        limit: int = 100,
+        short_link: Optional[str] = None,
+        url: Optional[str] = None,
+        response_status: Optional[int] = None,
+        body: Optional[str] = None,
+    ) -> List[Redirect]:
+        redirect_schemas: List[Redirect] = []
+        query = select(RedirectModel)
+        if short_link is not None:
+            query = query.where(RedirectModel.short_link == short_link)
+        if url is not None:
+            query = query.where(RedirectModel.url == url)
+        if response_status is not None:
+            query = query.where(RedirectModel.response_status == response_status)
+        if body is not None:
+            query = query.where(RedirectModel.body == body)
+
+        query = query.offset(skip).limit(limit).order_by(RedirectModel.id)
+        async with async_session.begin():
+            redirect_models = (await async_session.scalars(query)).all()
             for redirect_model in redirect_models:
                 redirect_schemas.append(self.schema.from_orm(redirect_model))
         return redirect_schemas
