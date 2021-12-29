@@ -1,3 +1,4 @@
+# mypy: allow_any_expr
 import asyncio
 from asyncio import BaseEventLoop as AsyncLoopType
 from functools import partial
@@ -24,6 +25,13 @@ def inject_loop(binder: inject.Binder, *, loop: AsyncLoopType) -> None:
     binder.bind(AsyncLoopType, loop)
 
 
+def install_configurators(
+    binder: inject.Binder, *, configurators: List[inject.BinderCallable]
+) -> None:
+    for configurator in configurators:
+        binder.install(configurator)
+
+
 def initialize_dependency_injection(
     configurators: Optional[List[inject.BinderCallable]] = None,
 ) -> None:
@@ -36,11 +44,7 @@ def initialize_dependency_injection(
     loop = asyncio.get_running_loop()
     configurators.append(partial(inject_loop, loop=loop))
 
-    def config(binder: inject.Binder) -> None:
-        for configurator in configurators:
-            binder.install(configurator)
-
-    inject.configure(config)
+    inject.configure(partial(install_configurators, configurators=configurators))
 
 
 def reconfigure_dependency_injection(
@@ -60,8 +64,6 @@ def reconfigure_dependency_injection(
         loop = inject.instance(AsyncLoopType)
     configurators.append(partial(inject_loop, loop=loop))
 
-    def config(binder: inject.Binder) -> None:
-        for configurator in configurators:
-            binder.install(configurator)
-
-    inject.clear_and_configure(config)
+    inject.clear_and_configure(
+        partial(install_configurators, configurators=configurators)
+    )
