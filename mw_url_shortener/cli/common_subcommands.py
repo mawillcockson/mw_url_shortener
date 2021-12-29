@@ -10,6 +10,8 @@ def show_configuration() -> None:
     "print the configuration all other subcommands will use"
     settings = inject.instance(Settings)
     if settings.output_style == OutputStyle.json:
+        # NOTE:FUTURE serialize property values
+        # https://github.com/samuelcolvin/pydantic/issues/935#issuecomment-554378904
         json_settings = settings.json()
         typer.echo(json_settings)
         return
@@ -24,5 +26,7 @@ def show_configuration() -> None:
             "test_string_length",
         }
     )
+    settings_data["database_url"] = settings.database_url
+    settings_data["version"] = settings.version
     for key in settings_data:
         typer.echo(f"{key}: {settings_data[key]}")
