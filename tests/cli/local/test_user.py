@@ -7,6 +7,7 @@ from typing import List
 
 import inject
 import pytest
+from pydantic import parse_raw_as
 
 from mw_url_shortener.cli.entry_point import app
 from mw_url_shortener.database.start import AsyncSession, make_sessionmaker
@@ -111,7 +112,6 @@ async def test_get_by_id(
     assert retrieved_user == created_user
 
 
-@pytest.mark.xfail(reason="not implemented")
 async def test_search_by_username(
     on_disk_database: Path,
     run_test_command: CommandRunner,
@@ -182,12 +182,6 @@ async def test_search_by_username(
         ],
     )
     assert search_result.exit_code == 0, f"search result: {search_result}"
-    search_data = json.loads(search_result.stdout)
-    assert isinstance(search_data, list), f"search data: {search_data}"
-
-    retrieved_users: List[User] = []
-    for user_data in search_data:
-        user = User.parse_obj(user_data)
-
+    retrieved_users: List[User] = parse_raw_as(List[User], search_result.stdout)
     assert len(retrieved_users) == 1
     assert desired_user in retrieved_users
