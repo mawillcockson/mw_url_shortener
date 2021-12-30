@@ -110,3 +110,8 @@ class Settings(Defaults):
         allow_mutation = True
         env_prefix = APP_NAME.upper() + "__"
         extra = Extra.forbid
+
+
+class FlexibleSettings(Settings):
+    class Config:
+        extra = Extra.allow

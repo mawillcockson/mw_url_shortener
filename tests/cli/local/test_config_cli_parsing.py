@@ -4,7 +4,7 @@ can the app take all of it's configuration through command line parameters?
 from pathlib import Path
 
 from mw_url_shortener.cli.entry_point import app
-from mw_url_shortener.settings import OutputStyle, Settings, defaults
+from mw_url_shortener.settings import FlexibleSettings, OutputStyle, Settings, defaults
 
 from .conftest import CommandRunner
 
@@ -30,7 +30,7 @@ async def test_database_path(
 
     assert result.exit_code == 0, f"result: {result}"
 
-    settings = Settings.parse_raw(result.stdout)
+    settings = FlexibleSettings.parse_raw(result.stdout)
     assert settings.database_path == database_path
 
     # make sure no local files were modified
