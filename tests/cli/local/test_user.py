@@ -185,3 +185,52 @@ async def test_search_by_username(
     retrieved_users: List[User] = parse_raw_as(List[User], search_result.stdout)
     assert len(retrieved_users) == 1
     assert desired_user in retrieved_users
+
+
+async def test_remove_by_id(
+    on_disk_database: Path,
+    run_test_command: CommandRunner,
+) -> None:
+    "can a user be retrieved by id?"
+    test_username = random_username()
+    test_password = random_password()
+
+    create_result = await run_test_command(
+        app,
+        [
+            "--output-style",
+            OutputStyle.json.value,
+            "local",
+            "--database-path",
+            str(on_disk_database),
+            "user",
+            "create",
+            "--username",
+            test_username,
+            "--password",
+            test_password,
+        ],
+    )
+
+    assert create_result.exit_code == 0, f"result: {create_result}"
+    created_user = User.parse_raw(create_result.stdout)
+    assert created_user
+
+    result = await run_test_command(
+        app,
+        [
+            "--output-style",
+            OutputStyle.json.value,
+            "local",
+            "--database-path",
+            str(on_disk_database),
+            "user",
+            "remove-by-id",
+            str(created_user.id),
+        ],
+    )
+
+    assert result.exit_code == 0, f"search result: {result}"
+    removed_user = User.parse_raw(result.stdout)
+    assert removed_user
+    assert removed_user == created_user

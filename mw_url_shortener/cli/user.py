@@ -95,10 +95,31 @@ username: {retrieved_user.username}
         )
 
 
+def remove_by_id(id: int = typer.Argument(...)) -> None:
+    if id < 0:
+        typer.echo(f"'id' must be 0 or greater; got '{id}'")
+        raise typer.Exit(code=1)
+
+    user = inject.instance(UserInterface)
+    resource = get_resource()
+    with open_resource(resource) as opened_resource:
+        removed_user = run_sync(user.remove_by_id(opened_resource, id=id))
+
+    settings = inject.instance(Settings)
+    if settings.output_style == OutputStyle.json:
+        typer.echo(removed_user.json())
+        return
+
+    typer.echo(
+        f"""id: {removed_user.id}
+username: {removed_user.username}"""
+    )
+
+
 # update
-# remove_by_id
 
 app = typer.Typer()
 app.command()(create)
 app.command()(get_by_id)
 app.command()(search)
+app.command()(remove_by_id)

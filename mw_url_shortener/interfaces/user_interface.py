@@ -37,3 +37,8 @@ class UserInterface(InterfaceBaseProtocol):
         username: Optional[str] = None,
     ) -> List[User]:
         ...
+
+    async def remove_by_id(
+        self, opened_resource: OpenedResourceT, /, *, id: int
+    ) -> User:
+        ...
