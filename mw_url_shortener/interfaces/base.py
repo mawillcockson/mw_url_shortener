@@ -8,17 +8,17 @@ if TYPE_CHECKING:
     from mw_url_shortener.database.start import AsyncSession, sessionmaker
 
 
-Resource = TypeVar("Resource", "sessionmaker[AsyncSession]", "AsyncClient")
-ResourceType = Union["sessionmaker[AsyncSession]", "AsyncClient"]
-OpenedResource = TypeVar("OpenedResource", bound=Union["AsyncSession", "AsyncClient"])
-OpenedResourceType = Union["AsyncSession", "AsyncClient"]
+ResourceT = TypeVar("ResourceT", "sessionmaker[AsyncSession]", "AsyncClient")
+Resource = Union["sessionmaker[AsyncSession]", "AsyncClient"]
+OpenedResourceT = TypeVar("OpenedResourceT", bound=Union["AsyncSession", "AsyncClient"])
+OpenedResource = Union["AsyncSession", "AsyncClient"]
 ObjectSchemaType = TypeVar("ObjectSchemaType", bound=BaseInDBSchema)
 CreateSchemaType = TypeVar("CreateSchemaType", bound=BaseSchema)
 UpdateSchemaType = TypeVar("UpdateSchemaType", bound=BaseSchema)
 
 
 class InterfaceBase(
-    Generic[Resource, ObjectSchemaType, CreateSchemaType, UpdateSchemaType]
+    Generic[ResourceT, ObjectSchemaType, CreateSchemaType, UpdateSchemaType]
 ):
     """
     generic base interface for concrete implementations of database and api
