@@ -1,15 +1,10 @@
 ## Plan
 
-- `mw_url_shortener.interfaces.database.redirect_interface` should not have
-  separate `get_by_` methods, now that a generic `search` is implemented
-  - a `search` isn't useful for `user` right now, since the only publicly
-    exposed, non-unique field is `username`, and there's already a
-    `get_by_username`, though that should be changed to `search_by_username`,
-    which can be made a generic `search`, so there's fewer changes when other
-    fields are eventually added
 - complete local client
-  - add `local` subcommands for `search`, `remove_by_id` and `update_by_id` for `user`
   - mirror `local` subcommands for `redirect`
+  - make `redirect.body` not nullable (a body of `""` is effectively the same
+    as a null body, except `None` can be used to distinguish an empty
+    parameter)
   - the cli should be the same, whether working on a local database, or with a remote API
 - add a server implementing an API
 - either automatically (e.g. apistar) or manually add a remote interface to
