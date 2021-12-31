@@ -75,6 +75,10 @@ def search(
 
     settings = inject.instance(Settings)
     if settings.output_style == OutputStyle.json:
+        # NOTE:FUTURE partial serialization would allow for serializing
+        # pydantic.BaseModels into an object that json.dumps can encode, and
+        # can thus be included in other arbitrary data, like a list
+        # https://github.com/samuelcolvin/pydantic/issues/951
         typer.echo(json.dumps(retrieved_users, default=pydantic_encoder))
         return
 
