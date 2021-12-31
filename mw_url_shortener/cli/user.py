@@ -54,6 +54,13 @@ def get_by_id(id: int = typer.Argument(...)) -> None:
         retrieved_user = run_sync(user.get_by_id(opened_resource, id=id))
 
     settings = inject.instance(Settings)
+
+    if retrieved_user is None and settings.output_style == OutputStyle.text:
+        typer.echo(f"could not find user with id '{id}'")
+
+    if retrieved_user is None:
+        raise typer.Exit(code=1)
+
     if settings.output_style == OutputStyle.json:
         typer.echo(retrieved_user.json())
         return

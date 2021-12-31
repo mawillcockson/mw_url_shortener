@@ -112,6 +112,27 @@ async def test_get_by_id(
     assert retrieved_user == created_user
 
 
+async def test_get_non_existant_user(
+    on_disk_database: Path,
+    run_test_command: CommandRunner,
+) -> None:
+    result = await run_test_command(
+        app,
+        [
+            "--output-style",
+            OutputStyle.json.value,
+            "local",
+            "--database-path",
+            str(on_disk_database),
+            "user",
+            "get-by-id",
+            str(0),
+        ],
+    )
+
+    assert result.exit_code == 1, f"search result: {result}"
+
+
 async def test_search_by_username(
     on_disk_database: Path,
     run_test_command: CommandRunner,
