@@ -5,12 +5,12 @@ from functools import partial
 from pathlib import Path
 from typing import List, Optional
 
-import inject
 import typer
 
 from mw_url_shortener import __version__
 from mw_url_shortener.dependency_injection import (
     AsyncLoopType,
+    get_settings,
     initialize_dependency_injection,
     reconfigure_dependency_injection,
 )
@@ -42,7 +42,7 @@ def callback(
     if ctx.resilient_parsing or ctx.invoked_subcommand is None:
         return
 
-    settings = inject.instance(Settings)
+    settings = get_settings()
     settings.output_style = output_style
 
 

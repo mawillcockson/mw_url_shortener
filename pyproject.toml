@@ -173,12 +173,6 @@ plugins = [
 ]
 
 [[tool.mypy.overrides]]
-module = ["mw_url_shortener.cli.*"]
-# NOTE:TYPES Settings, and any class derived from pydantic.BaseModel has Any in
-# it's class call signature
-allow_any_expr = true
-
-[[tool.mypy.overrides]]
 module = ["tests.conftest", "tests.*.conftest"]
 # NOTE:TYPES @pytest.fixture contains Any
 allow_any_expr = true
@@ -187,20 +181,6 @@ allow_any_expr = true
 module = ["tests.*"]
 # NOTE:TYPES many uses of pydantic.BaseModel and typer.testing.CliRunner have Any
 allow_any_expr = true
-
-#[[tool.mypy.overrides]]
-#module = ["tests.conftest.*", "tests.test_mw_url_shortener.*"]
-## NOTE:BUG pytest-dev/pytest#7448
-## From issue:
-## https://github.com/python/mypy/issues/7030
-## pytest only recently published type hints
-## The pull request adding typing information
-## https://github.com/pytest-dev/pytest/pull/7448
-## Has ben merged, waiting for pytest v6.0
-## disallow_any_expr = false
-## disallow_untyped_decorators = false
-## disallow_any_decorated = false
-#implicit_reexport = true
 
 # NOTE::FUTURE add mypy plugin configuration when syntax is available
 # [pydantic-mypy]

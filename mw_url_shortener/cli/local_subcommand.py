@@ -9,6 +9,7 @@ import typer
 from mw_url_shortener.database.start import inject_async_sessionmaker, make_sessionmaker
 from mw_url_shortener.dependency_injection import (
     AsyncLoopType,
+    get_settings,
     reconfigure_dependency_injection,
 )
 from mw_url_shortener.interfaces import UserInterface
@@ -30,7 +31,7 @@ def callback(
     if ctx.resilient_parsing or ctx.invoked_subcommand is None or "--help" in sys.argv:
         return
 
-    settings = inject.instance(Settings)
+    settings = get_settings()
     settings.cli_mode = CliMode.local_database
     settings.database_path = database_path
     settings.log_db_access = log_db_access

@@ -21,6 +21,10 @@ def inject_settings(binder: inject.Binder, *, settings: Settings) -> None:
     binder.bind(Settings, settings)
 
 
+def get_settings() -> Settings:
+    return inject.instance(Settings)
+
+
 def inject_loop(binder: inject.Binder, *, loop: AsyncLoopType) -> None:
     binder.bind(AsyncLoopType, loop)
 

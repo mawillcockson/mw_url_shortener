@@ -1,6 +1,7 @@
-import inject
+# mypy: allow_any_expr
 import typer
 
+from mw_url_shortener.dependency_injection import get_settings
 from mw_url_shortener.settings import FlexibleSettings, OutputStyle, Settings
 
 SHOW_CONFIGURATION_COMMAND_NAME: str = "show-configuration"
@@ -8,7 +9,7 @@ SHOW_CONFIGURATION_COMMAND_NAME: str = "show-configuration"
 
 def show_configuration() -> None:
     "print the configuration all other subcommands will use"
-    settings = inject.instance(Settings)
+    settings = get_settings()
     # NOTE:FUTURE serialize property values
     # https://github.com/samuelcolvin/pydantic/issues/935#issuecomment-554378904
     all_settings = FlexibleSettings.parse_obj(

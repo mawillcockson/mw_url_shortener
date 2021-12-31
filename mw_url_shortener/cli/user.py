@@ -1,11 +1,12 @@
+# mypy: allow_any_expr
 "the 'user' subcommand of the client"
 import json
 from typing import Optional
 
-import inject
 import typer
 from pydantic.json import pydantic_encoder
 
+from mw_url_shortener.dependency_injection import get_settings
 from mw_url_shortener.interfaces import (
     UserInterface,
     get_resource,
@@ -32,7 +33,7 @@ def create(
             user.create(opened_resource, create_object_schema=create_user_schema)
         )
 
-    settings = inject.instance(Settings)
+    settings = get_settings()
     if settings.output_style == OutputStyle.json:
         typer.echo(created_user.json())
         return
@@ -54,7 +55,7 @@ def get_by_id(id: int = typer.Argument(...)) -> None:
     with open_resource(resource) as opened_resource:
         retrieved_user = run_sync(user.get_by_id(opened_resource, id=id))
 
-    settings = inject.instance(Settings)
+    settings = get_settings()
 
     if retrieved_user is None and settings.output_style == OutputStyle.text:
         typer.echo(f"could not find user with id '{id}'")
@@ -86,7 +87,7 @@ def search(
             user.search(opened_resource, skip=skip, limit=limit, username=username)
         )
 
-    settings = inject.instance(Settings)
+    settings = get_settings()
     if settings.output_style == OutputStyle.json:
         # NOTE:FUTURE partial serialization would allow for serializing
         # pydantic.BaseModels into an object that json.dumps can encode, and
@@ -113,7 +114,7 @@ def remove_by_id(id: int = typer.Argument(...)) -> None:
     with open_resource(resource) as opened_resource:
         removed_user = run_sync(user.remove_by_id(opened_resource, id=id))
 
-    settings = inject.instance(Settings)
+    settings = get_settings()
     if settings.output_style == OutputStyle.json:
         typer.echo(removed_user.json())
         return
@@ -137,7 +138,7 @@ def check_authentication(
             user.authenticate(opened_resource, username=username, password=password)
         )
 
-    settings = inject.instance(Settings)
+    settings = get_settings()
 
     if valid_user is None and settings.output_style == OutputStyle.text:
         typer.echo("invalid username/password combination")
@@ -175,7 +176,7 @@ def update_by_id(
     with open_resource(resource) as opened_resource:
         old_user = run_sync(user.get_by_id(opened_resource, id=id))
 
-    settings = inject.instance(Settings)
+    settings = get_settings()
 
     if old_user is None and settings.output_style == OutputStyle.text:
         typer.echo(f"could not find user with id '{id}'")
