@@ -1,9 +1,9 @@
 from mw_url_shortener.schemas.redirect import Redirect, RedirectCreate, RedirectUpdate
 
-from .base import InterfaceBase, ResourceType
+from .base import InterfaceBase, Resource
 
 
 class RedirectInterface(
-    InterfaceBase[ResourceType, Redirect, RedirectCreate, RedirectUpdate]
+    InterfaceBase[Resource, Redirect, RedirectCreate, RedirectUpdate]
 ):
     "generic user data interface"

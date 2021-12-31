@@ -1,18 +1,21 @@
 # mypy: allow_any_expr
 import asyncio
 from contextlib import AsyncExitStack, contextmanager
-from typing import Awaitable, Iterator, Tuple, Type, TypeVar, Union, cast, overload
+from typing import Awaitable, Iterator, Tuple, Type, TypeVar, Union, cast, overload, Optional
 
 import inject
 from httpx import AsyncClient
 
 from mw_url_shortener.database.start import AsyncSession, sessionmaker
 from mw_url_shortener.dependency_injection import AsyncLoopType
+from mw_url_shortener.settings import Settings, CliMode
 
 from .base import (
     CreateSchemaType,
     InterfaceBase,
     ObjectSchemaType,
+    OpenedResource,
+    OpenedResourceType,
     Resource,
     ResourceType,
     UpdateSchemaType,
@@ -27,16 +30,16 @@ def run_sync(coroutine: Awaitable[T]) -> T:
 
 
 @overload
-def resource_opener(resource: "sessionmaker[AsyncSession]") -> Iterator[AsyncSession]:
+def resource_opener(resource: "sessionmaker[AsyncSession]") -> "Iterator[AsyncSession]":
     ...
 
 
 @overload
-def resource_opener(resource: AsyncClient) -> Iterator[AsyncClient]:
+def resource_opener(resource: "AsyncClient") -> "Iterator[AsyncClient]":
     ...
 
 
-def resource_opener(resource: Resource) -> Iterator[Union[AsyncClient, AsyncSession]]:
+def resource_opener(resource: ResourceType) -> Iterator[OpenedResourceType]:
     if isinstance(resource, AsyncClient):
         async_client = inject.instance(AsyncClient)
         yield async_client
@@ -54,9 +57,11 @@ def resource_opener(resource: Resource) -> Iterator[Union[AsyncClient, AsyncSess
                 return (stack.pop_all(), async_session)
 
         loop = inject.instance(AsyncLoopType)
-        async_exitstack, async_session = asyncio.run_coroutine_threadsafe(
+        future = asyncio.run_coroutine_threadsafe(
             get_async_session(async_sessionmaker), loop=loop
-        ).result()
+        )
+        result = future.result()
+        async_exitstack, async_session = result
 
         yield async_session
 
@@ -66,56 +71,28 @@ def resource_opener(resource: Resource) -> Iterator[Union[AsyncClient, AsyncSess
 open_resource = contextmanager(resource_opener)
 
 
+def get_resource(resource_type: Optional[Type[Resource]] = None) -> Resource:
+    if resource_type is None:
+        settings = inject.instance(Settings)
+        if settings.cli_mode == CliMode.local_database:
+            return cast("Resource", inject.instance("sessionmaker[AsyncSession]"))
+        return cast("Resource", inject.instance("AsyncClient"))
+
+    return inject.instance(resource_type)
+
+
 def inject_interface(
     binder: "inject.Binder",
     *,
     interface_type: Type[
-        InterfaceBase[
-            ResourceType, ObjectSchemaType, CreateSchemaType, UpdateSchemaType
-        ]
+        InterfaceBase[Resource, ObjectSchemaType, CreateSchemaType, UpdateSchemaType]
     ],
     interface: InterfaceBase[
-        ResourceType, ObjectSchemaType, CreateSchemaType, UpdateSchemaType
+        Resource, ObjectSchemaType, CreateSchemaType, UpdateSchemaType
     ],
 ) -> None:
     binder.bind(interface_type, interface)
 
 
-def inject_resource(binder: "inject.Binder", *, resource: Resource) -> None:
-    binder.bind(Resource, resource)
-
-
-# from abc import ABC, abstractmethod
-# from .database.base import ModelType
-# class BaseInterface(ABC, Generic[ResourceType]):
-#     def __init__(self, resource: ResourceType):
-#         self.resource = resource
-#
-#     @property
-#     @abstractmethod
-#     def interface(
-#         self,
-#     ) -> InterfaceBase[ModelType, ObjectSchemaType, CreateSchemaType, UpdateSchemaType]:
-#         raise NotImplementedError
-#
-#     def create(self, create_object_schema: CreateSchemaType) -> ObjectSchemaType:
-#         with open_resource(self.resource) as resource:
-#             return run_sync(
-#                 self.interface.create(
-#                     resource, create_object_schema=create_object_schema
-#                 )
-#             )
-
-# from httpx import AsyncClient
-#
-# from mw_url_shortener import database_interface
-#
-# from .base import BaseInterface, ResourceType
-#
-#
-# class UserInterface(BaseInterface):
-#     @property
-#     def interface(self) -> ResourceType:
-#         if isinstance(self.resource, AsyncClient):
-#             raise NotImplementedError
-#         return database_interface.user
+def inject_resource(binder: "inject.Binder", *, resource: ResourceType) -> None:
+    binder.bind(ResourceType, resource)

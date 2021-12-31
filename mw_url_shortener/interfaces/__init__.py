@@ -1,9 +1,12 @@
 from .base import CreateSchemaType as CreateSchemaType
 from .base import InterfaceBase as InterfaceBase
 from .base import ObjectSchemaType as ObjectSchemaType
+from .base import OpenedResource as OpenedResource
+from .base import OpenedResourceType as OpenedResourceType
 from .base import Resource as Resource
 from .base import ResourceType as ResourceType
 from .base import UpdateSchemaType as UpdateSchemaType
+from .helpers import get_resource as get_resource
 from .helpers import inject_interface as inject_interface
 from .helpers import inject_resource as inject_resource
 from .helpers import open_resource as open_resource
