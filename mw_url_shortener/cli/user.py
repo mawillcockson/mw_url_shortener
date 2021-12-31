@@ -111,7 +111,8 @@ def remove_by_id(id: int = typer.Argument(...)) -> None:
         return
 
     typer.echo(
-        f"""id: {removed_user.id}
+        f"""successfully removed user
+id: {removed_user.id}
 username: {removed_user.username}"""
     )
 
