@@ -363,3 +363,124 @@ async def test_authentication_invalid_info(
     )
 
     assert result.exit_code == 1, f"search result: {result}"
+
+
+async def test_update(on_disk_database: Path, run_test_command: CommandRunner) -> None:
+    "can user info be modified?"
+    username = random_username()
+    new_username = random_username()
+    assert new_username != username
+
+    password = random_password()
+    new_password = random_password()
+    assert new_password != password
+
+    create_result = await run_test_command(
+        app,
+        [
+            "--output-style",
+            OutputStyle.json.value,
+            "local",
+            "--database-path",
+            str(on_disk_database),
+            "user",
+            "create",
+            "--username",
+            str(username),
+            "--password",
+            str(password),
+        ],
+    )
+
+    assert create_result.exit_code == 0, f"result: {create_result}"
+    created_user = User.parse_raw(create_result.stdout)
+    assert created_user
+
+    update_result = await run_test_command(
+        app,
+        [
+            "--output-style",
+            OutputStyle.json.value,
+            "local",
+            "--database-path",
+            str(on_disk_database),
+            "user",
+            "update-by-id",
+            str(created_user.id),
+            "--username",
+            str(new_username),
+            "--password",
+            str(new_password),
+        ],
+    )
+
+    assert update_result.exit_code == 0, f"search result: {update_result}"
+    updated_user = User.parse_raw(update_result.stdout)
+    assert updated_user
+    assert updated_user.username == new_username
+
+    authentication_failure_result = await run_test_command(
+        app,
+        [
+            "--output-style",
+            OutputStyle.json.value,
+            "local",
+            "--database-path",
+            str(on_disk_database),
+            "user",
+            "check-authentication",
+            "--username",
+            str(username),
+            "--password",
+            str(password),
+        ],
+    )
+
+    assert (
+        authentication_failure_result.exit_code == 1
+    ), f"bad authentication success: {authentication_failure_result}"
+
+    authentication_failure_result2 = await run_test_command(
+        app,
+        [
+            "--output-style",
+            OutputStyle.json.value,
+            "local",
+            "--database-path",
+            str(on_disk_database),
+            "user",
+            "check-authentication",
+            "--username",
+            str(new_username),
+            "--password",
+            str(password),
+        ],
+    )
+
+    assert (
+        authentication_failure_result2.exit_code == 1
+    ), f"bad authentication success: {authentication_failure_result2}"
+
+    authentication_result = await run_test_command(
+        app,
+        [
+            "--output-style",
+            OutputStyle.json.value,
+            "local",
+            "--database-path",
+            str(on_disk_database),
+            "user",
+            "check-authentication",
+            "--username",
+            str(new_username),
+            "--password",
+            str(new_password),
+        ],
+    )
+
+    assert (
+        authentication_result.exit_code == 0
+    ), f"authentication failure: {authentication_result}"
+    authenticated_user = User.parse_raw(authentication_result.stdout)
+    assert authenticated_user
+    assert authenticated_user == updated_user

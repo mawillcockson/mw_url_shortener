@@ -12,7 +12,7 @@ from mw_url_shortener.interfaces import (
     open_resource,
     run_sync,
 )
-from mw_url_shortener.schemas.user import UserCreate
+from mw_url_shortener.schemas.user import UserCreate, UserUpdate
 from mw_url_shortener.settings import OutputStyle, Settings
 
 
@@ -155,7 +155,52 @@ username: {valid_user.username}"""
     )
 
 
-# update
+def update_by_id(
+    id: int = typer.Argument(...),
+    # it might be kind of annoying to have to type in a username and password, the
+    # latter, twice, before being told "that user couldn't be found", but it's
+    # simpler like this
+    username: Optional[str] = typer.Option(None, prompt=True),
+    password: Optional[str] = typer.Option(
+        None, prompt=True, confirmation_prompt=True, hide_input=True
+    ),
+) -> None:
+    # validate first
+    user_update_schema = UserUpdate(username=username, password=password)
+
+    # then check if the user exists
+    user = inject.instance(UserInterface)
+    resource = get_resource()
+    with open_resource(resource) as opened_resource:
+        old_user = run_sync(user.get_by_id(opened_resource, id=id))
+
+    settings = inject.instance(Settings)
+
+    if old_user is None and settings.output_style == OutputStyle.text:
+        typer.echo(f"could not find user with id '{id}'")
+
+    if old_user is None:
+        raise typer.Exit(code=1)
+
+    with open_resource(resource) as opened_resource:
+        updated_user = run_sync(
+            user.update(
+                opened_resource,
+                current_object_schema=old_user,
+                update_object_schema=user_update_schema,
+            )
+        )
+
+    if settings.output_style == OutputStyle.json:
+        typer.echo(updated_user.json())
+        return
+
+    typer.echo(f"successfully updated user\nid: {updated_user.id}")
+    typer.echo(f"username: {updated_user.username}", nl=False)
+    if old_user.username != updated_user.username:
+        typer.echo(f" -> {updated_user.username}", nl=False)
+    typer.echo("")
+
 
 app = typer.Typer()
 app.command()(create)
@@ -163,3 +208,4 @@ app.command()(get_by_id)
 app.command()(search)
 app.command()(remove_by_id)
 app.command()(check_authentication)
+app.command()(update_by_id)
