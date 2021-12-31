@@ -4,7 +4,6 @@ does the database interface behave as expected?
 from typing import List
 
 import pytest
-from sqlalchemy.exc import NoResultFound
 
 from mw_url_shortener.database.start import AsyncSession
 from mw_url_shortener.interfaces import database as database_interface
@@ -15,11 +14,11 @@ from tests.utils import random_password, random_username
 
 async def test_get_nonexistent_user_by_id(in_memory_database: AsyncSession) -> None:
     "does get_by_id() fail if the database is empty?"
-    with pytest.raises(NoResultFound):
-        assert not await database_interface.user.get_by_id(in_memory_database, id=0)
+    non_existant_user = await database_interface.user.get_by_id(in_memory_database, id=0)
+    assert not non_existant_user
 
-    with pytest.raises(NoResultFound):
-        assert not await database_interface.user.get_by_id(in_memory_database, id=1)
+    non_existant_user = await database_interface.user.get_by_id(in_memory_database, id=1)
+    assert not non_existant_user
 
 
 async def test_create_user(in_memory_database: AsyncSession) -> None:
@@ -190,10 +189,11 @@ async def test_delete_user_by_id(in_memory_database: AsyncSession) -> None:
         in_memory_database, id=user_retrieved.id
     )
     assert deleted_user == user_created
-    with pytest.raises(NoResultFound):
-        await database_interface.user.get_by_id(
-            in_memory_database, id=user_retrieved.id
-        )
+
+    non_existant_user = await database_interface.user.get_by_id(
+        in_memory_database, id=user_retrieved.id
+    )
+    assert not non_existant_user
 
 
 async def test_search_by_everything(in_memory_database: AsyncSession) -> None:

@@ -30,13 +30,17 @@ class DBInterfaceBase(
         self.model = model
         self.schema = schema
 
-    async def get_by_id(self, async_session: AsyncSession, id: int) -> ObjectSchemaType:
+    async def get_by_id(self, async_session: AsyncSession, id: int) -> Optional[ObjectSchemaType]:
         async with async_session.begin():
             object_model = (
                 await async_session.execute(
                     select(self.model).where(self.model.id == id)
                 )
-            ).scalar_one()
+            ).scalar_one_or_none()
+
+            if object_model is None:
+                return None
+
             assert isinstance(
                 object_model, self.model
             ), f"expected '{self.model}', got '{type(object_model)}'"

@@ -5,7 +5,7 @@ from re import escape
 from typing import List
 
 import pytest
-from sqlalchemy.exc import IntegrityError, NoResultFound
+from sqlalchemy.exc import IntegrityError
 
 from mw_url_shortener.database.start import AsyncSession
 from mw_url_shortener.interfaces import database as database_interface
@@ -143,6 +143,7 @@ async def redirect_get_by_id(in_memory_database: AsyncSession) -> None:
     retrieved_redirect = await database_interface.redirect.get_by_id(
         in_memory_database, id=created_redirect.id
     )
+    assert retrieved_redirect
 
     assert retrieved_redirect == created_redirect
 
@@ -292,6 +293,7 @@ async def test_redirect_remove_by_id(in_memory_database: AsyncSession) -> None:
     retrieved_redirect = await database_interface.redirect.get_by_id(
         in_memory_database, id=created_redirect.id
     )
+    assert retrieved_redirect
     assert retrieved_redirect == created_redirect
 
     removed_redirect = await database_interface.redirect.remove_by_id(
@@ -299,10 +301,10 @@ async def test_redirect_remove_by_id(in_memory_database: AsyncSession) -> None:
     )
     assert removed_redirect == created_redirect
 
-    with pytest.raises(NoResultFound):
-        _ = await database_interface.redirect.get_by_id(
-            in_memory_database, id=created_redirect.id
-        )
+    non_existant_redirect = await database_interface.redirect.get_by_id(
+        in_memory_database, id=created_redirect.id
+    )
+    assert not non_existant_redirect
 
 
 async def test_search_redirect_by_everything(in_memory_database: AsyncSession) -> None:
