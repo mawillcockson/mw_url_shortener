@@ -13,7 +13,9 @@ class UserInterface(InterfaceBaseProtocol):
     ) -> User:
         ...
 
-    async def get_by_id(self, opened_resource: OpenedResourceT, /, *, id: int) -> Optional[User]:
+    async def get_by_id(
+        self, opened_resource: OpenedResourceT, /, *, id: int
+    ) -> Optional[User]:
         ...
 
     async def update(

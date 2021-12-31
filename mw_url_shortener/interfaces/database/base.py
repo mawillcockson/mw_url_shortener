@@ -30,7 +30,9 @@ class DBInterfaceBase(
         self.model = model
         self.schema = schema
 
-    async def get_by_id(self, async_session: AsyncSession, id: int) -> Optional[ObjectSchemaType]:
+    async def get_by_id(
+        self, async_session: AsyncSession, id: int
+    ) -> Optional[ObjectSchemaType]:
         async with async_session.begin():
             object_model = (
                 await async_session.execute(

@@ -14,10 +14,14 @@ from tests.utils import random_password, random_username
 
 async def test_get_nonexistent_user_by_id(in_memory_database: AsyncSession) -> None:
     "does get_by_id() fail if the database is empty?"
-    non_existant_user = await database_interface.user.get_by_id(in_memory_database, id=0)
+    non_existant_user = await database_interface.user.get_by_id(
+        in_memory_database, id=0
+    )
     assert not non_existant_user
 
-    non_existant_user = await database_interface.user.get_by_id(in_memory_database, id=1)
+    non_existant_user = await database_interface.user.get_by_id(
+        in_memory_database, id=1
+    )
     assert not non_existant_user
 
 
