@@ -6,7 +6,12 @@ import inject
 import typer
 from pydantic.json import pydantic_encoder
 
-from mw_url_shortener.interfaces import Resource, UserInterface, open_resource, run_sync
+from mw_url_shortener.interfaces import (
+    UserInterface,
+    get_resource,
+    open_resource,
+    run_sync,
+)
 from mw_url_shortener.schemas.user import UserCreate
 from mw_url_shortener.settings import OutputStyle, Settings
 
@@ -20,7 +25,7 @@ def create(
     create_user_schema = UserCreate(username=username, password=password)
 
     user = inject.instance(UserInterface)
-    resource = inject.instance(Resource)
+    resource = get_resource()
     with open_resource(resource) as opened_resource:
         created_user = run_sync(
             user.create(opened_resource, create_object_schema=create_user_schema)
@@ -44,7 +49,7 @@ def get_by_id(id: int = typer.Argument(...)) -> None:
         raise typer.Exit(code=1)
 
     user = inject.instance(UserInterface)
-    resource = inject.instance(Resource)
+    resource = get_resource()
     with open_resource(resource) as opened_resource:
         retrieved_user = run_sync(user.get_by_id(opened_resource, id=id))
 
@@ -67,7 +72,7 @@ def search(
     username: Optional[str] = typer.Option(None),
 ) -> None:
     user = inject.instance(UserInterface)
-    resource = inject.instance(Resource)
+    resource = get_resource()
     with open_resource(resource) as opened_resource:
         retrieved_users = run_sync(
             user.search(opened_resource, skip=skip, limit=limit, username=username)
