@@ -9,6 +9,7 @@ from pydantic.json import pydantic_encoder
 from mw_url_shortener.interfaces import (
     UserInterface,
     get_resource,
+    get_user_interface,
     open_resource,
     run_sync,
 )
@@ -24,7 +25,7 @@ def create(
 ) -> None:
     create_user_schema = UserCreate(username=username, password=password)
 
-    user = inject.instance(UserInterface)
+    user = get_user_interface()
     resource = get_resource()
     with open_resource(resource) as opened_resource:
         created_user = run_sync(
@@ -48,7 +49,7 @@ def get_by_id(id: int = typer.Argument(...)) -> None:
         typer.echo(f"'id' must be 0 or greater; got '{id}'")
         raise typer.Exit(code=1)
 
-    user = inject.instance(UserInterface)
+    user = get_user_interface()
     resource = get_resource()
     with open_resource(resource) as opened_resource:
         retrieved_user = run_sync(user.get_by_id(opened_resource, id=id))
@@ -78,7 +79,7 @@ def search(
     ),
     username: Optional[str] = typer.Option(None),
 ) -> None:
-    user = inject.instance(UserInterface)
+    user = get_user_interface()
     resource = get_resource()
     with open_resource(resource) as opened_resource:
         retrieved_users = run_sync(
@@ -107,7 +108,7 @@ def remove_by_id(id: int = typer.Argument(...)) -> None:
         typer.echo(f"'id' must be 0 or greater; got '{id}'")
         raise typer.Exit(code=1)
 
-    user = inject.instance(UserInterface)
+    user = get_user_interface()
     resource = get_resource()
     with open_resource(resource) as opened_resource:
         removed_user = run_sync(user.remove_by_id(opened_resource, id=id))
@@ -129,7 +130,7 @@ def check_authentication(
     password: str = typer.Option(..., prompt=True, hide_input=True),
 ) -> None:
     "check if username and password are valid"
-    user = inject.instance(UserInterface)
+    user = get_user_interface()
     resource = get_resource()
     with open_resource(resource) as opened_resource:
         valid_user = run_sync(
@@ -169,7 +170,7 @@ def update_by_id(
     user_update_schema = UserUpdate(username=username, password=password)
 
     # then check if the user exists
-    user = inject.instance(UserInterface)
+    user = get_user_interface()
     resource = get_resource()
     with open_resource(resource) as opened_resource:
         old_user = run_sync(user.get_by_id(opened_resource, id=id))

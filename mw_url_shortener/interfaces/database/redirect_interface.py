@@ -13,14 +13,14 @@ from .base import DBInterfaceBase
 
 class RedirectDBInterface(
     DBInterfaceBase[Redirect, RedirectCreate, RedirectUpdate],
-    RedirectInterface["sessionmaker[AsyncSession]"],
+    RedirectInterface[AsyncSession],
 ):
     async def get_by_short_link(
-        self, async_session: AsyncSession, *, short_link: str
+        self, opened_resource: AsyncSession, /, *, short_link: str
     ) -> Redirect:
-        async with async_session.begin():
+        async with opened_resource.begin():
             redirect_model = (
-                await async_session.execute(
+                await opened_resource.execute(
                     select(RedirectModel).where(RedirectModel.short_link == short_link)
                 )
             ).scalar_one()
@@ -33,7 +33,8 @@ class RedirectDBInterface(
 
     async def search(
         self,
-        async_session: AsyncSession,
+        opened_resource: AsyncSession,
+        /,
         *,
         skip: int = 0,
         limit: int = 100,
@@ -54,8 +55,8 @@ class RedirectDBInterface(
             query = query.where(RedirectModel.body == body)
 
         query = query.offset(skip).limit(limit).order_by(RedirectModel.id)
-        async with async_session.begin():
-            redirect_models = (await async_session.scalars(query)).all()
+        async with opened_resource.begin():
+            redirect_models = (await opened_resource.scalars(query)).all()
             for redirect_model in redirect_models:
                 redirect_schemas.append(self.schema.from_orm(redirect_model))
         return redirect_schemas

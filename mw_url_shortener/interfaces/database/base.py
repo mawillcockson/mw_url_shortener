@@ -17,7 +17,7 @@ ModelType = TypeVar("ModelType", bound=DeclarativeBase)
 
 class DBInterfaceBase(
     InterfaceBase[
-        "sessionmaker[AsyncSession]",
+        AsyncSession,
         ObjectSchemaType,
         CreateSchemaType,
         UpdateSchemaType,
@@ -31,11 +31,11 @@ class DBInterfaceBase(
         self.schema = schema
 
     async def get_by_id(
-        self, async_session: AsyncSession, id: int
+        self, opened_resource: AsyncSession, /, *, id: int
     ) -> Optional[ObjectSchemaType]:
-        async with async_session.begin():
+        async with opened_resource.begin():
             object_model = (
-                await async_session.execute(
+                await opened_resource.execute(
                     select(self.model).where(self.model.id == id)
                 )
             ).scalar_one_or_none()
@@ -49,32 +49,34 @@ class DBInterfaceBase(
             return self.schema.from_orm(object_model)
 
     async def get_multiple(
-        self, async_session: AsyncSession, *, skip: int = 0, limit: int = 100
+        self, opened_resource: AsyncSession, /, *, skip: int = 0, limit: int = 100
     ) -> List[ObjectSchemaType]:
         objects: List[ObjectSchemaType] = []
-        async with async_session.begin():
+        async with opened_resource.begin():
             query = select(self.model).offset(skip).limit(limit)
-            object_models = (await async_session.execute(query)).scalars().all()
+            object_models = (await opened_resource.execute(query)).scalars().all()
             for object_model in object_models:
                 objects.append(self.schema.from_orm(object_model))
         return objects
 
     async def create(
         self,
-        async_session: AsyncSession,
+        opened_resource: AsyncSession,
+        /,
         *,
         create_object_schema: CreateSchemaType,
     ) -> ObjectSchemaType:
         object_model = self.model(**create_object_schema.dict())
-        async with async_session.begin():
-            async_session.add(object_model)
-        await async_session.refresh(object_model)
-        await async_session.close()  # .refresh() opens a new session
+        async with opened_resource.begin():
+            opened_resource.add(object_model)
+        await opened_resource.refresh(object_model)
+        await opened_resource.close()  # .refresh() opens a new session
         return self.schema.from_orm(object_model)
 
     async def update(
         self,
-        async_session: AsyncSession,
+        opened_resource: AsyncSession,
+        /,
         *,
         current_object_schema: ObjectSchemaType,
         update_object_schema: UpdateSchemaType,
@@ -83,24 +85,24 @@ class DBInterfaceBase(
         updated_object = current_object_schema.copy(exclude={"id"}, update=update_data)
 
         get_by_id = select(self.model).where(self.model.id == current_object_schema.id)
-        async with async_session.begin():
-            object_model = (await async_session.execute(get_by_id)).scalar_one()
+        async with opened_resource.begin():
+            object_model = (await opened_resource.execute(get_by_id)).scalar_one()
             update_sql = (
                 update(self.model)
                 .where(self.model.id == current_object_schema.id)
                 .values(**updated_object.dict())
                 .execution_options(synchronize_session="evaluate")
             )
-            await async_session.execute(update_sql)
+            await opened_resource.execute(update_sql)
             return self.schema.from_orm(object_model)
 
     async def remove_by_id(
-        self, async_session: AsyncSession, *, id: int
+        self, opened_resource: AsyncSession, /, *, id: int
     ) -> ObjectSchemaType:
-        async with async_session.begin():
+        async with opened_resource.begin():
             get_by_id = select(self.model).where(self.model.id == id)
-            object_model = (await async_session.execute(get_by_id)).scalar_one()
+            object_model = (await opened_resource.execute(get_by_id)).scalar_one()
             object_schema = self.schema.from_orm(object_model)
-            await async_session.delete(object_model)
+            await opened_resource.delete(object_model)
             object_schema_with_id = object_schema.copy(update={"id": id})
             return object_schema_with_id

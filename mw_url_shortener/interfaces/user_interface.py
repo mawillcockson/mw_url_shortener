@@ -1,36 +1,20 @@
-from typing import List, Optional, Protocol
+from typing import List, Optional, Protocol, runtime_checkable
 
 from mw_url_shortener.schemas.user import User, UserCreate, UserUpdate
 
-from .base import InterfaceBaseProtocol, OpenedResourceT
+from .base import ContravariantOpenedResourceT, InterfaceBaseProtocol
 
 
-class UserInterface(InterfaceBaseProtocol):
+@runtime_checkable
+class UserInterface(
+    InterfaceBaseProtocol[ContravariantOpenedResourceT, User, UserCreate, UserUpdate],
+    Protocol[ContravariantOpenedResourceT],
+):
     "generic user data interface"
-
-    async def create(
-        self, opened_resource: OpenedResourceT, /, *, create_object_schema: UserCreate
-    ) -> User:
-        ...
-
-    async def get_by_id(
-        self, opened_resource: OpenedResourceT, /, *, id: int
-    ) -> Optional[User]:
-        ...
-
-    async def update(
-        self,
-        opened_resource: OpenedResourceT,
-        /,
-        *,
-        current_object_schema: User,
-        update_object_schema: UserUpdate,
-    ) -> User:
-        ...
 
     async def search(
         self,
-        opened_resource: OpenedResourceT,
+        opened_resource: ContravariantOpenedResourceT,
         /,
         *,
         skip: int = 0,
@@ -40,12 +24,12 @@ class UserInterface(InterfaceBaseProtocol):
     ) -> List[User]:
         ...
 
-    async def remove_by_id(
-        self, opened_resource: OpenedResourceT, /, *, id: int
-    ) -> User:
-        ...
-
     async def authenticate(
-        self, opened_resource: OpenedResourceT, /, *, username: str, password: str
+        self,
+        opened_resource: ContravariantOpenedResourceT,
+        /,
+        *,
+        username: str,
+        password: str,
     ) -> Optional[User]:
         ...

@@ -21,14 +21,17 @@ from mw_url_shortener.dependency_injection import AsyncLoopType
 from mw_url_shortener.settings import CliMode, Settings
 
 from .base import (
-    CreateSchemaType,
-    InterfaceBase,
+    ContravariantCreateSchemaType,
+    ContravariantOpenedResourceT,
+    ContravariantUpdateSchemaType,
+    InterfaceBaseProtocol,
     ObjectSchemaType,
     OpenedResource,
     Resource,
     ResourceT,
-    UpdateSchemaType,
 )
+from .redirect_interface import RedirectInterface
+from .user_interface import UserInterface
 
 T = TypeVar("T")
 
@@ -90,18 +93,56 @@ def get_resource(resource_type: Optional[Type[ResourceT]] = None) -> ResourceT:
     return inject.instance(resource_type)
 
 
+def inject_resource(binder: "inject.Binder", *, resource: ResourceT) -> None:
+    binder.bind(Resource, resource)
+
+
 def inject_interface(
     binder: "inject.Binder",
     *,
     interface_type: Type[
-        InterfaceBase[ResourceT, ObjectSchemaType, CreateSchemaType, UpdateSchemaType]
+        InterfaceBaseProtocol[
+            ContravariantOpenedResourceT,
+            ObjectSchemaType,
+            ContravariantCreateSchemaType,
+            ContravariantUpdateSchemaType,
+        ]
     ],
-    interface: InterfaceBase[
-        ResourceT, ObjectSchemaType, CreateSchemaType, UpdateSchemaType
+    interface: InterfaceBaseProtocol[
+        ContravariantOpenedResourceT,
+        ObjectSchemaType,
+        ContravariantCreateSchemaType,
+        ContravariantUpdateSchemaType,
     ],
 ) -> None:
     binder.bind(interface_type, interface)
 
 
-def inject_resource(binder: "inject.Binder", *, resource: ResourceT) -> None:
-    binder.bind(Resource, resource)
+def get_user_interface(
+    interface_type: Optional[Type[UserInterface[ContravariantOpenedResourceT]]] = None,
+) -> UserInterface[ContravariantOpenedResourceT]:
+    if interface_type is None:
+        user_interface = inject.instance(UserInterface)
+    else:
+        user_interface = inject.instance(interface_type)
+
+    assert isinstance(
+        user_interface, UserInterface
+    ), f"{user_interface} is not UserInterface"
+    return user_interface
+
+
+def get_redirect_interface(
+    interface_type: Optional[
+        Type[RedirectInterface[ContravariantOpenedResourceT]]
+    ] = None,
+) -> RedirectInterface[ContravariantOpenedResourceT]:
+    if interface_type is None:
+        redirect_interface = inject.instance(RedirectInterface)
+    else:
+        redirect_interface = inject.instance(interface_type)
+
+    assert isinstance(
+        redirect_interface, RedirectInterface
+    ), f"{redirect_interface} is not RedirectInterface"
+    return redirect_interface

@@ -8,18 +8,19 @@ from mw_url_shortener.database.start import AsyncSession, sessionmaker
 from mw_url_shortener.schemas.user import User, UserCreate, UserUpdate
 from mw_url_shortener.security import hash_password, verify_password
 
+from ..user_interface import UserInterface
 from .base import DBInterfaceBase
 
 
 class UserDBInterface(
-    DBInterfaceBase[User, UserCreate, UserUpdate],
+    DBInterfaceBase[User, UserCreate, UserUpdate], UserInterface[AsyncSession]
 ):
     async def get_by_username(
-        self, async_session: AsyncSession, *, username: str
+        self, opened_resource: AsyncSession, /, *, username: str
     ) -> Optional[User]:
-        async with async_session.begin():
+        async with opened_resource.begin():
             user_model = (
-                await async_session.execute(
+                await opened_resource.execute(
                     select(UserModel).where(UserModel.username == username)
                 )
             ).scalar_one_or_none()
@@ -34,7 +35,8 @@ class UserDBInterface(
 
     async def create(
         self,
-        async_session: AsyncSession,
+        opened_resource: AsyncSession,
+        /,
         *,
         create_object_schema: UserCreate,
     ) -> User:
@@ -43,15 +45,16 @@ class UserDBInterface(
         create_data["hashed_password"] = hash_password(password)
 
         user_model = self.model(**create_data)
-        async with async_session.begin():
-            async_session.add(user_model)
-        await async_session.refresh(user_model)
-        await async_session.close()
+        async with opened_resource.begin():
+            opened_resource.add(user_model)
+        await opened_resource.refresh(user_model)
+        await opened_resource.close()
         return self.schema.from_orm(user_model)
 
     async def update(
         self,
-        async_session: AsyncSession,
+        opened_resource: AsyncSession,
+        /,
         *,
         current_object_schema: User,
         update_object_schema: UserUpdate,
@@ -63,17 +66,17 @@ class UserDBInterface(
             update_object_schema = update_object_schema.copy(exclude={"password"})
 
         return await super().update(
-            async_session,
+            opened_resource,
             current_object_schema=current_object_schema,
             update_object_schema=update_object_schema,
         )
 
     async def authenticate(
-        self, async_session: AsyncSession, *, username: str, password: str
+        self, opened_resource: AsyncSession, /, *, username: str, password: str
     ) -> Optional[User]:
-        async with async_session.begin():
+        async with opened_resource.begin():
             user_model = (
-                await async_session.execute(
+                await opened_resource.execute(
                     select(UserModel).where(UserModel.username == username)
                 )
             ).scalar_one_or_none()
@@ -94,7 +97,8 @@ class UserDBInterface(
 
     async def search(
         self,
-        async_session: AsyncSession,
+        opened_resource: AsyncSession,
+        /,
         *,
         skip: int = 0,
         limit: int = 100,
@@ -111,8 +115,8 @@ class UserDBInterface(
         query = query.offset(skip).limit(limit).order_by(UserModel.id)
 
         user_schemas: List[User] = []
-        async with async_session.begin():
-            user_models = (await async_session.scalars(query)).all()
+        async with opened_resource.begin():
+            user_models = (await opened_resource.scalars(query)).all()
 
             for user_model in user_models:
                 user_schema = self.schema.from_orm(user_model)

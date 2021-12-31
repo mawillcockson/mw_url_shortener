@@ -6,7 +6,9 @@ from .base import OpenedResourceT as OpenedResourceT
 from .base import Resource as Resource
 from .base import ResourceT as ResourceT
 from .base import UpdateSchemaType as UpdateSchemaType
+from .helpers import get_redirect_interface as get_redirect_interface
 from .helpers import get_resource as get_resource
+from .helpers import get_user_interface as get_user_interface
 from .helpers import inject_interface as inject_interface
 from .helpers import inject_resource as inject_resource
 from .helpers import open_resource as open_resource

@@ -183,7 +183,7 @@ async def test_delete_user_by_id(in_memory_database: AsyncSession) -> None:
 
     # affirm user is in database
     user_retrieved = await database_interface.user.get_by_id(
-        in_memory_database, user_created.id
+        in_memory_database, id=user_created.id
     )
     # roundtripping with get_by_id() is tested more thoroughly elsewhere, no
     # need to test it again here
