@@ -62,6 +62,8 @@ async def test_create_user(
         )
     assert retrieved_user == created_user
 
+    inject.clear()
+
 
 async def test_get_by_id(
     on_disk_database: Path,
