@@ -234,3 +234,111 @@ async def test_remove_by_id(
     removed_user = User.parse_raw(result.stdout)
     assert removed_user
     assert removed_user == created_user
+
+
+async def test_authentication(
+    on_disk_database: Path, run_test_command: CommandRunner
+) -> None:
+    """
+    if a user is in the database, does the cli correctly identify if the info
+    matches?
+    """
+    test_username = random_username()
+    test_password = random_password()
+
+    create_result = await run_test_command(
+        app,
+        [
+            "--output-style",
+            OutputStyle.json.value,
+            "local",
+            "--database-path",
+            str(on_disk_database),
+            "user",
+            "create",
+            "--username",
+            test_username,
+            "--password",
+            test_password,
+        ],
+    )
+
+    assert create_result.exit_code == 0, f"result: {create_result}"
+    created_user = User.parse_raw(create_result.stdout)
+    assert created_user
+
+    result = await run_test_command(
+        app,
+        [
+            "--output-style",
+            OutputStyle.json.value,
+            "local",
+            "--database-path",
+            str(on_disk_database),
+            "user",
+            "check-authentication",
+            "--username",
+            str(test_username),
+            "--password",
+            str(test_password),
+        ],
+    )
+
+    assert result.exit_code == 0, f"search result: {result}"
+    valid_user = User.parse_raw(result.stdout)
+    assert valid_user
+    assert valid_user == created_user
+
+
+async def test_authentication_invalid_info(
+    on_disk_database: Path, run_test_command: CommandRunner
+) -> None:
+    """
+    if a user is in the database, does the cli correctly identify if the info
+    matches?
+    """
+    test_username = random_username()
+
+    test_password = random_password()
+    incorrect_password = random_password()
+    assert incorrect_password != test_password
+
+    create_result = await run_test_command(
+        app,
+        [
+            "--output-style",
+            OutputStyle.json.value,
+            "local",
+            "--database-path",
+            str(on_disk_database),
+            "user",
+            "create",
+            "--username",
+            str(test_username),
+            "--password",
+            str(test_password),
+        ],
+    )
+
+    assert create_result.exit_code == 0, f"result: {create_result}"
+    created_user = User.parse_raw(create_result.stdout)
+    assert created_user
+
+    result = await run_test_command(
+        app,
+        [
+            "--output-style",
+            OutputStyle.json.value,
+            "local",
+            "--database-path",
+            str(on_disk_database),
+            "user",
+            "check-authentication",
+            "--username",
+            str(test_username),
+            "--password",
+            str(incorrect_password),
+        ],
+    )
+
+    assert result.exit_code == 1, f"search result: {result}"

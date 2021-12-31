@@ -117,6 +117,37 @@ username: {removed_user.username}"""
     )
 
 
+def check_authentication(
+    username: str = typer.Option(..., prompt=True),
+    password: str = typer.Option(..., prompt=True, hide_input=True),
+) -> None:
+    "check if username and password are valid"
+    user = inject.instance(UserInterface)
+    resource = get_resource()
+    with open_resource(resource) as opened_resource:
+        valid_user = run_sync(
+            user.authenticate(opened_resource, username=username, password=password)
+        )
+
+    settings = inject.instance(Settings)
+
+    if valid_user is None and settings.output_style == OutputStyle.text:
+        typer.echo("invalid username/password combination")
+
+    if valid_user is None:
+        raise typer.Exit(code=1)
+
+    if settings.output_style == OutputStyle.json:
+        typer.echo(valid_user.json())
+        return
+
+    typer.echo(
+        f"""authentication successful
+id: {valid_user.id}
+username: {valid_user.username}"""
+    )
+
+
 # update
 
 app = typer.Typer()
@@ -124,3 +155,4 @@ app.command()(create)
 app.command()(get_by_id)
 app.command()(search)
 app.command()(remove_by_id)
+app.command()(check_authentication)

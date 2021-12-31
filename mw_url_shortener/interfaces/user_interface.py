@@ -42,3 +42,8 @@ class UserInterface(InterfaceBaseProtocol):
         self, opened_resource: OpenedResourceT, /, *, id: int
     ) -> User:
         ...
+
+    async def authenticate(
+        self, opened_resource: OpenedResourceT, /, *, username: str, password: str
+    ) -> Optional[User]:
+        ...
