@@ -74,9 +74,9 @@ username: {retrieved_user.username}"""
 
 
 def search(
-    skip: int = typer.Option(0, help="how many results to skip over (default 0)"),
+    skip: int = typer.Option(0, help="how many results to skip over"),
     limit: int = typer.Option(
-        100, help="how many results to show at once (default 100)"
+        100, help="how many results to show at once"
     ),
     username: Optional[str] = typer.Option(None),
 ) -> None:
