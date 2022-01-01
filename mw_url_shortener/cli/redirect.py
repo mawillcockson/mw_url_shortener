@@ -50,7 +50,7 @@ def create(
 id: {created_redirect.id}
 url: {created_redirect.url}
 short link: {created_redirect.short_link}
-response_status: {created_redirect.response_status}
+response status: {created_redirect.response_status}
 body: {created_redirect.body}"""
     )
 
@@ -79,10 +79,10 @@ def get_by_id(id: int = typer.Argument(...)) -> None:
 
     typer.echo(
         f"""id: {retrieved_redirect.id}
-url: {created_redirect.url}
-short link: {created_redirect.short_link}
-response_status: {created_redirect.response_status}
-body: {created_redirect.body}"""
+url: {retrieved_redirect.url}
+short link: {retrieved_redirect.short_link}
+response status: {retrieved_redirect.response_status}
+body: {retrieved_redirect.body}"""
     )
 
 
@@ -125,7 +125,7 @@ def search(
             f"""id: {retrieved_redirect.id}
 url: {retrieved_redirect.url}
 short link: {retrieved_redirect.short_link}
-response_status: {retrieved_redirect.response_status}
+response status: {retrieved_redirect.response_status}
 body: {retrieved_redirect.body}
 """  # extra newline for separation
         )
@@ -149,9 +149,10 @@ def remove_by_id(id: int = typer.Argument(...)) -> None:
     typer.echo(
         f"""successfully removed redirect
 id: {removed_redirect.id}
-url: {created_redirect.url}
-short link: {created_redirect.short_link}
-response_status: {created_redirect.response_status}"""
+url: {removed_redirect.url}
+short link: {removed_redirect.short_link}
+response status: {removed_redirect.response_status}
+body: {removed_redirect.body}"""
     )
 
 
