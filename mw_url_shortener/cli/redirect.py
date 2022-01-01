@@ -55,5 +55,37 @@ body: {created_redirect.body}"""
     )
 
 
+def get_by_id(id: int = typer.Argument(...)) -> None:
+    if id < 0:
+        typer.echo(f"'id' must be 0 or greater; got '{id}'")
+        raise typer.Exit(code=1)
+
+    redirect = get_redirect_interface()
+    resource = get_resource()
+    with open_resource(resource) as opened_resource:
+        retrieved_redirect = run_sync(redirect.get_by_id(opened_resource, id=id))
+
+    settings = get_settings()
+
+    if retrieved_redirect is None and settings.output_style == OutputStyle.text:
+        typer.echo(f"could not find redirect with id '{id}'")
+
+    if retrieved_redirect is None:
+        raise typer.Exit(code=1)
+
+    if settings.output_style == OutputStyle.json:
+        typer.echo(retrieved_redirect.json())
+        return
+
+    typer.echo(
+        f"""id: {retrieved_redirect.id}
+url: {created_redirect.url}
+short link: {created_redirect.short_link}
+response_status: {created_redirect.response_status}
+body: {created_redirect.body}"""
+    )
+
+
 app = typer.Typer()
 app.command()(create)
+app.command()(get_by_id)
