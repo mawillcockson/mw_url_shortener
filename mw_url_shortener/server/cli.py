@@ -32,8 +32,8 @@ def start(
     ip_address: str = typer.Option(server_defaults.insecure_bind_ip_address),
     port: int = typer.Option(server_defaults.insecure_bind_port),
 ):
+    raise NotImplementedError
     try:
-        from hypercorn.asyncio import serve
         from hypercorn.config import Config
     except ImportError as err:
         typer.echo(
