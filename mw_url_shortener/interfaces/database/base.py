@@ -80,17 +80,21 @@ class DBInterfaceBase(
         *,
         current_object_schema: ObjectSchemaType,
         update_object_schema: UpdateSchemaType,
-    ) -> ObjectSchemaType:
+    ) -> Optional[ObjectSchemaType]:
         update_data = update_object_schema.dict(exclude_unset=True)
         updated_object = current_object_schema.copy(exclude={"id"}, update=update_data)
 
         get_by_id = select(self.model).where(self.model.id == current_object_schema.id)
         async with opened_resource.begin():
-            object_model = (await opened_resource.execute(get_by_id)).scalar_one()
+            object_model = (await opened_resource.execute(get_by_id)).scalar_one_or_none()
+
+            if object_model is None:
+                return None
+
             update_sql = (
                 update(self.model)
                 .where(self.model.id == current_object_schema.id)
-                .values(**updated_object.dict())
+                .values(**updated_object.dict(exclude_none=True))
                 .execution_options(synchronize_session="evaluate")
             )
             await opened_resource.execute(update_sql)

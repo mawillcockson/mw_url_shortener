@@ -191,6 +191,8 @@ def update_by_id(
             )
         )
 
+    assert updated_user, f"user existed before update, but not after: {old_user}"
+
     if settings.output_style == OutputStyle.json:
         typer.echo(updated_user.json())
         return

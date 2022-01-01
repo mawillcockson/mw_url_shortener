@@ -58,7 +58,7 @@ class UserDBInterface(
         *,
         current_object_schema: User,
         update_object_schema: UserUpdate,
-    ) -> User:
+    ) -> Optional[User]:
         if update_object_schema.password is not None:
             hashed_password = hash_password(update_object_schema.password)
             password_data = {"hashed_password": hashed_password}

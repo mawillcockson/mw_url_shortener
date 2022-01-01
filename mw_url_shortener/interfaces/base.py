@@ -77,7 +77,7 @@ class InterfaceBaseProtocol(
         *,
         current_object_schema: ObjectSchemaType,
         update_object_schema: ContravariantUpdateSchemaType,
-    ) -> ObjectSchemaType:
+    ) -> Optional[ObjectSchemaType]:
         ...
 
     async def remove_by_id(

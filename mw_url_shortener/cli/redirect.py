@@ -160,13 +160,13 @@ body: {removed_redirect.body}"""
 
 def update_by_id(
     id: int = typer.Argument(...),
-    url: str = typer.Option(...),
-    short_link: str = typer.Option(...),
-    response_status: int = typer.Option(
-        defaults.redirect_response_status,
+    url: Optional[str] = typer.Option(None),
+    short_link: Optional[str] = typer.Option(None),
+    response_status: Optional[int] = typer.Option(
+        None,
         help=RESPONSE_STATUS_HELP,
     ),
-    body: Optional[str] = typer.Option(defaults.redirect_body),
+    body: Optional[str] = typer.Option(None),
 ) -> None:
     # validate first
     redirect_update_schema = RedirectUpdate(
@@ -195,6 +195,8 @@ def update_by_id(
                 update_object_schema=redirect_update_schema,
             )
         )
+
+    assert updated_redirect, f"redirect existed before update, but not after: {old_redirect}"
 
     if settings.output_style == OutputStyle.json:
         typer.echo(updated_redirect.json())

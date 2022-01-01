@@ -276,6 +276,7 @@ async def test_update_redirect(in_memory_database: AsyncSession) -> None:
         current_object_schema=created_redirect,
         update_object_schema=update_redirect_schema,
     )
+    assert updated_redirect
 
     update_data = update_redirect_schema.dict()
     updated_redirect_data = updated_redirect.dict(exclude={"id"})
