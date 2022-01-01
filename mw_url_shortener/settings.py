@@ -102,7 +102,7 @@ class Defaults(BaseSettings):
         allow_mutation = False
 
         # prevents pulling in environment variables with the same name as properties
-        env_prefix = APP_NAME.upper() + "__"
+        env_prefix = APP_NAME.upper() + "__DEFAULT__"
 
 
 defaults = Defaults()
@@ -112,6 +112,7 @@ class Settings(Defaults):
     class Config:
         allow_mutation = True
         extra = Extra.forbid
+        env_prefix = APP_NAME.upper() + "__"
 
 
 class FlexibleSettings(Settings):
