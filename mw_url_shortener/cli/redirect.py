@@ -53,3 +53,7 @@ short link: {created_redirect.short_link}
 response_status: {created_redirect.response_status}
 body: {created_redirect.body}"""
     )
+
+
+app = typer.Typer()
+app.command()(create)
