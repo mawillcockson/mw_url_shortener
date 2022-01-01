@@ -49,6 +49,7 @@ anyio = ">=3.3.4" # provides pytest.mark.anyio decorator for async test function
 
 [tool.poetry.scripts]
 mw-redir = "mw_url_shortener.cli.entry_point:main"
+mw-redir-server = "mw_url_shortener.server.cli:app"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
