@@ -123,10 +123,10 @@ def search(
     for retrieved_redirect in retrieved_redirects:
         typer.echo(
             f"""id: {retrieved_redirect.id}
-url: {created_redirect.url}
-short link: {created_redirect.short_link}
-response_status: {created_redirect.response_status}
-body: {created_redirect.body}
+url: {retrieved_redirect.url}
+short link: {retrieved_redirect.short_link}
+response_status: {retrieved_redirect.response_status}
+body: {retrieved_redirect.body}
 """  # extra newline for separation
         )
 
