@@ -53,3 +53,5 @@
   - if the file does exist, and it's not a readable database, an error should be displayed
 - wrangle logging
 - tests should verify error message content
+- look at `hypercorn.run.run_multiple` for better server scaling:
+  <https://gitlab.com/pgjones/hypercorn/-/blob/main/src/hypercorn/run.py#L41>
