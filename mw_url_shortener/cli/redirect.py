@@ -95,7 +95,7 @@ def search(
     ),
     url: Optional[str] = typer.Option(None),
     short_link: Optional[str] = typer.Option(None),
-    response_status: Optional[str] = typer.Option(None, help=RESPONSE_STATUS_HELP),
+    response_status: Optional[int] = typer.Option(None, help=RESPONSE_STATUS_HELP),
     body: Optional[str] = typer.Option(None),
 ) -> None:
     redirect = get_redirect_interface()
