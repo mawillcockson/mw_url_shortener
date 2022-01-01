@@ -62,3 +62,41 @@ async def test_create_redirect_defaults(
     assert retrieved_redirect == created_redirect
 
     inject.clear()
+
+
+async def test_create_redirect(
+    on_disk_database: Path,
+    run_test_command: CommandRunner,
+) -> None:
+    "can a redirect be created and read back?"
+    url = unsafe_random_string(defaults.test_string_length)
+    short_link = random_short_link(defaults.test_string_length)
+    response_status = int(defaults.test_string_length)
+    body = unsafe_random_string(defaults.test_string_length)
+
+    result = await run_test_command(
+        app,
+        [
+            "--output-style",
+            OutputStyle.json.value,
+            "local",
+            "--database-path",
+            str(on_disk_database),
+            "redirect",
+            "create",
+            str(url),
+            str(short_link),
+            "--response-status",
+            str(response_status),
+            "--body",
+            str(body),
+        ],
+    )
+
+    assert result.exit_code == 0, f"result: {result}"
+    created_redirect = Redirect.parse_raw(result.stdout)
+    assert created_redirect
+    assert created_redirect.url == url
+    assert created_redirect.short_link == short_link
+    assert created_redirect.response_status == response_status
+    assert created_redirect.body == body
