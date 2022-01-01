@@ -13,24 +13,27 @@ importlib-metadata = {version = ">=4.8.1", python = "<3.8"}
 platformdirs = ">=2.4.0"
 SQLAlchemy = {version = ">=1.4.25", extras = ["mypy"]}
 aiosqlite = ">=0.17.0"
-pydantic = ">=1.8.2"
+pydantic = {version = ">=1.8.2", extras = ["email", "dotenv"]}
 typer = ">=0.4.0"
 passlib = {version = ">=1.7.4", extras = ["bcrypt"]}
-fastapi = {version = ">=0.62.0", extras = ["all"]}
-python-dateutil = ">=2.8.1"
-python-jose = {version = ">=3.2.0", extras = ["cryptography"]}
-python-dotenv = ">=0.15.0"
 Inject = "^4.3.1"
 httpx = "^0.21.1"
 
+### server requirements
+fastapi = ">=0.62.0"
+hypercorn = "^0.13.2"
+python-jose = {version = ">=3.2.0", extras = ["cryptography"]}
+python-dateutil = ">=2.8.1"
+python-multipart = ">=0.0.5,<0.0.6"
+itsdangerous = ">=1.1.0,<3.0.0"
+orjson = ">=3.2.1"
+# NOTE:FUTURE windows support
+# https://github.com/MagicStack/uvloop/issues/14
+uvloop = {version = ">=0.16.0", markers = "sys_platform != 'win32' and sys_platform != 'cygwin' and sys_platform != 'cli'"}
+
 # NOTE::future split out server as a pip extra
 # [tool.poetry.extras]
-# server = [
-#     "fastapi[all]>=0.62.0",
-#     "python-dateutil>=2.8.1",
-#     "python-jose>=3.2.0",
-#     "python-dotenv>=0.15.0",
-# ]
+# server = ["fastapi[all]>=0.62.0", "python-dateutil>=2.8.1", "python-jose>=3.2.0", "python-dotenv>=0.15.0"]
 
 [tool.poetry.dev-dependencies]
 pytest = ">=6.2.0"
