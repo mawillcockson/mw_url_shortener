@@ -343,7 +343,9 @@ async def test_remove_by_id(
     assert removed_redirect == created_redirect
 
 
-async def test_update_all(on_disk_database: Path, run_test_command: CommandRunner) -> None:
+async def test_update_all(
+    on_disk_database: Path, run_test_command: CommandRunner
+) -> None:
     "can all redirect info be modified?"
     url = unsafe_random_string(defaults.test_string_length)
     new_url = unsafe_random_string(defaults.test_string_length)
@@ -415,7 +417,9 @@ async def test_update_all(on_disk_database: Path, run_test_command: CommandRunne
     assert updated_redirect.body == new_body
 
 
-async def test_update_body(on_disk_database: Path, run_test_command: CommandRunner) -> None:
+async def test_update_body(
+    on_disk_database: Path, run_test_command: CommandRunner
+) -> None:
     "if only the body is modified, does all other info stay the same?"
     url = unsafe_random_string(defaults.test_string_length)
     short_link = random_short_link(defaults.test_string_length)

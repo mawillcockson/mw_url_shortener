@@ -196,7 +196,9 @@ def update_by_id(
             )
         )
 
-    assert updated_redirect, f"redirect existed before update, but not after: {old_redirect}"
+    assert (
+        updated_redirect
+    ), f"redirect existed before update, but not after: {old_redirect}"
 
     if settings.output_style == OutputStyle.json:
         typer.echo(updated_redirect.json())

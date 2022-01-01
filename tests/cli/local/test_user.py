@@ -367,7 +367,9 @@ async def test_authentication_invalid_info(
     assert result.exit_code == 1, f"search result: {result}"
 
 
-async def test_update(on_disk_database: Path, run_test_command: CommandRunner) -> None:
+async def test_update_all(
+    on_disk_database: Path, run_test_command: CommandRunner
+) -> None:
     "can all user info be modified?"
     username = random_username()
     new_username = random_username()

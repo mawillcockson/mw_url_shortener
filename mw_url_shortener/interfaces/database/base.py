@@ -90,7 +90,9 @@ class DBInterfaceBase(
 
         get_by_id = select(self.model).where(self.model.id == current_object_schema.id)
         async with opened_resource.begin():
-            object_model = (await opened_resource.execute(get_by_id)).scalar_one_or_none()
+            object_model = (
+                await opened_resource.execute(get_by_id)
+            ).scalar_one_or_none()
 
             if object_model is None:
                 return None
