@@ -5,7 +5,7 @@ import warnings
 from enum import Enum
 from pathlib import Path
 from string import ascii_lowercase, digits
-from typing import Callable, Dict, Optional, Union
+from typing import Callable, Dict, List, Optional
 
 import platformdirs
 from pydantic import BaseSettings, Extra, Json, PositiveInt, validator
@@ -101,6 +101,9 @@ class Defaults(BaseSettings):
         json_dumps = json_dumps  # type: ignore
         allow_mutation = False
 
+        # prevents pulling in environment variables with the same name as properties
+        env_prefix = APP_NAME.upper() + "__"
+
 
 defaults = Defaults()
 
@@ -108,7 +111,6 @@ defaults = Defaults()
 class Settings(Defaults):
     class Config:
         allow_mutation = True
-        env_prefix = APP_NAME.upper() + "__"
         extra = Extra.forbid
 
 
