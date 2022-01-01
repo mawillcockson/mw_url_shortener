@@ -86,6 +86,52 @@ body: {created_redirect.body}"""
     )
 
 
+def search(
+    skip: int = typer.Option(0, help="how many results to skip over (default 0)"),
+    limit: int = typer.Option(
+        100, help="how many results to show at once (default 100)"
+    ),
+    url: Optional[str] = typer.Option(None),
+    short_link: Optional[str] = typer.Option(None),
+    response_status: Optional[str] = typer.Option(None),
+    body: Optional[str] = typer.Option(None),
+) -> None:
+    redirect = get_redirect_interface()
+    resource = get_resource()
+    with open_resource(resource) as opened_resource:
+        retrieved_redirects = run_sync(
+            redirect.search(
+                opened_resource,
+                skip=skip,
+                limit=limit,
+                url=url,
+                short_link=short_link,
+                response_status=response_status,
+                body=body,
+            )
+        )
+
+    settings = get_settings()
+    if settings.output_style == OutputStyle.json:
+        # NOTE:FUTURE partial serialization would allow for serializing
+        # pydantic.BaseModels into an object that json.dumps can encode, and
+        # can thus be included in other arbitrary data, like a list
+        # https://github.com/samuelcolvin/pydantic/issues/951
+        typer.echo(json.dumps(retrieved_redirects, default=pydantic_encoder))
+        return
+
+    for retrieved_redirect in retrieved_redirects:
+        typer.echo(
+            f"""id: {retrieved_redirect.id}
+url: {created_redirect.url}
+short link: {created_redirect.short_link}
+response_status: {created_redirect.response_status}
+body: {created_redirect.body}
+"""  # extra newline for separation
+        )
+
+
 app = typer.Typer()
 app.command()(create)
 app.command()(get_by_id)
+app.command()(search)

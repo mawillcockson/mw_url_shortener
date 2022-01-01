@@ -175,3 +175,116 @@ async def test_get_non_existant_redirect(
     )
 
     assert result.exit_code == 1, f"search result: {result}"
+
+
+async def test_search_by_body(
+    on_disk_database: Path,
+    run_test_command: CommandRunner,
+) -> None:
+    "will all redirects matching the search criteria be returned?"
+    url = unsafe_random_string(defaults.test_string_length)
+
+    short_link1 = random_short_link(defaults.test_string_length)
+    short_link2 = random_short_link(defaults.test_string_length)
+    short_link3 = random_short_link(defaults.test_string_length)
+    assert len({short_link1, short_link2, short_link3}) == 3
+
+    response_status = int(defaults.test_string_length)
+
+    desired_body = unsafe_random_string(defaults.test_string_length)
+    other_body = unsafe_random_string(defaults.test_string_length)
+    assert desired_body != other_body
+
+    first_desired_result = await run_test_command(
+        app,
+        [
+            "--output-style",
+            OutputStyle.json.value,
+            "local",
+            "--database-path",
+            str(on_disk_database),
+            "redirect",
+            "create",
+            str(url),
+            str(short_link1),
+            "--response-status",
+            str(response_status),
+            "--body",
+            str(desired_body),
+        ],
+    )
+    assert (
+        first_desired_result.exit_code == 0
+    ), f"first desired result: {first_desired_result}"
+    first_desired_redirect = Redirect.parse_raw(first_desired_result.stdout)
+    assert first_desired_redirect
+
+    second_desired_result = await run_test_command(
+        app,
+        [
+            "--output-style",
+            OutputStyle.json.value,
+            "local",
+            "--database-path",
+            str(on_disk_database),
+            "redirect",
+            "create",
+            str(url),
+            str(short_link2),
+            "--response-status",
+            str(response_status),
+            "--body",
+            str(desired_body),
+        ],
+    )
+    assert (
+        second_desired_result.exit_code == 0
+    ), f"second desired result: {second_desired_result}"
+    second_desired_redirect = Redirect.parse_raw(second_desired_result.stdout)
+    assert second_desired_redirect
+
+    other_create_result = await run_test_command(
+        app,
+        [
+            "--output-style",
+            OutputStyle.json.value,
+            "local",
+            "--database-path",
+            str(on_disk_database),
+            "redirect",
+            "create",
+            str(url),
+            str(short_link3),
+            "--response-status",
+            str(response_status),
+            "--body",
+            str(other_body),
+        ],
+    )
+    assert (
+        other_create_result.exit_code == 0
+    ), f"other create result: {other_create_result}"
+    other_redirect = Redirect.parse_raw(other_create_result.stdout)
+    assert other_redirect not in [first_desired_redirect, second_desired_redirect]
+
+    search_result = await run_test_command(
+        app,
+        [
+            "--output-style",
+            OutputStyle.json.value,
+            "local",
+            "--database-path",
+            str(on_disk_database),
+            "redirect",
+            "search",
+            "--body",
+            str(desired_body),
+        ],
+    )
+    assert search_result.exit_code == 0, f"search result: {search_result}"
+    retrieved_redirects: List[Redirect] = parse_raw_as(
+        List[Redirect], search_result.stdout
+    )
+    assert len(retrieved_redirects) == 2
+    assert first_desired_redirect in retrieved_redirects
+    assert second_desired_redirect in retrieved_redirects
