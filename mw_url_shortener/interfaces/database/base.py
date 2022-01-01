@@ -83,6 +83,10 @@ class DBInterfaceBase(
     ) -> Optional[ObjectSchemaType]:
         update_data = update_object_schema.dict(exclude_unset=True)
         updated_object = current_object_schema.copy(exclude={"id"}, update=update_data)
+        new_object_data = updated_object.dict(exclude_none=True)
+
+        if not new_object_data:
+            return current_object_schema
 
         get_by_id = select(self.model).where(self.model.id == current_object_schema.id)
         async with opened_resource.begin():
@@ -94,7 +98,7 @@ class DBInterfaceBase(
             update_sql = (
                 update(self.model)
                 .where(self.model.id == current_object_schema.id)
-                .values(**updated_object.dict(exclude_none=True))
+                .values(**new_object_data)
                 .execution_options(synchronize_session="evaluate")
             )
             await opened_resource.execute(update_sql)

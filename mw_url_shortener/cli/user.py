@@ -157,13 +157,12 @@ username: {valid_user.username}"""
 
 def update_by_id(
     id: int = typer.Argument(...),
-    # it might be kind of annoying to have to type in a username and password, the
-    # latter, twice, before being told "that user couldn't be found", but it's
-    # simpler like this
-    username: Optional[str] = typer.Option(None, prompt=True),
-    password: Optional[str] = typer.Option(
-        None, prompt=True, confirmation_prompt=True, hide_input=True
-    ),
+    username: Optional[str] = typer.Option(None),
+    # NOTE:FUTURE allow the password option to be passed without a value, which
+    # will prompt for input
+    # Would likely require either subclassing typer.Option or click.ParamType:
+    # https://github.com/tiangolo/typer/issues/311
+    password: Optional[str] = typer.Option(None),
 ) -> None:
     # validate first
     user_update_schema = UserUpdate(username=username, password=password)
