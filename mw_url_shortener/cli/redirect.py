@@ -131,7 +131,32 @@ body: {created_redirect.body}
         )
 
 
+def remove_by_id(id: int = typer.Argument(...)) -> None:
+    if id < 0:
+        typer.echo(f"'id' must be 0 or greater; got '{id}'")
+        raise typer.Exit(code=1)
+
+    redirect = get_redirect_interface()
+    resource = get_resource()
+    with open_resource(resource) as opened_resource:
+        removed_redirect = run_sync(redirect.remove_by_id(opened_resource, id=id))
+
+    settings = get_settings()
+    if settings.output_style == OutputStyle.json:
+        typer.echo(removed_redirect.json())
+        return
+
+    typer.echo(
+        f"""successfully removed redirect
+id: {removed_redirect.id}
+url: {created_redirect.url}
+short link: {created_redirect.short_link}
+response_status: {created_redirect.response_status}"""
+    )
+
+
 app = typer.Typer()
 app.command()(create)
 app.command()(get_by_id)
 app.command()(search)
+app.command()(remove_by_id)

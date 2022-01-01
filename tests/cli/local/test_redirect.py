@@ -288,3 +288,56 @@ async def test_search_by_body(
     assert len(retrieved_redirects) == 2
     assert first_desired_redirect in retrieved_redirects
     assert second_desired_redirect in retrieved_redirects
+
+
+async def test_remove_by_id(
+    on_disk_database: Path,
+    run_test_command: CommandRunner,
+) -> None:
+    "can a redirect be removed by id?"
+    url = unsafe_random_string(defaults.test_string_length)
+    short_link = random_short_link(defaults.test_string_length)
+    response_status = int(defaults.test_string_length)
+    body = unsafe_random_string(defaults.test_string_length)
+
+    create_result = await run_test_command(
+        app,
+        [
+            "--output-style",
+            OutputStyle.json.value,
+            "local",
+            "--database-path",
+            str(on_disk_database),
+            "redirect",
+            "create",
+            str(url),
+            str(short_link),
+            "--response-status",
+            str(response_status),
+            "--body",
+            str(body),
+        ],
+    )
+
+    assert create_result.exit_code == 0, f"result: {create_result}"
+    created_redirect = Redirect.parse_raw(create_result.stdout)
+    assert created_redirect
+
+    result = await run_test_command(
+        app,
+        [
+            "--output-style",
+            OutputStyle.json.value,
+            "local",
+            "--database-path",
+            str(on_disk_database),
+            "redirect",
+            "remove-by-id",
+            str(created_redirect.id),
+        ],
+    )
+
+    assert result.exit_code == 0, f"search result: {result}"
+    removed_redirect = Redirect.parse_raw(result.stdout)
+    assert removed_redirect
+    assert removed_redirect == created_redirect
