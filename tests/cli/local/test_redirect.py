@@ -341,3 +341,75 @@ async def test_remove_by_id(
     removed_redirect = Redirect.parse_raw(result.stdout)
     assert removed_redirect
     assert removed_redirect == created_redirect
+
+
+async def test_update(on_disk_database: Path, run_test_command: CommandRunner) -> None:
+    "can redirect info be modified?"
+    url = unsafe_random_string(defaults.test_string_length)
+    new_url = unsafe_random_string(defaults.test_string_length)
+    assert new_url != url
+
+    short_link = random_short_link(defaults.test_string_length)
+    new_short_link = random_short_link(defaults.test_string_length)
+    assert new_short_link != short_link
+
+    response_status = int(defaults.test_string_length)
+    new_response_status = abs(response_status + 1)
+    assert new_response_status != response_status
+
+    body = unsafe_random_string(defaults.test_string_length)
+    new_body = unsafe_random_string(defaults.test_string_length)
+    assert new_body != body
+
+    create_result = await run_test_command(
+        app,
+        [
+            "--output-style",
+            OutputStyle.json.value,
+            "local",
+            "--database-path",
+            str(on_disk_database),
+            "redirect",
+            "create",
+            str(url),
+            str(short_link),
+            "--response-status",
+            str(response_status),
+            "--body",
+            str(body),
+        ],
+    )
+
+    assert create_result.exit_code == 0, f"result: {create_result}"
+    created_redirect = Redirect.parse_raw(create_result.stdout)
+    assert created_redirect
+
+    update_result = await run_test_command(
+        app,
+        [
+            "--output-style",
+            OutputStyle.json.value,
+            "local",
+            "--database-path",
+            str(on_disk_database),
+            "redirect",
+            "update-by-id",
+            str(created_redirect.id),
+            "--url",
+            str(new_url),
+            "--short-link",
+            str(new_short_link),
+            "--response-status",
+            str(new_response_status),
+            "--body",
+            str(new_body),
+        ],
+    )
+
+    assert update_result.exit_code == 0, f"search result: {update_result}"
+    updated_redirect = Redirect.parse_raw(update_result.stdout)
+    assert updated_redirect
+    assert updated_redirect.url == new_url
+    assert updated_redirect.short_link == new_short_link
+    assert updated_redirect.response_status == new_response_status
+    assert updated_redirect.body == new_body

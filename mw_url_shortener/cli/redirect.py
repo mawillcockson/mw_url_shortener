@@ -17,13 +17,15 @@ from mw_url_shortener.interfaces import (
 from mw_url_shortener.schemas.redirect import RedirectCreate, RedirectUpdate
 from mw_url_shortener.settings import OutputStyle, Settings, defaults
 
+RESPONSE_STATUS_HELP = "HTTP code to respond with (see https://developer.mozilla.org/en-US/docs/Web/HTTP/Status)"
+
 
 def create(
     url: str = typer.Argument(...),
     short_link: str = typer.Argument(...),
     response_status: int = typer.Option(
         defaults.redirect_response_status,
-        help="HTTP code to respond with (see https://developer.mozilla.org/en-US/docs/Web/HTTP/Status)",
+        help=RESPONSE_STATUS_HELP,
     ),
     body: Optional[str] = typer.Option(defaults.redirect_body),
 ) -> None:
@@ -156,8 +158,70 @@ body: {removed_redirect.body}"""
     )
 
 
+def update_by_id(
+    id: int = typer.Argument(...),
+    url: str = typer.Option(...),
+    short_link: str = typer.Option(...),
+    response_status: int = typer.Option(
+        defaults.redirect_response_status,
+        help=RESPONSE_STATUS_HELP,
+    ),
+    body: Optional[str] = typer.Option(defaults.redirect_body),
+) -> None:
+    # validate first
+    redirect_update_schema = RedirectUpdate(
+        url=url, short_link=short_link, response_status=response_status, body=body
+    )
+
+    # then check if the redirect exists
+    redirect = get_redirect_interface()
+    resource = get_resource()
+    with open_resource(resource) as opened_resource:
+        old_redirect = run_sync(redirect.get_by_id(opened_resource, id=id))
+
+    settings = get_settings()
+
+    if old_redirect is None and settings.output_style == OutputStyle.text:
+        typer.echo(f"could not find redirect with id '{id}'")
+
+    if old_redirect is None:
+        raise typer.Exit(code=1)
+
+    with open_resource(resource) as opened_resource:
+        updated_redirect = run_sync(
+            redirect.update(
+                opened_resource,
+                current_object_schema=old_redirect,
+                update_object_schema=redirect_update_schema,
+            )
+        )
+
+    if settings.output_style == OutputStyle.json:
+        typer.echo(updated_redirect.json())
+        return
+
+    typer.echo(f"successfully updated redirect\nid: {updated_redirect.id}")
+    typer.echo(f"url: {updated_redirect.url}", nl=False)
+    if old_redirect.url != updated_redirect.url:
+        typer.echo(f" -> {updated_redirect.url}", nl=False)
+    typer.echo("")
+    typer.echo(f"short link: {updated_redirect.short_link}", nl=False)
+    if old_redirect.short_link != updated_redirect.short_link:
+        typer.echo(f" -> {updated_redirect.short_link}", nl=False)
+    typer.echo("")
+    typer.echo(f"response_status: {updated_redirect.response_status}", nl=False)
+    if old_redirect.response_status != updated_redirect.response_status:
+        typer.echo(f" -> {updated_redirect.response_status}", nl=False)
+    typer.echo("")
+    typer.echo(f"body: {updated_redirect.body}", nl=False)
+    if old_redirect.body != updated_redirect.body:
+        typer.echo(f" -> {updated_redirect.body}", nl=False)
+    typer.echo("")
+
+
 app = typer.Typer()
 app.command()(create)
 app.command()(get_by_id)
 app.command()(search)
 app.command()(remove_by_id)
+app.command()(update_by_id)
