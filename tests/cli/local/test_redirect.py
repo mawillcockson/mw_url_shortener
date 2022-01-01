@@ -413,3 +413,61 @@ async def test_update_all(on_disk_database: Path, run_test_command: CommandRunne
     assert updated_redirect.short_link == new_short_link
     assert updated_redirect.response_status == new_response_status
     assert updated_redirect.body == new_body
+
+
+async def test_update_body(on_disk_database: Path, run_test_command: CommandRunner) -> None:
+    "if only the body is modified, does all other info stay the same?"
+    url = unsafe_random_string(defaults.test_string_length)
+    short_link = random_short_link(defaults.test_string_length)
+    response_status = int(defaults.test_string_length)
+
+    body = unsafe_random_string(defaults.test_string_length)
+    new_body = unsafe_random_string(defaults.test_string_length)
+    assert new_body != body
+
+    create_result = await run_test_command(
+        app,
+        [
+            "--output-style",
+            OutputStyle.json.value,
+            "local",
+            "--database-path",
+            str(on_disk_database),
+            "redirect",
+            "create",
+            str(url),
+            str(short_link),
+            "--response-status",
+            str(response_status),
+            "--body",
+            str(body),
+        ],
+    )
+
+    assert create_result.exit_code == 0, f"result: {create_result}"
+    created_redirect = Redirect.parse_raw(create_result.stdout)
+    assert created_redirect
+
+    update_result = await run_test_command(
+        app,
+        [
+            "--output-style",
+            OutputStyle.json.value,
+            "local",
+            "--database-path",
+            str(on_disk_database),
+            "redirect",
+            "update-by-id",
+            str(created_redirect.id),
+            "--body",
+            str(new_body),
+        ],
+    )
+
+    assert update_result.exit_code == 0, f"search result: {update_result}"
+    updated_redirect = Redirect.parse_raw(update_result.stdout)
+    assert updated_redirect
+    assert updated_redirect.url == url
+    assert updated_redirect.short_link == short_link
+    assert updated_redirect.response_status == response_status
+    assert updated_redirect.body == new_body
