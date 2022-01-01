@@ -153,3 +153,25 @@ async def test_get_by_id(
     retrieved_redirect = Redirect.parse_raw(result.stdout)
     assert retrieved_redirect
     assert retrieved_redirect == created_redirect
+
+
+async def test_get_non_existant_redirect(
+    on_disk_database: Path,
+    run_test_command: CommandRunner,
+) -> None:
+    "does the app exit with an error if there's no redirect to retrieve?"
+    result = await run_test_command(
+        app,
+        [
+            "--output-style",
+            OutputStyle.json.value,
+            "local",
+            "--database-path",
+            str(on_disk_database),
+            "redirect",
+            "get-by-id",
+            str(1),
+        ],
+    )
+
+    assert result.exit_code == 1, f"search result: {result}"
