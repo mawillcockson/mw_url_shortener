@@ -12,12 +12,13 @@ from mw_url_shortener.dependency_injection import (
     get_settings,
     reconfigure_dependency_injection,
 )
-from mw_url_shortener.interfaces import UserInterface
+from mw_url_shortener.interfaces import RedirectInterface, UserInterface
 from mw_url_shortener.interfaces import database as database_interface
 from mw_url_shortener.interfaces import inject_interface, inject_resource
 from mw_url_shortener.settings import CliMode, Settings, defaults
 
 from .common_subcommands import SHOW_CONFIGURATION_COMMAND_NAME, show_configuration
+from .redirect import app as redirect_app
 from .user import app as user_app
 
 
@@ -48,11 +49,19 @@ def callback(
     )
     resource_injector = partial(inject_resource, resource=async_sessionmaker)
 
-    interface_injector = partial(
-        inject_interface,
-        interface_type=UserInterface,
-        interface=database_interface.user,
-    )
+    if ctx.invoked_subcommand == "user":
+        interface_injector = partial(
+            inject_interface,
+            interface_type=UserInterface,
+            interface=database_interface.user,
+        )
+
+    if ctx.invoked_subcommand == "redirect":
+        interface_injector = partial(
+            inject_interface,
+            interface_type=RedirectInterface,
+            interface=database_interface.redirect,
+        )
 
     reconfigure_dependency_injection(
         [async_sessionmaker_injector, resource_injector, interface_injector]
@@ -63,3 +72,4 @@ app = typer.Typer(callback=callback)
 app.command(name=SHOW_CONFIGURATION_COMMAND_NAME)(show_configuration)
 
 app.add_typer(user_app, name="user")
+app.add_typer(redirect_app, name="redirect")
