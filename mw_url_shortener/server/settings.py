@@ -1,7 +1,12 @@
 """
 server settings
 """
-from mw_url_shortener.settings import Defaults
+from pathlib import Path
+from typing import List, Optional
+
+from pydantic import Extra, NonNegativeInt
+
+from mw_url_shortener.settings import Defaults, Settings
 
 
 class ServerDefaults(Defaults):
@@ -38,3 +43,10 @@ class ServerDefaults(Defaults):
 
 
 server_defaults = ServerDefaults()
+
+
+class ServerSettings(ServerDefaults):
+    class Config:
+        allow_mutation = True
+        extra = Extra.forbid
+        env_prefix = Settings.Config.env_prefix
