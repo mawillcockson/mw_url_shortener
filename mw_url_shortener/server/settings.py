@@ -30,7 +30,7 @@ class ServerDefaults(Defaults):
     # h2_max_header_list_size  # maximum number of HTTP/2 headers
     # h2_max_inbound_frame_size  # maximum size of HTTP/2 frame
     use_reloader: bool = False  # enable automatic reloads on code changes
-    application_path: Path = "."  # path location of the ASGI application
+    application_path: Path = Path(".")  # path location of the ASGI application
     backlog: int = 100  # maximum number of pending connections
     graceful_timeout: float = 3.0  # time to wait after SIGTERM or Ctrl-C for any remaining requests (tasks) to complete
     user: Optional[NonNegativeInt] = None  # user to own any Unix sockets

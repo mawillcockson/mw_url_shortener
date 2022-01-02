@@ -31,7 +31,7 @@ def make_signal_handler(
 def start(
     ip_address: str = typer.Option(server_defaults.insecure_bind_ip_address),
     port: int = typer.Option(server_defaults.insecure_bind_port),
-):
+) -> None:
     raise NotImplementedError
 
 
