@@ -302,10 +302,10 @@ async def test_redirect_remove_by_id(in_memory_database: AsyncSession) -> None:
     )
     assert removed_redirect == created_redirect
 
-    non_existant_redirect = await database_interface.redirect.get_by_id(
+    non_existent_redirect = await database_interface.redirect.get_by_id(
         in_memory_database, id=created_redirect.id
     )
-    assert not non_existant_redirect
+    assert not non_existent_redirect
 
 
 async def test_search_redirect_by_everything(in_memory_database: AsyncSession) -> None:

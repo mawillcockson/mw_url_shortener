@@ -114,7 +114,7 @@ async def test_get_by_id(
     assert retrieved_user == created_user
 
 
-async def test_get_non_existant_user(
+async def test_get_non_existent_user(
     on_disk_database: Path,
     run_test_command: CommandRunner,
 ) -> None:

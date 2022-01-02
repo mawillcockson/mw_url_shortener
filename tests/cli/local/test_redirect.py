@@ -155,7 +155,7 @@ async def test_get_by_id(
     assert retrieved_redirect == created_redirect
 
 
-async def test_get_non_existant_redirect(
+async def test_get_non_existent_redirect(
     on_disk_database: Path,
     run_test_command: CommandRunner,
 ) -> None:

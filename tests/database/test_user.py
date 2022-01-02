@@ -12,17 +12,17 @@ from mw_url_shortener.security import verify_password
 from tests.utils import random_password, random_username
 
 
-async def test_get_nonexistent_user_by_id(in_memory_database: AsyncSession) -> None:
+async def test_get_non_existent_user_by_id(in_memory_database: AsyncSession) -> None:
     "does get_by_id() fail if the database is empty?"
-    non_existant_user = await database_interface.user.get_by_id(
+    non_existent_user = await database_interface.user.get_by_id(
         in_memory_database, id=0
     )
-    assert not non_existant_user
+    assert not non_existent_user
 
-    non_existant_user = await database_interface.user.get_by_id(
+    non_existent_user = await database_interface.user.get_by_id(
         in_memory_database, id=1
     )
-    assert not non_existant_user
+    assert not non_existent_user
 
 
 async def test_create_user(in_memory_database: AsyncSession) -> None:
@@ -194,10 +194,10 @@ async def test_delete_user_by_id(in_memory_database: AsyncSession) -> None:
     )
     assert deleted_user == user_created
 
-    non_existant_user = await database_interface.user.get_by_id(
+    non_existent_user = await database_interface.user.get_by_id(
         in_memory_database, id=user_retrieved.id
     )
-    assert not non_existant_user
+    assert not non_existent_user
 
 
 async def test_search_by_everything(in_memory_database: AsyncSession) -> None:
