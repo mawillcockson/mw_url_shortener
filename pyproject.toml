@@ -29,10 +29,7 @@ itsdangerous = ">=1.1.0,<3.0.0"
 orjson = ">=3.2.1"
 # NOTE:FUTURE windows support
 # https://github.com/MagicStack/uvloop/issues/14
-uvloop = {
-    version = ">=0.16.0",
-    markers = "sys_platform != 'win32' and sys_platform != 'cygwin' and sys_platform != 'cli'",
-}
+uvloop = {version = ">=0.16.0", markers = "sys_platform != 'win32' and sys_platform != 'cygwin' and sys_platform != 'cli'"}
 
 # NOTE::future split out server as a pip extra
 # [tool.poetry.extras]
