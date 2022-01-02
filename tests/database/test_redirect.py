@@ -85,11 +85,10 @@ async def test_create_non_unique_short_link(in_memory_database: AsyncSession) ->
         in_memory_database, create_object_schema=create_redirect_schema
     )
 
-    with pytest.raises(IntegrityError) as error:
-        created_redirect2 = await database_interface.redirect.create(
-            in_memory_database, create_object_schema=create_redirect_schema
-        )
-    assert error.match(escape("UNIQUE constraint failed"))
+    created_redirect_duplicat_short_link = await database_interface.redirect.create(
+        in_memory_database, create_object_schema=create_redirect_schema
+    )
+    assert not created_redirect_duplicat_short_link
 
 
 async def test_create_unique_short_link(in_memory_database: AsyncSession) -> None:
@@ -139,6 +138,7 @@ async def test_redirect_get_by_id(in_memory_database: AsyncSession) -> None:
     created_redirect = await database_interface.redirect.create(
         in_memory_database, create_object_schema=create_redirect_schema
     )
+    assert created_redirect
 
     retrieved_redirect = await database_interface.redirect.get_by_id(
         in_memory_database, id=created_redirect.id
@@ -148,6 +148,21 @@ async def test_redirect_get_by_id(in_memory_database: AsyncSession) -> None:
     assert retrieved_redirect == created_redirect
 
 
+async def test_redirect_get_by_id_non_existent(
+    in_memory_database: AsyncSession,
+) -> None:
+    "will get_by_id return anything on an empty database?"
+    redirect_schema = await database_interface.redirect.get_by_id(
+        in_memory_database, id=0
+    )
+    assert not redirect_schema
+
+    redirect_schema = await database_interface.redirect.get_by_id(
+        in_memory_database, id=1
+    )
+    assert not redirect_schema
+
+
 async def test_redirect_get_by_short_link(in_memory_database: AsyncSession) -> None:
     short_link = random_short_link(defaults.test_string_length)
     create_redirect_schema = RedirectCreate(short_link=short_link)
@@ -155,6 +170,7 @@ async def test_redirect_get_by_short_link(in_memory_database: AsyncSession) -> N
     created_redirect = await database_interface.redirect.create(
         in_memory_database, create_object_schema=create_redirect_schema
     )
+    assert created_redirect
 
     retrieved_redirect = await database_interface.redirect.get_by_short_link(
         in_memory_database, short_link=created_redirect.short_link
@@ -170,6 +186,7 @@ async def test_redirect_get_by_url(in_memory_database: AsyncSession) -> None:
     created_redirect = await database_interface.redirect.create(
         in_memory_database, create_object_schema=create_redirect_schema
     )
+    assert created_redirect
 
     retrieved_redirects = await database_interface.redirect.search(
         in_memory_database, url=created_redirect.url
@@ -188,6 +205,7 @@ async def test_redirect_get_by_response_status(
     created_redirect = await database_interface.redirect.create(
         in_memory_database, create_object_schema=create_redirect_schema
     )
+    assert created_redirect
 
     retrieved_redirects = await database_interface.redirect.search(
         in_memory_database, response_status=created_redirect.response_status
@@ -204,6 +222,7 @@ async def test_redirect_get_by_body(in_memory_database: AsyncSession) -> None:
     created_redirect = await database_interface.redirect.create(
         in_memory_database, create_object_schema=create_redirect_schema
     )
+    assert created_redirect
 
     assert created_redirect.body is not None  # for mypy
 
@@ -226,9 +245,11 @@ async def test_get_two_redirects(in_memory_database: AsyncSession) -> None:
     first_redirect = await database_interface.redirect.create(
         in_memory_database, create_object_schema=first_redirect_schema
     )
+    assert first_redirect
     second_redirect = await database_interface.redirect.create(
         in_memory_database, create_object_schema=second_redirect_schema
     )
+    assert second_redirect
 
     assert first_redirect != second_redirect
 
@@ -254,6 +275,7 @@ async def test_update_redirect(in_memory_database: AsyncSession) -> None:
     created_redirect = await database_interface.redirect.create(
         in_memory_database, create_object_schema=create_redirect_schema
     )
+    assert created_redirect
 
     new_short_link = random_short_link(defaults.test_string_length)
     assert new_short_link != short_link
@@ -283,6 +305,21 @@ async def test_update_redirect(in_memory_database: AsyncSession) -> None:
     assert updated_redirect_data == update_data
 
 
+async def test_update_no_match(in_memory_database: AsyncSession) -> None:
+    "will the database reject an update for an item that doesn't exist?"
+    non_existent_redirect_schema = Redirect(
+        id=1, url=url, short_link=short_link, response_status=response_status, body=body
+    )
+    redirect_update_schema = RedirectUpdate()
+
+    updated_redirect_schema = await database_interface.redirect.update(
+        in_memory_database,
+        current_object_schema=non_existent_redirect,
+        update_object_schema=redirect_update_schema,
+    )
+    assert not updated_redirect_schema
+
+
 async def test_redirect_remove_by_id(in_memory_database: AsyncSession) -> None:
     "if a redirect is deleted, can their data no longer be found in the database?"
     create_redirect_schema = RedirectCreate()
@@ -290,6 +327,7 @@ async def test_redirect_remove_by_id(in_memory_database: AsyncSession) -> None:
     created_redirect = await database_interface.redirect.create(
         in_memory_database, create_object_schema=create_redirect_schema
     )
+    assert created_redirect
 
     retrieved_redirect = await database_interface.redirect.get_by_id(
         in_memory_database, id=created_redirect.id
@@ -306,6 +344,20 @@ async def test_redirect_remove_by_id(in_memory_database: AsyncSession) -> None:
         in_memory_database, id=created_redirect.id
     )
     assert not non_existent_redirect
+
+
+async def test_redirect_remove_by_id_non_existent(
+    in_memory_database: AsyncSession,
+) -> None:
+    removed_redirect = await database_interface.redirect.remove_by_id(
+        in_memory_database, id=0
+    )
+    assert not removed_redirect
+
+    removed_redirect = await database_interface.redirect.remove_by_id(
+        in_memory_database, id=1
+    )
+    assert not removed_redirect
 
 
 async def test_search_redirect_by_everything(in_memory_database: AsyncSession) -> None:
@@ -363,6 +415,7 @@ async def test_search_redirect_by_everything(in_memory_database: AsyncSession) -
     redirect_different_short_link = await database_interface.redirect.create(
         in_memory_database, create_object_schema=redirect_different_short_link_schema
     )
+    assert redirect_different_short_link
     assert redirect_different_short_link != desired_redirect
 
     similar_redirect_schema2 = RedirectCreate(
@@ -417,3 +470,12 @@ async def test_search_redirect_by_everything(in_memory_database: AsyncSession) -
     assert len(retrieved_redirects) == 2, str(retrieved_redirects)
     assert desired_redirect in retrieved_redirects
     assert redirect_different_short_link in retrieved_redirects
+
+
+async def test_search_no_arguments_no_matches(in_memory_database: AsyncSession) -> None:
+    """
+    are no results returned if no search criteria are given to search, and the
+    database is empty?
+    """
+    redirect_schemas = await database_interface.redirect.search(in_memory_database)
+    assert len(redirect_schemas) == 0

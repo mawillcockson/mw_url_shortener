@@ -62,7 +62,7 @@ class InterfaceBaseProtocol(
         /,
         *,
         create_object_schema: ContravariantCreateSchemaType,
-    ) -> ObjectSchemaType:
+    ) -> Optional[ObjectSchemaType]:
         ...
 
     async def get_by_id(
@@ -82,5 +82,5 @@ class InterfaceBaseProtocol(
 
     async def remove_by_id(
         self, opened_resource: ContravariantOpenedResourceT, /, *, id: int
-    ) -> ObjectSchemaType:
+    ) -> Optional[ObjectSchemaType]:
         ...

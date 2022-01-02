@@ -39,6 +39,36 @@ async def test_create_user(in_memory_database: AsyncSession) -> None:
     assert not hasattr(created_user, "hashed_password")
 
 
+async def test_create_user_duplicate_username(in_memory_database: AsyncSession) -> None:
+    """
+    will the database reject a user with a duplicate username?
+
+    if two users differ only in password, and both the username and password,
+    and nothing more, are used for authentication, how does one tell the
+    different between if one of the users incorrectly uses the other user's
+    password, and the other user signing in?
+    """
+    username = random_username()
+
+    password = random_password()
+    other_password = random_password()
+    assert password != other_password
+
+    user_create_schema = UserCreate(username=username, password=password)
+
+    created_user = await database_interface.create(
+        in_memory_database, create_object_schema=user_create_schema
+    )
+    assert created_user
+
+    duplicate_username_schema = UserCreate(username=username, password=other_password)
+
+    duplicate_user = await database_interface.create(
+        in_memory_database, create_object_schema=duplicate_username_schema
+    )
+    assert not duplicate_user
+
+
 async def test_authenticate_user(in_memory_database: AsyncSession) -> None:
     "can an added user's data be used to authenticate the user?"
     username = random_username()
@@ -170,6 +200,23 @@ async def test_update_user_password(in_memory_database: AsyncSession) -> None:
     assert authenticated_user == user_created
 
 
+async def test_user_update_non_existent(in_memory_database: AsyncSession) -> None:
+    "will the database reject updating a user if the database is empty?"
+    username = random_username()
+    password = random_password()
+
+    current_user_schema = User(id=1, username=username)
+
+    user_update_schema = UserUpdate(username=username, password=password)
+
+    updated_user = await database_interface.user.update(
+        in_memory_database,
+        current_object_schema=current_user_schema,
+        update_object_schema=user_update_schema,
+    )
+    assert not updated_user
+
+
 async def test_delete_user_by_id(in_memory_database: AsyncSession) -> None:
     "if a user is deleted, can their data no longer be found in the database?"
     # create user
@@ -198,6 +245,15 @@ async def test_delete_user_by_id(in_memory_database: AsyncSession) -> None:
         in_memory_database, id=user_retrieved.id
     )
     assert not non_existent_user
+
+
+async def test_user_remove_by_id_non_existent(in_memory_database: AsyncSession) -> None:
+    "will the database reject removing a user from an empty database?"
+    removed_user = await database_interface.user.remove_by_id(in_memory_database, id=0)
+    assert not removed_user
+
+    removed_user = await database_interface.user.remove_by_id(in_memory_database, id=1)
+    assert not removed_user
 
 
 async def test_search_by_everything(in_memory_database: AsyncSession) -> None:
