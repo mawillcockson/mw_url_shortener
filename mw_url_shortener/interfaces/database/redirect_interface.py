@@ -17,13 +17,16 @@ class RedirectDBInterface(
 ):
     async def get_by_short_link(
         self, opened_resource: AsyncSession, /, *, short_link: str
-    ) -> Redirect:
+    ) -> Optional[Redirect]:
         async with opened_resource.begin():
             redirect_model = (
                 await opened_resource.execute(
                     select(RedirectModel).where(RedirectModel.short_link == short_link)
                 )
-            ).scalar_one()
+            ).scalar_one_or_none()
+
+            if redirect_model is None:
+                return None
 
             assert isinstance(
                 redirect_model, RedirectModel

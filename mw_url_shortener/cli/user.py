@@ -34,6 +34,16 @@ def create(
         )
 
     settings = get_settings()
+    if created_user is None and settings.output_style == OutputStyle.text:
+        typer.echo(
+            f"""couldn't create user with
+username: '{username}'
+password: '{password}'"""
+        )
+
+    if created_user is None:
+        raise typer.Exit(code=1)
+
     if settings.output_style == OutputStyle.json:
         typer.echo(created_user.json())
         return
@@ -59,7 +69,6 @@ def get_by_id(id: int = typer.Argument(...)) -> None:
 
     if retrieved_user is None and settings.output_style == OutputStyle.text:
         typer.echo(f"could not find user with id '{id}'")
-
     if retrieved_user is None:
         raise typer.Exit(code=1)
 
@@ -113,6 +122,12 @@ def remove_by_id(id: int = typer.Argument(...)) -> None:
         removed_user = run_sync(user.remove_by_id(opened_resource, id=id))
 
     settings = get_settings()
+
+    if removed_user is None and settings.output_style == OutputStyle.text:
+        typer.echo(f"could not find user with id '{id}'")
+    if removed_user is None:
+        raise typer.Exit(code=1)
+
     if settings.output_style == OutputStyle.json:
         typer.echo(removed_user.json())
         return
@@ -177,7 +192,6 @@ def update_by_id(
 
     if old_user is None and settings.output_style == OutputStyle.text:
         typer.echo(f"could not find user with id '{id}'")
-
     if old_user is None:
         raise typer.Exit(code=1)
 

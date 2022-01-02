@@ -2,6 +2,7 @@
 from typing import Dict, Generic, List, Optional, Type, TypeVar, Union
 
 from sqlalchemy import select, update
+from sqlalchemy.exc import IntegrityError
 
 from mw_url_shortener.database.models.base import DeclarativeBase
 from mw_url_shortener.database.start import AsyncSession, sessionmaker
@@ -65,10 +66,13 @@ class DBInterfaceBase(
         /,
         *,
         create_object_schema: CreateSchemaType,
-    ) -> ObjectSchemaType:
+    ) -> Optional[ObjectSchemaType]:
         object_model = self.model(**create_object_schema.dict())
         async with opened_resource.begin():
-            opened_resource.add(object_model)
+            try:
+                opened_resource.add(object_model)
+            except IntegrityError as err:
+                return None
         await opened_resource.refresh(object_model)
         await opened_resource.close()  # .refresh() opens a new session
         return self.schema.from_orm(object_model)
@@ -108,10 +112,14 @@ class DBInterfaceBase(
 
     async def remove_by_id(
         self, opened_resource: AsyncSession, /, *, id: int
-    ) -> ObjectSchemaType:
+    ) -> Optional[ObjectSchemaType]:
         async with opened_resource.begin():
             get_by_id = select(self.model).where(self.model.id == id)
-            object_model = (await opened_resource.execute(get_by_id)).scalar_one()
+            object_model = (
+                await opened_resource.execute(get_by_id)
+            ).scalar_one_or_none()
+            if object_model is None:
+                return None
             object_schema = self.schema.from_orm(object_model)
             await opened_resource.delete(object_model)
             object_schema_with_id = object_schema.copy(update={"id": id})
