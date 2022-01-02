@@ -133,7 +133,7 @@ async def test_create_unique_short_link(in_memory_database: AsyncSession) -> Non
     assert first_redirect_data_no_short_link == second_redirect_data_no_short_link
 
 
-async def redirect_get_by_id(in_memory_database: AsyncSession) -> None:
+async def test_redirect_get_by_id(in_memory_database: AsyncSession) -> None:
     create_redirect_schema = RedirectCreate()
 
     created_redirect = await database_interface.redirect.create(
