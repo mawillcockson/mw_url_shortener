@@ -33,6 +33,7 @@ async def test_create_user(in_memory_database: AsyncSession) -> None:
     created_user = await database_interface.user.create(
         in_memory_database, create_object_schema=create_user_schema
     )
+    assert created_user
     assert created_user.username == username
     assert hasattr(created_user, "id")
     assert created_user.id is not None
@@ -56,14 +57,14 @@ async def test_create_user_duplicate_username(in_memory_database: AsyncSession) 
 
     user_create_schema = UserCreate(username=username, password=password)
 
-    created_user = await database_interface.create(
+    created_user = await database_interface.user.create(
         in_memory_database, create_object_schema=user_create_schema
     )
     assert created_user
 
     duplicate_username_schema = UserCreate(username=username, password=other_password)
 
-    duplicate_user = await database_interface.create(
+    duplicate_user = await database_interface.user.create(
         in_memory_database, create_object_schema=duplicate_username_schema
     )
     assert not duplicate_user
@@ -77,6 +78,7 @@ async def test_authenticate_user(in_memory_database: AsyncSession) -> None:
     user_created = await database_interface.user.create(
         in_memory_database, create_object_schema=user_create_schema
     )
+    assert user_created
     user_authenticated = await database_interface.user.authenticate(
         in_memory_database, username=username, password=password
     )
@@ -102,6 +104,7 @@ async def test_get_user_by_id(in_memory_database: AsyncSession) -> None:
     user_created = await database_interface.user.create(
         in_memory_database, create_object_schema=user_create_schema
     )
+    assert user_created
     user_retrieved = await database_interface.user.get_by_id(
         in_memory_database, id=user_created.id
     )
@@ -120,6 +123,7 @@ async def test_get_user_by_username(in_memory_database: AsyncSession) -> None:
     user_created1 = await database_interface.user.create(
         in_memory_database, create_object_schema=user_create_schema1
     )
+    assert user_created1
 
     username2 = random_username()
     password2 = random_password()
@@ -127,6 +131,7 @@ async def test_get_user_by_username(in_memory_database: AsyncSession) -> None:
     user_created2 = await database_interface.user.create(
         in_memory_database, create_object_schema=user_create_schema2
     )
+    assert user_created2
 
     retrieved_user1 = await database_interface.user.get_by_username(
         in_memory_database, username=username1
@@ -143,6 +148,7 @@ async def test_get_two_users(in_memory_database: AsyncSession) -> None:
     user_created1 = await database_interface.user.create(
         in_memory_database, create_object_schema=user_create_schema1
     )
+    assert user_created1
 
     username2 = random_username()
     password2 = random_password()
@@ -150,6 +156,7 @@ async def test_get_two_users(in_memory_database: AsyncSession) -> None:
     user_created2 = await database_interface.user.create(
         in_memory_database, create_object_schema=user_create_schema2
     )
+    assert user_created2
 
     retrieved_users = await database_interface.user.get_multiple(
         in_memory_database, skip=0, limit=100
@@ -169,15 +176,17 @@ async def test_update_user_password(in_memory_database: AsyncSession) -> None:
     user_created = await database_interface.user.create(
         in_memory_database, create_object_schema=user_create_schema
     )
+    assert user_created
 
     new_password = random_password()
     user_update_schema = UserUpdate(password=new_password)
 
-    await database_interface.user.update(
+    updated_user = await database_interface.user.update(
         in_memory_database,
         current_object_schema=user_created,
         update_object_schema=user_update_schema,
     )
+    assert updated_user
 
     user_retrieved = await database_interface.user.get_by_id(
         in_memory_database, id=user_created.id
@@ -227,6 +236,7 @@ async def test_delete_user_by_id(in_memory_database: AsyncSession) -> None:
         in_memory_database,
         create_object_schema=user_create_schema,
     )
+    assert user_created
 
     # affirm user is in database
     user_retrieved = await database_interface.user.get_by_id(

@@ -5,7 +5,6 @@ from re import escape
 from typing import List
 
 import pytest
-from sqlalchemy.exc import IntegrityError
 
 from mw_url_shortener.database.start import AsyncSession
 from mw_url_shortener.interfaces import database as database_interface
@@ -112,6 +111,7 @@ async def test_create_unique_short_link(in_memory_database: AsyncSession) -> Non
     first_redirect = await database_interface.redirect.create(
         in_memory_database, create_object_schema=first_redirect_schema
     )
+    assert first_redirect
 
     new_short_link = random_short_link(defaults.test_string_length)
     second_redirect_schema = first_redirect_schema.copy(
@@ -307,7 +307,12 @@ async def test_update_redirect(in_memory_database: AsyncSession) -> None:
 
 async def test_update_no_match(in_memory_database: AsyncSession) -> None:
     "will the database reject an update for an item that doesn't exist?"
-    non_existent_redirect_schema = Redirect(
+    url = unsafe_random_string(defaults.test_string_length)
+    short_link = random_short_link(defaults.test_string_length)
+    response_status = int(defaults.test_string_length)
+    body = unsafe_random_string(defaults.test_string_length)
+
+    non_existent_redirect = Redirect(
         id=1, url=url, short_link=short_link, response_status=response_status, body=body
     )
     redirect_update_schema = RedirectUpdate()
