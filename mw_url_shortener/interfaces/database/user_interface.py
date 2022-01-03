@@ -40,11 +40,6 @@ class UserDBInterface(
         *,
         create_object_schema: UserCreate,
     ) -> Optional[User]:
-        password = create_object_schema.password
-        create_data = create_object_schema.dict(exclude={"password"})
-        create_data["hashed_password"] = hash_password(password)
-
-        user_model = self.model(**create_data)
         get_username = select(self.model).where(
             UserModel.username == create_object_schema.username
         )
@@ -55,6 +50,13 @@ class UserDBInterface(
             if non_existent_user_model is not None:
                 return None
 
+        password = create_object_schema.password
+        create_data = create_object_schema.dict(exclude={"password"})
+        create_data["hashed_password"] = hash_password(password)
+
+        user_model = self.model(**create_data)
+
+        async with opened_resource.begin():
             opened_resource.add(user_model)
         await opened_resource.refresh(user_model)
         await opened_resource.close()
