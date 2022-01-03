@@ -34,7 +34,6 @@ async def login_for_access_token(
         server_settings.jwt_secret_key,
         algorithm=server_settings.jwt_hash_algorithm,
     )
-    print(encoded_token)
     return AccessToken(access_token=encoded_token)
 
 

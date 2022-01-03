@@ -6,8 +6,9 @@ from datetime import timedelta
 from pathlib import Path
 from typing import TYPE_CHECKING, List, Optional
 
-from pydantic import Extra, NonNegativeInt, PositiveInt
+from pydantic import AnyUrl, Extra, NonNegativeInt, PositiveInt
 
+from mw_url_shortener import APP_NAME, __version__
 from mw_url_shortener.settings import Defaults, Settings
 
 if TYPE_CHECKING:
@@ -27,7 +28,7 @@ class ServerDefaults(Defaults):
     loglevel: str = "info"
     debug: bool = False
     include_server_header: bool = False
-    root_path: str = ""  #
+    root_path: str = ""  # https://example.com/{root_path}/v0/api/user/me
     insecure_bind_ip_address: str = "[::]"
     insecure_bind_port: str = "8080"
     # h11_max_incomplete_size  # the max HTTP/2 request line + headers size in bytes
@@ -47,6 +48,11 @@ class ServerDefaults(Defaults):
     )  # hostnames that can be served; requests to different hosts will be responded to with 404s
     jwt_hash_algorithm: str = "HS256"
     jwt_access_token_valid_duration: timedelta = timedelta(minutes=30)
+    oauth2_endpoint: str = "token"
+    fast_api_title: str = APP_NAME
+    fast_api_description: str = "A URL shortener"
+    fast_api_version: str = __version__
+    fast_api_terms_of_service: Optional[AnyUrl] = None
 
 
 server_defaults = ServerDefaults()
@@ -67,11 +73,3 @@ def inject_server_settings(
     if not server_settings:
         server_settings = ServerSettings()
     binder.bind(ServerSettings, server_settings)
-
-
-# NOTE:FUTURE loading all the settings should be done during server startup, in
-# mw_url_shortener.server.cli, and should probably use python-inject, rather
-# than the FastAPI.Depends system
-import inject
-
-inject.configure(inject_server_settings)
