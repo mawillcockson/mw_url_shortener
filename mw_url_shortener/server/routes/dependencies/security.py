@@ -13,7 +13,7 @@ from mw_url_shortener.server.settings import ServerSettings
 
 from .main import get_async_session, get_server_settings
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="v0/security/token")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 
 credentials_exception = HTTPException(

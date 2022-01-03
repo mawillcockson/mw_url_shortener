@@ -14,6 +14,8 @@ async def get_server_settings() -> ServerSettings:
 
 async def get_async_session() -> AsyncIterator[AsyncSession]:
     server_settings = await get_server_settings()
-    async_sessionmaker = await make_sessionmaker(server_settings.database_url)
+    async_sessionmaker = await make_sessionmaker(
+        server_settings.database_url, echo=server_settings.log_db_access
+    )
     async with async_sessionmaker() as async_session:
         yield async_session
