@@ -1,12 +1,17 @@
+# mypy: allow_any_expr
 """
 server settings
 """
+from datetime import timedelta
 from pathlib import Path
-from typing import List, Optional
+from typing import TYPE_CHECKING, List, Optional
 
-from pydantic import Extra, NonNegativeInt
+from pydantic import Extra, NonNegativeInt, PositiveInt
 
 from mw_url_shortener.settings import Defaults, Settings
+
+if TYPE_CHECKING:
+    import inject
 
 
 class ServerDefaults(Defaults):
@@ -40,13 +45,33 @@ class ServerDefaults(Defaults):
     ] = (
         []
     )  # hostnames that can be served; requests to different hosts will be responded to with 404s
+    jwt_hash_algorithm: str = "HS256"
+    jwt_access_token_valid_duration: timedelta = timedelta(minutes=30)
 
 
 server_defaults = ServerDefaults()
 
 
 class ServerSettings(ServerDefaults):
+    jwt_secret_key: str
+
     class Config:
         allow_mutation = True
         extra = Extra.forbid
         env_prefix = Settings.Config.env_prefix
+
+
+def inject_server_settings(
+    binder: "inject.Binder", *, server_settings: Optional[ServerSettings] = None
+) -> None:
+    if not server_settings:
+        server_settings = ServerSettings()
+    binder.bind(ServerSettings, server_settings)
+
+
+# NOTE:FUTURE loading all the settings should be done during server startup, in
+# mw_url_shortener.server.cli, and should probably use python-inject, rather
+# than the FastAPI.Depends system
+import inject
+
+inject.configure(inject_server_settings)
