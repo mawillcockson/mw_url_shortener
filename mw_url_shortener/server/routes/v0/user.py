@@ -9,6 +9,18 @@ from mw_url_shortener.schemas.user import User, UserCreate
 from ..dependencies import get_async_session, get_current_user
 
 
+async def get_by_id(
+    id: int,
+    async_session: AsyncSession = Depends(get_async_session),
+    current_user: User = Depends(get_current_user),
+) -> User:
+    retrieved_user = await user_interface.get_by_id(async_session, id=id)
+    if retrieved_user is not None:
+        return retrieved_user
+
+    raise HTTPException(status_code=404, detail="could not find user")
+
+
 async def create_user(
     create_user_schema: UserCreate,
     async_session: AsyncSession = Depends(get_async_session),
@@ -30,3 +42,4 @@ async def me(current_user: User = Depends(get_current_user)) -> User:
 router = APIRouter()
 router.get("/me")(me)
 router.post("/")(create_user)
+router.get("/")(get_by_id)
