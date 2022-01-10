@@ -29,7 +29,12 @@ def callback(
         defaults.log_db_access, help="show output from the database interactions"
     ),
 ) -> None:
-    if ctx.resilient_parsing or ctx.invoked_subcommand is None or "--help" in sys.argv:
+    if (
+        ctx.resilient_parsing
+        or ctx.invoked_subcommand is None
+        or "--help" in sys.argv
+        or "--show-completion" in sys.argv
+    ):
         return
 
     settings = get_settings()
