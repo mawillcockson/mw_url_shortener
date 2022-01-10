@@ -22,13 +22,15 @@ except ImportError:
 else:
     json_loads = orjson.loads  # type: ignore
 
-    def json_dumps(v: Json, *, default: Callable[[Json], str]) -> str:  # type: ignore
+    def json_dumps(v: Json, *, default: Callable[[Json], str], indent: Optional[int] = None) -> str:  # type: ignore
         """
         orjson.dumps returns bytes, to match standard json.dumps we need to decode
 
         from:
         https://pydantic-docs.helpmanual.io/usage/exporting_models/#custom-json-deserialisation
         """
+        if indent:
+            return orjson.dumps(v, default=default, option=orjson.OPT_INDENT_2).decode()
         return orjson.dumps(v, default=default).decode()
 
 
