@@ -6,7 +6,7 @@ from datetime import timedelta
 from pathlib import Path
 from typing import TYPE_CHECKING, List, Optional
 
-from pydantic import AnyUrl, Extra, NonNegativeInt, PositiveInt
+from pydantic import AnyUrl, ConstrainedStr, Extra, NonNegativeInt, PositiveInt
 
 from mw_url_shortener import APP_NAME, __version__
 from mw_url_shortener.settings import Defaults, Settings
@@ -53,13 +53,18 @@ class ServerDefaults(Defaults):
     fast_api_description: str = "A URL shortener"
     fast_api_version: str = __version__
     fast_api_terms_of_service: Optional[AnyUrl] = None
+    jwt_secret_key_max_length: PositiveInt = 128
 
 
 server_defaults = ServerDefaults()
 
 
+class JWTSecretKey(ConstrainedStr):
+    max_length = server_defaults.jwt_secret_key_max_length
+
+
 class ServerSettings(ServerDefaults):
-    jwt_secret_key: str
+    jwt_secret_key: JWTSecretKey
 
     class Config:
         allow_mutation = True
