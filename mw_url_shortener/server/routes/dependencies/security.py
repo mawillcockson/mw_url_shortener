@@ -13,6 +13,7 @@ from mw_url_shortener.server.settings import ServerSettings
 
 from .main import get_async_session, get_server_settings
 
+# this is actually set in mw_url_shortener.server.cli.make_fastapi_app()
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 

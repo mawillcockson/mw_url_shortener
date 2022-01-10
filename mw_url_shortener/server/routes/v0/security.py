@@ -38,4 +38,6 @@ async def login_for_access_token(
 
 
 router = APIRouter()
+# this is hardcoded here, but the function is added as another endpoint at the
+# toplevel FastAPI app in mw_url_shortener.server.cli.make_fastapi_app()
 router.post("/token")(login_for_access_token)
