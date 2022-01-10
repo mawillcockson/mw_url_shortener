@@ -46,6 +46,7 @@ pytest-timeout = ">=1.4.2"
 tox = ">=3.24.4"
 pylint = ">=2.11.1"
 anyio = ">=3.3.4" # provides pytest.mark.anyio decorator for async test function support
+requests = ">=2.24.0,<3.0.0" # starlette.testclient.TestClient
 
 [tool.poetry.scripts]
 mw-redir = "mw_url_shortener.cli.entry_point:main"
