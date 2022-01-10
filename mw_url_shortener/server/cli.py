@@ -10,11 +10,17 @@ from mw_url_shortener import APP_NAME
 from .settings import ServerSettings, inject_server_settings, server_defaults
 
 if TYPE_CHECKING:
-    from typing import Iterable, List
+    from typing import Dict, Iterable, List
+
+    EnvPatch = Dict[str, str]
 
 
 def uppercase_all(names: "Iterable[str]") -> "List[str]":
     return list(map(str.upper, names))
+
+
+def make_env_patch(names: "Iterable[str]", value: str) -> "EnvPatch":
+    return {name: value for name in names}
 
 
 server_settings_schema = ServerSettings.schema()
@@ -67,43 +73,45 @@ cannot import hypercorn: {err}"""
 
     from functools import partial
 
-    import inject
-
     server_settings = ServerSettings(
         jwt_secret_key=jwt_secret_key, database_path=database_path, show_docs=show_docs
     )
-    server_settings_injector = partial(
-        inject_server_settings, server_settings=server_settings
+
+    env_patch: "EnvPatch" = {"MAKE_APP": "true"}
+
+    database_path_env_addon = make_env_patch(
+        database_path_env_names, str(database_path)
     )
-    inject.configure(server_settings_injector)
+    env_patch.update(database_path_env_addon)
+
+    jwt_secret_key_env_addon = make_env_patch(
+        jwt_secret_key_env_names, str(jwt_secret_key)
+    )
+    env_patch.update(jwt_secret_key_env_addon)
+
+    if show_docs:
+        show_docs_env_addon = make_env_patch(show_docs_env_names, "true")
+        env_patch.update(show_docs_env_addon)
+
+    import inject
+
+    def config(binder: "inject.Binder") -> None:
+        binder.bind("EnvPatch", env_patch)
+
+    inject.configure(config)
 
 
 def debug() -> None:
     from subprocess import run
+    from typing import cast
     from unittest.mock import patch
 
     import inject
 
-    from mw_url_shortener.utils import safe_random_string
-
-    server_settings = inject.instance(ServerSettings)
-
-    env_patch = {"MAKE_APP": "true"}
-
-    database_path: "Path" = server_settings.database_path
-    database_path_env_addon = {
-        name: str(database_path) for name in database_path_env_names
-    }
-    env_patch.update(database_path_env_addon)
-
-    jwt_secret_key = safe_random_string(5)
-    jwt_secret_key_env_addon = {
-        name: str(jwt_secret_key) for name in jwt_secret_key_env_names
-    }
-    env_patch.update(jwt_secret_key_env_addon)
+    env_patch = cast("EnvPatch", inject.instance("EnvPatch"))
 
     # always turn documentation on
-    show_docs_env_addon = {name: "true" for name in show_docs_env_names}
+    show_docs_env_addon = make_env_patch(show_docs_env_names, "true")
     env_patch.update(show_docs_env_addon)
 
     with patch.dict("os.environ", env_patch) as patched_env:
