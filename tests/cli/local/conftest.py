@@ -15,8 +15,10 @@ from mw_url_shortener.dependency_injection import initialize_dependency_injectio
 @pytest.fixture
 def cli_test_client() -> Iterator[CliRunner]:
     inject.clear()
-    yield CliRunner()
-    inject.clear()
+    try:
+        yield CliRunner()
+    finally:
+        inject.clear()
 
 
 class CommandRunner(Protocol):
