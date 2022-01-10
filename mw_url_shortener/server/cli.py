@@ -4,13 +4,57 @@ import typer
 
 from mw_url_shortener import APP_NAME
 
-from .settings import server_defaults
+from .settings import ServerSettings, inject_server_settings, server_defaults
 
 if TYPE_CHECKING:
     from asyncio import Event
     from signal import Signals
     from types import FrameType
     from typing import Callable
+
+    from fastapi import FastAPI
+
+
+def make_fastapi_app(server_settings: ServerSettings) -> "FastAPI":
+    from functools import partial
+
+    import inject
+
+    from mw_url_shortener.interfaces import install_binder_callables
+
+    server_settings_injector = partial(
+        inject_server_settings, server_settings=server_settings
+    )
+
+    configurators = [
+        server_settings_injector,
+    ]
+
+    injector = partial(install_binder_callables, configurators=configurators)
+
+    inject.configure(injector)
+
+    from fastapi import FastAPI
+
+    from .routes.dependencies.security import oauth2_scheme
+    from .routes.v0 import api_router as api_router_v0
+    from .routes.v0.redirect import match_redirect
+    from .routes.v0.security import login_for_access_token
+    from .routes.v0.security import router as api_router_v0_security
+
+    oauth2_scheme.model.flows.password.tokenUrl = str(server_settings.oauth2_endpoint)  # type: ignore
+
+    api_router_v0_security.post(f"/{server_settings.oauth2_endpoint}")(
+        login_for_access_token
+    )
+
+    app = FastAPI()
+    app.include_router(api_router_v0, prefix="/v0")
+    app.post(f"/{server_settings.oauth2_endpoint}")(login_for_access_token)
+    # this must come last so it doesn't overwrite anything
+    app.get("/{short_link:path}")(match_redirect)
+
+    return app
 
 
 def callback(ctx: typer.Context) -> None:
