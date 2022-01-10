@@ -2,6 +2,7 @@
 *.sqlitedb
 *.env
 commit_message.txt
+test_requirements.txt
 
 # Editors
 .vscode/
