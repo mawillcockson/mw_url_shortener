@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 import typer
@@ -8,9 +9,8 @@ from .settings import ServerSettings, inject_server_settings, server_defaults
 
 if TYPE_CHECKING:
     from asyncio import Event
-    from signal import Signals
     from types import FrameType
-    from typing import Callable
+    from typing import Callable, Optional
 
     from fastapi import FastAPI
 
@@ -65,11 +65,71 @@ def callback(ctx: typer.Context) -> None:
 
 def make_signal_handler(
     shutdown_event: "Event",
-) -> "Callable[[Signals, FrameType], None]":
-    def signal_handler(signalnum: "Signals", frame_object: "FrameType") -> None:
+) -> "Callable[[int, Optional[FrameType]], None]":
+    def signal_handler(
+        signalnum: "Optional[int]" = None, frame_object: "Optional[FrameType]" = None
+    ) -> None:
         shutdown_event.set()
 
     return signal_handler
+
+
+def debug(database_path: Path = typer.Option(...)) -> None:
+    if not database_path.is_file():
+        typer.echo(f"expected a file '{database_path}'")
+        raise typer.Exit(code=1)
+
+    try:
+        from hypercorn.config import Config
+    except ImportError as err:
+        typer.echo(
+            f"""were the server extras installed? (pip install {APP_NAME}[server])
+
+cannot import hypercorn: {err}"""
+        )
+        raise typer.Exit(code=1)
+
+    config = Config()
+    config.accesslog = "-"
+    config.errorlog = "-"
+
+    from mw_url_shortener.utils import safe_random_string
+
+    jwt_secret_key = safe_random_string(5)
+
+    server_settings = ServerSettings(
+        database_path=database_path,
+        jwt_secret_key=jwt_secret_key,
+        accesslog="-",
+        errorlog="-",
+    )
+
+    typer.echo(f"server_settings: {server_settings.json(indent=2)}")
+
+    server_app = make_fastapi_app(server_settings)
+
+    # from:
+    # https://gitlab.com/pgjones/hypercorn/-/blob/73733d71b804e49a14926633132eef7d54075578/src/hypercorn/asyncio/run.py#L62-73
+
+    import asyncio
+    import signal
+
+    shutdown_event = asyncio.Event()
+    signal_handler = make_signal_handler(shutdown_event)
+    loop = asyncio.new_event_loop()
+
+    for signal_name in {"SIGINT", "SIGTERM", "SIGBREAK"}:
+        if hasattr(signal, signal_name):
+            try:
+                loop.add_signal_handler(getattr(signal, signal_name), signal_handler)
+            except NotImplementedError:
+                # Add signal handler may not be implemented on Windows
+                signal.signal(getattr(signal, signal_name), signal_handler)
+
+    from hypercorn.asyncio import serve
+
+    serve_awaitable = serve(server_app, config, shutdown_trigger=shutdown_event.wait)
+    loop.run_until_complete(serve_awaitable)
 
 
 def start(
@@ -103,9 +163,9 @@ def start(
 #     from .routes import app as routes_app
 #
 #     try:
-#         import uvicorn
+#         import uvloop
 #
-#         uvicorn.install()
+#         uvloop.install()
 #         config.worker_class = "uvloop"
 #     except ImportError:
 #         pass
@@ -137,6 +197,7 @@ def start(
 
 
 app = typer.Typer(callback=callback)
+app.command()(debug)
 app.command()(start)
 if __name__ == "__main__":
     app()
