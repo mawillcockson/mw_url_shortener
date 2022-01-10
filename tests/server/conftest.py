@@ -9,7 +9,7 @@ from mw_url_shortener.database.start import make_sessionmaker
 from mw_url_shortener.interfaces import database as database_interface
 from mw_url_shortener.schemas.security import AuthorizationHeaders
 from mw_url_shortener.schemas.user import User, UserCreate
-from mw_url_shortener.server.cli import make_fastapi_app
+from mw_url_shortener.server.app import make_fastapi_app
 from mw_url_shortener.server.settings import ServerSettings, server_defaults
 from mw_url_shortener.settings import defaults
 from mw_url_shortener.utils import safe_random_string

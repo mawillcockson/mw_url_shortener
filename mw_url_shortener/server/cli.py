@@ -1,3 +1,5 @@
+# mypy: allow_any_expr
+import sys
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -7,80 +9,34 @@ from mw_url_shortener import APP_NAME
 
 from .settings import ServerSettings, inject_server_settings, server_defaults
 
-if TYPE_CHECKING:
-    from asyncio import Event
-    from types import FrameType
-    from typing import Callable, Optional
-
-    from fastapi import FastAPI
-
-
-def make_fastapi_app(server_settings: ServerSettings) -> "FastAPI":
-    from functools import partial
-
-    import inject
-
-    from mw_url_shortener.interfaces import install_binder_callables
-
-    server_settings_injector = partial(
-        inject_server_settings, server_settings=server_settings
-    )
-
-    configurators = [
-        server_settings_injector,
-    ]
-
-    injector = partial(install_binder_callables, configurators=configurators)
-
-    inject.configure(injector)
-
-    from fastapi import FastAPI
-
-    from .routes.dependencies.security import oauth2_scheme
-    from .routes.v0 import api_router as api_router_v0
-    from .routes.v0.redirect import match_redirect
-    from .routes.v0.security import login_for_access_token
-    from .routes.v0.security import router as api_router_v0_security
-
-    oauth2_scheme.model.flows.password.tokenUrl = str(server_settings.oauth2_endpoint)  # type: ignore
-
-    api_router_v0_security.post(f"/{server_settings.oauth2_endpoint}")(
-        login_for_access_token
-    )
-
-    app = FastAPI()
-    app.include_router(api_router_v0, prefix="/v0")
-    app.post(f"/{server_settings.oauth2_endpoint}")(login_for_access_token)
-    # this must come last so it doesn't overwrite anything
-    app.get("/{short_link:path}")(match_redirect)
-
-    return app
+server_settings_schema = ServerSettings.schema()
+server_settings_schema_properties = server_settings_schema["properties"]
+database_path_env_names = [
+    name.upper()
+    for name in server_settings_schema_properties["database_path"]["env_names"]
+]
+jwt_secret_key_env_names = [
+    name.upper()
+    for name in server_settings_schema_properties["jwt_secret_key"]["env_names"]
+]
 
 
-def callback(ctx: typer.Context) -> None:
+def callback(
+    ctx: typer.Context,
+    database_path: Path = typer.Option(
+        server_defaults.database_path, envvar=database_path_env_names
+    ),
+) -> None:
     # skip everything if doing cli completion, or there's no subcommand
-    if ctx.resilient_parsing or ctx.invoked_subcommand is None:
+    if ctx.resilient_parsing or ctx.invoked_subcommand is None or "--help" in sys.argv:
         return
 
-
-def make_signal_handler(
-    shutdown_event: "Event",
-) -> "Callable[[int, Optional[FrameType]], None]":
-    def signal_handler(
-        signalnum: "Optional[int]" = None, frame_object: "Optional[FrameType]" = None
-    ) -> None:
-        shutdown_event.set()
-
-    return signal_handler
-
-
-def debug(database_path: Path = typer.Option(...)) -> None:
     if not database_path.is_file():
         typer.echo(f"expected a file '{database_path}'")
         raise typer.Exit(code=1)
 
     try:
-        from hypercorn.config import Config
+        from hypercorn.__main__ import main
     except ImportError as err:
         typer.echo(
             f"""were the server extras installed? (pip install {APP_NAME}[server])
@@ -89,47 +45,63 @@ cannot import hypercorn: {err}"""
         )
         raise typer.Exit(code=1)
 
-    config = Config()
-    config.accesslog = "-"
-    config.errorlog = "-"
+    from functools import partial
+
+    import inject
+
+    # temporary values for missing keys
+    server_settings = ServerSettings(jwt_secret_key="", database_path=database_path)
+    server_settings_injector = partial(
+        inject_server_settings, server_settings=server_settings
+    )
+    inject.configure(server_settings_injector)
+
+
+def debug() -> None:
+    from subprocess import run
+    from unittest.mock import patch
+
+    import inject
 
     from mw_url_shortener.utils import safe_random_string
 
+    server_settings = inject.instance(ServerSettings)
+    database_path: "Path" = server_settings.database_path
+    database_path_env_addon = {
+        name: str(database_path) for name in database_path_env_names
+    }
+
     jwt_secret_key = safe_random_string(5)
+    jwt_secret_key_env_addon = {
+        name: str(jwt_secret_key) for name in jwt_secret_key_env_names
+    }
 
-    server_settings = ServerSettings(
-        database_path=database_path,
-        jwt_secret_key=jwt_secret_key,
-        accesslog="-",
-        errorlog="-",
-    )
+    env_patch = {"MAKE_APP": "true"}
+    env_patch.update(jwt_secret_key_env_addon)
+    env_patch.update(database_path_env_addon)
 
-    typer.echo(f"server_settings: {server_settings.json(indent=2)}")
+    with patch.dict("os.environ", env_patch) as patched_env:
+        result = run(
+            [
+                str(sys.executable),
+                "-m",
+                "hypercorn",
+                "mw_url_shortener.server.app:app",
+                "--worker-class",
+                "uvloop",
+                "--access-logfile",
+                "-",
+                "--error-logfile",
+                "-",
+                "--debug",
+                "--reload",
+            ],
+            env=patched_env,
+            check=False,
+        )
 
-    server_app = make_fastapi_app(server_settings)
-
-    # from:
-    # https://gitlab.com/pgjones/hypercorn/-/blob/73733d71b804e49a14926633132eef7d54075578/src/hypercorn/asyncio/run.py#L62-73
-
-    import asyncio
-    import signal
-
-    shutdown_event = asyncio.Event()
-    signal_handler = make_signal_handler(shutdown_event)
-    loop = asyncio.new_event_loop()
-
-    for signal_name in {"SIGINT", "SIGTERM", "SIGBREAK"}:
-        if hasattr(signal, signal_name):
-            try:
-                loop.add_signal_handler(getattr(signal, signal_name), signal_handler)
-            except NotImplementedError:
-                # Add signal handler may not be implemented on Windows
-                signal.signal(getattr(signal, signal_name), signal_handler)
-
-    from hypercorn.asyncio import serve
-
-    serve_awaitable = serve(server_app, config, shutdown_trigger=shutdown_event.wait)
-    loop.run_until_complete(serve_awaitable)
+    if result.returncode != 0:
+        raise typer.Exit(code=result.returncode)
 
 
 def start(
@@ -137,63 +109,6 @@ def start(
     port: int = typer.Option(server_defaults.insecure_bind_port),
 ) -> None:
     raise NotImplementedError
-
-
-#     try:
-#         from hypercorn.config import Config
-#     except ImportError as err:
-#         typer.echo(
-#             f"""were the server extras installed? (pip install {APP_NAME}[server])
-#
-# cannot import hypercorn: {err}"""
-#         )
-#         raise typer.Exit(code=1)
-#
-#     config = Config()
-#     config.accesslog = "-"  # stdout
-#     config.errorlog = "-"  # stderr
-#     config.loglevel = "info"
-#     config.include_server_header = False
-#     # config.root_path =
-#     config.insecure_bind = f"{ip_address}:{port}"
-#
-#     import asyncio
-#     from signal import Signals
-#
-#     from .routes import app as routes_app
-#
-#     try:
-#         import uvloop
-#
-#         uvloop.install()
-#         config.worker_class = "uvloop"
-#     except ImportError:
-#         pass
-#
-#     shutdown_event = asyncio.Event()
-#
-#     serve_awaitable = serve(routes_app, config, shutdown_trigger=shutdown_event.wait)
-#
-#     # import inject
-#
-#     # if inject.is_configured():
-#     #     from mw_url_shortener.dependency_injection import AsyncLoopType
-#     #     from mw_url_shortener.interfaces import run_sync
-#
-#     #     loop = inject.instance(AsyncLoopType)
-#
-#     #     async def add_signal_handler_and_serve() -> None:
-#     #         loop.add_signal_handler(
-#     #             Signals.SIGTERM, make_signal_handler(shutdown_event)
-#     #         )
-#     #         await serve_awaitable
-#
-#     #     run_sync(add_signal_handler_and_serve())
-#     # else:
-#
-#     loop = asyncio.new_event_loop()
-#     loop.add_signal_handler(Signals.SIGTERM, make_signal_handler(shutdown_event))
-#     loop.run_until_complete(serve_awaitable)
 
 
 app = typer.Typer(callback=callback)
