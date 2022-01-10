@@ -21,7 +21,7 @@ async def get_by_id(
     raise HTTPException(status_code=404, detail="could not find user")
 
 
-async def create_user(
+async def create(
     create_user_schema: UserCreate,
     async_session: AsyncSession = Depends(get_async_session),
     current_user: User = Depends(get_current_user),
@@ -41,5 +41,5 @@ async def me(current_user: User = Depends(get_current_user)) -> User:
 
 router = APIRouter()
 router.get("/me")(me)
-router.post("/")(create_user)
+router.post("/")(create)
 router.get("/")(get_by_id)
