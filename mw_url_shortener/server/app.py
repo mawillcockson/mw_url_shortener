@@ -68,8 +68,6 @@ def make_fastapi_app(server_settings: "ServerSettings") -> "FastAPI":
 
     from fastapi import FastAPI
 
-    from mw_url_shortener import APP_NAME, metadata
-
     from .routes.dependencies.security import oauth2_scheme
     from .routes.v0 import api_router as api_router_v0
     from .routes.v0.redirect import match_redirect
@@ -87,15 +85,12 @@ def make_fastapi_app(server_settings: "ServerSettings") -> "FastAPI":
     else:
         openapi_url = "/v0/openapi.json"
 
-    license_info = {
-        "name": "MIT",
-        "url": "https://github.com/mawillcockson/mw_url_shortener/blob/main/LICENSE",
-    }
     app = FastAPI(
-        title=APP_NAME,
-        description=metadata["Description"],
+        title=server_settings.fast_api_title,
+        description=server_settings.fast_api_description,
         version=server_settings.version,
-        license_info=license_info,
+        terms_of_service=server_settings.fast_api_terms_of_service,
+        license_info=server_settings.fast_api_license_info.dict(),
         openapi_url=openapi_url,
     )
     app.include_router(api_router_v0, prefix="/v0")

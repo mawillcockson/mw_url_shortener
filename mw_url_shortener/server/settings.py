@@ -8,11 +8,17 @@ from typing import TYPE_CHECKING, List, Optional
 
 from pydantic import AnyUrl, ConstrainedStr, Extra, NonNegativeInt, PositiveInt
 
-from mw_url_shortener import APP_NAME, __version__
+from mw_url_shortener import APP_NAME, __version__, metadata
+from mw_url_shortener.schemas.base import BaseSchema
 from mw_url_shortener.settings import Defaults, Settings
 
 if TYPE_CHECKING:
     import inject
+
+
+class FastAPILicenseInfo(BaseSchema):
+    name: str
+    url: Optional[str] = None
 
 
 class ServerDefaults(Defaults):
@@ -50,9 +56,13 @@ class ServerDefaults(Defaults):
     jwt_access_token_valid_duration: timedelta = timedelta(minutes=30)
     oauth2_endpoint: str = "token"
     fast_api_title: str = APP_NAME
-    fast_api_description: str = "A URL shortener"
+    fast_api_description: str = metadata["Description"]
     fast_api_version: str = __version__
     fast_api_terms_of_service: Optional[AnyUrl] = None
+    fast_api_license_info: FastAPILicenseInfo = FastAPILicenseInfo(
+        name="MIT",
+        url="https://github.com/mawillcockson/mw_url_shortener/blob/main/LICENSE",
+    )
     jwt_secret_key_max_length: PositiveInt = 128
     show_docs: bool = False
 
