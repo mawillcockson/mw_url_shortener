@@ -54,6 +54,7 @@ class ServerDefaults(Defaults):
     fast_api_version: str = __version__
     fast_api_terms_of_service: Optional[AnyUrl] = None
     jwt_secret_key_max_length: PositiveInt = 128
+    show_docs: bool = False
 
 
 server_defaults = ServerDefaults()

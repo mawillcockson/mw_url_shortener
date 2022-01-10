@@ -11,6 +11,7 @@ briefly, in a systemd service file:
 [Service]
 Environment=MAKE_APP=true
 Environment=MW_URL_SHORTENER__DATABASE_PATH="/path/to/database file"
+Environment=MW_URL_SHORTENER__JWT_SECRET_KEY="super secret key"
 Type=forking
 GuessMainPID=no
 PIDFIle=/path/to/pid/file
@@ -38,6 +39,8 @@ from os import environ
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from typing import Optional
+
     from fastapi import FastAPI
 
     from mw_url_shortener.server.settings import ServerSettings
@@ -65,6 +68,8 @@ def make_fastapi_app(server_settings: "ServerSettings") -> "FastAPI":
 
     from fastapi import FastAPI
 
+    from mw_url_shortener import APP_NAME, metadata
+
     from .routes.dependencies.security import oauth2_scheme
     from .routes.v0 import api_router as api_router_v0
     from .routes.v0.redirect import match_redirect
@@ -77,7 +82,22 @@ def make_fastapi_app(server_settings: "ServerSettings") -> "FastAPI":
         login_for_access_token
     )
 
-    app = FastAPI()
+    if not server_settings.show_docs:
+        openapi_url: "Optional[str]" = None
+    else:
+        openapi_url = "/v0/openapi.json"
+
+    license_info = {
+        "name": "MIT",
+        "url": "https://github.com/mawillcockson/mw_url_shortener/blob/main/LICENSE",
+    }
+    app = FastAPI(
+        title=APP_NAME,
+        description=metadata["Description"],
+        version=server_settings.version,
+        license_info=license_info,
+        openapi_url=openapi_url,
+    )
     app.include_router(api_router_v0, prefix="/v0")
     app.post(f"/{server_settings.oauth2_endpoint}")(login_for_access_token)
     # this must come last so it doesn't overwrite anything
