@@ -11,6 +11,7 @@ from .helpers import get_resource as get_resource
 from .helpers import get_user_interface as get_user_interface
 from .helpers import inject_interface as inject_interface
 from .helpers import inject_resource as inject_resource
+from .helpers import install_binder_callables as install_binder_callables
 from .helpers import open_resource as open_resource
 from .helpers import run_sync as run_sync
 from .redirect_interface import RedirectInterface as RedirectInterface

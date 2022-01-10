@@ -5,6 +5,7 @@ from typing import (
     Awaitable,
     Iterator,
     Optional,
+    Sequence,
     Tuple,
     Type,
     TypeVar,
@@ -146,3 +147,15 @@ def get_redirect_interface(
         redirect_interface, RedirectInterface
     ), f"{redirect_interface} is not RedirectInterface"
     return redirect_interface
+
+
+def install_binder_callables(
+    binder: "inject.Binder",
+    *,
+    configurators: "Optional[Sequence[inject.BinderCallable]]" = None,
+) -> None:
+    if not configurators:
+        return
+
+    for configurator in configurators:
+        binder.install(configurator)
