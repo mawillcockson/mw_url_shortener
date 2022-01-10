@@ -76,13 +76,19 @@ def unsafe_random_printable_string(length: int) -> str:
     )
 
 
+# NOTE:FIXME change this to return a string of specified length
+# using math.ceil(length / 2) then output[:length - 1]
 def safe_random_string(num_bytes: int) -> str:
-    "returns a random, url- and cryptographically-safe string of specified length"
-    error_message = "safe_random_chars only takes positive integer values"
+    """
+    returns a random, url- and cryptographically-safe string of a length twice the specified number of bytes
+
+    use like safe_random_string(length // 2)
+    """
+    error_message = "safe_random_string only takes positive integer values"
     try:
         length = int(num_bytes)
     except (TypeError, ValueError) as err:
-        raise TypeError(error_message) from err
+        raise ValueError(error_message) from err
 
     if length < 1:
         raise ValueError(error_message)
