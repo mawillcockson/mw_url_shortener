@@ -55,3 +55,12 @@
 - tests should verify error message content
 - look at `hypercorn.run.run_multiple` for better server scaling:
   <https://gitlab.com/pgjones/hypercorn/-/blob/main/src/hypercorn/run.py#L41>
+- reduce code duplication between various interfaces to the database
+  - can probably use `python-inject` instead of the FastAPI dependency system
+    for injecting the `async_session` into the database interface calls
+    themselves, eliminating the need to pass a resource to them
+  - this would also allow the interface to be used directly by the api:
+    `router.delete("/")(user_interface.remove)`
+    - the interface would have to raise custom errors, and an interface handler
+      would have to be added to convert them, but it would be worth it,
+      probably
