@@ -23,7 +23,7 @@ async def match_redirect(
         async_session, short_link=short_link
     )
     if len(redirect_schemas) == 1:
-        return RedirectResponse(url=redirect_schemas[0].url)
+        return RedirectResponse(url=str(redirect_schemas[0].url))
 
     raise HTTPException(status_code=404, detail="redirect not found")
 
