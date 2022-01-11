@@ -135,3 +135,51 @@ def test_user_update_full(
     retrieved_user = User.parse_obj(retrieve_data)
 
     assert retrieved_user == updated_user
+
+
+def test_user_update_username(
+    test_client: TestClient,
+    authorization_headers: AuthorizationHeaders,
+    test_user: User,
+) -> None:
+    "if only the username is updated, can the updated info be retrieved?"
+    username = random_username()
+    assert username != test_user.username
+
+    password = random_password()
+    user_create_schema = UserCreate(username=username, password=password)
+    create_response = test_client.post(
+        "/v0/user/", headers=authorization_headers, json=user_create_schema.dict()
+    )
+    assert create_response.status_code == 200
+    create_data = create_response.text
+    assert create_data
+    created_user = User.parse_raw(create_data)
+
+    new_username = random_username()
+    assert len({new_username, username, test_user.username}) == 3
+
+    user_update_schema = UserUpdate(username=new_username)
+    user_update_schema_data = user_update_schema.dict()
+    created_user_data = created_user.dict()
+    update_body = {
+        "current_object_schema": created_user_data,
+        "update_object_schema": user_update_schema_data,
+    }
+    update_result = test_client.put(
+        "/v0/user/", headers=authorization_headers, json=update_body
+    )
+    assert update_result.status_code == 200
+    update_data = update_result.text
+    assert update_data
+    updated_user = User.parse_raw(update_data)
+
+    params = {"id": created_user.id}
+    retrieve_response = test_client.get(
+        "/v0/user/", headers=authorization_headers, params=params
+    )
+    assert retrieve_response.status_code == 200
+    retrieve_data = retrieve_response.json()
+    retrieved_user = User.parse_obj(retrieve_data)
+
+    assert retrieved_user == updated_user
