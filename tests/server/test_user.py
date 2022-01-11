@@ -10,8 +10,8 @@ def test_user_me(
 ) -> None:
     me_response = test_client.get("/v0/user/me", headers=authorization_headers)
     assert me_response.status_code == 200
-    me_data = me_response.json()
-    me = User.parse_obj(me_data)
+    me_data = me_response.text
+    me = User.parse_raw(me_data)
 
 
 def test_user_get_by_id(
@@ -24,8 +24,8 @@ def test_user_get_by_id(
         "/v0/user/", headers=authorization_headers, params=params
     )
     assert retrieve_response.status_code == 200
-    retrieve_data = retrieve_response.json()
-    retrieved_user = User.parse_obj(retrieve_data)
+    retrieve_data = retrieve_response.text
+    retrieved_user = User.parse_raw(retrieve_data)
 
     assert retrieved_user == test_user
 
@@ -59,9 +59,9 @@ def test_user_roundtrip(
         "/v0/user/", headers=authorization_headers, json=user_create_schema.dict()
     )
     assert create_response.status_code == 200
-    create_data = create_response.json()
+    create_data = create_response.text
     assert create_data
-    created_user = User.parse_obj(create_data)
+    created_user = User.parse_raw(create_data)
 
     params = {"id": created_user.id}
     retrieve_response = test_client.get(
