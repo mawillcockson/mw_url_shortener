@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from mw_url_shortener.database.start import make_sessionmaker
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def test_string_length() -> int:
     "the length of most dynamic strings in the test suite"
     # use a ridiculous number so things break earlier
