@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException
 
 from mw_url_shortener.database.start import AsyncSession
 from mw_url_shortener.interfaces.database import user as user_interface
-from mw_url_shortener.schemas.user import User, UserCreate
+from mw_url_shortener.schemas.user import User, UserCreate, UserUpdate
 
 from ..dependencies import get_async_session, get_current_user
 
@@ -39,7 +39,25 @@ async def me(current_user: User = Depends(get_current_user)) -> User:
     return current_user
 
 
+async def update(
+    current_object_schema: User,
+    update_object_schema: UserUpdate,
+    async_session: AsyncSession = Depends(get_async_session),
+    current_user: User = Depends(get_current_user),
+) -> User:
+    updated_user = await user_interface.update(
+        async_session,
+        current_object_schema=current_object_schema,
+        update_object_schema=update_object_schema,
+    )
+    if updated_user is not None:
+        return updated_user
+
+    raise HTTPException(status_code=409, detail="could not update user")
+
+
 router = APIRouter()
 router.get("/me")(me)
-router.post("/")(create)
 router.get("/")(get_by_id)
+router.post("/")(create)
+router.put("/")(update)
