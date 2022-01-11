@@ -23,10 +23,11 @@ from .conftest import CommandRunner
 async def test_create_redirect_defaults(
     on_disk_database: Path,
     run_test_command: CommandRunner,
+    test_string_length: int,
 ) -> None:
     "can a redirect be created and read back?"
     url = defaults.redirect_url
-    short_link = random_short_link(defaults.test_string_length)
+    short_link = random_short_link(test_string_length)
 
     result = await run_test_command(
         app,
@@ -67,12 +68,13 @@ async def test_create_redirect_defaults(
 async def test_create_redirect(
     on_disk_database: Path,
     run_test_command: CommandRunner,
+    test_string_length: int,
 ) -> None:
     "can a redirect be created and read back?"
-    url = unsafe_random_string(defaults.test_string_length)
-    short_link = random_short_link(defaults.test_string_length)
-    response_status = int(defaults.test_string_length)
-    body = unsafe_random_string(defaults.test_string_length)
+    url = unsafe_random_string(test_string_length)
+    short_link = random_short_link(test_string_length)
+    response_status = int(test_string_length)
+    body = unsafe_random_string(test_string_length)
 
     result = await run_test_command(
         app,
@@ -105,12 +107,13 @@ async def test_create_redirect(
 async def test_get_by_id(
     on_disk_database: Path,
     run_test_command: CommandRunner,
+    test_string_length: int,
 ) -> None:
     "can a redirect be retrieved by id?"
-    url = unsafe_random_string(defaults.test_string_length)
-    short_link = random_short_link(defaults.test_string_length)
-    response_status = int(defaults.test_string_length)
-    body = unsafe_random_string(defaults.test_string_length)
+    url = unsafe_random_string(test_string_length)
+    short_link = random_short_link(test_string_length)
+    response_status = int(test_string_length)
+    body = unsafe_random_string(test_string_length)
 
     create_result = await run_test_command(
         app,
@@ -180,19 +183,20 @@ async def test_get_non_existent_redirect(
 async def test_search_by_body(
     on_disk_database: Path,
     run_test_command: CommandRunner,
+    test_string_length: int,
 ) -> None:
     "will all redirects matching the search criteria be returned?"
-    url = unsafe_random_string(defaults.test_string_length)
+    url = unsafe_random_string(test_string_length)
 
-    short_link1 = random_short_link(defaults.test_string_length)
-    short_link2 = random_short_link(defaults.test_string_length)
-    short_link3 = random_short_link(defaults.test_string_length)
+    short_link1 = random_short_link(test_string_length)
+    short_link2 = random_short_link(test_string_length)
+    short_link3 = random_short_link(test_string_length)
     assert len({short_link1, short_link2, short_link3}) == 3
 
-    response_status = int(defaults.test_string_length)
+    response_status = int(test_string_length)
 
-    desired_body = unsafe_random_string(defaults.test_string_length)
-    other_body = unsafe_random_string(defaults.test_string_length)
+    desired_body = unsafe_random_string(test_string_length)
+    other_body = unsafe_random_string(test_string_length)
     assert desired_body != other_body
 
     first_desired_result = await run_test_command(
@@ -293,12 +297,13 @@ async def test_search_by_body(
 async def test_remove_by_id(
     on_disk_database: Path,
     run_test_command: CommandRunner,
+    test_string_length: int,
 ) -> None:
     "can a redirect be removed by id?"
-    url = unsafe_random_string(defaults.test_string_length)
-    short_link = random_short_link(defaults.test_string_length)
-    response_status = int(defaults.test_string_length)
-    body = unsafe_random_string(defaults.test_string_length)
+    url = unsafe_random_string(test_string_length)
+    short_link = random_short_link(test_string_length)
+    response_status = int(test_string_length)
+    body = unsafe_random_string(test_string_length)
 
     create_result = await run_test_command(
         app,
@@ -344,23 +349,25 @@ async def test_remove_by_id(
 
 
 async def test_update_all(
-    on_disk_database: Path, run_test_command: CommandRunner
+    on_disk_database: Path,
+    run_test_command: CommandRunner,
+    test_string_length: int,
 ) -> None:
     "can all redirect info be modified?"
-    url = unsafe_random_string(defaults.test_string_length)
-    new_url = unsafe_random_string(defaults.test_string_length)
+    url = unsafe_random_string(test_string_length)
+    new_url = unsafe_random_string(test_string_length)
     assert new_url != url
 
-    short_link = random_short_link(defaults.test_string_length)
-    new_short_link = random_short_link(defaults.test_string_length)
+    short_link = random_short_link(test_string_length)
+    new_short_link = random_short_link(test_string_length)
     assert new_short_link != short_link
 
-    response_status = int(defaults.test_string_length)
+    response_status = int(test_string_length)
     new_response_status = abs(response_status + 1)
     assert new_response_status != response_status
 
-    body = unsafe_random_string(defaults.test_string_length)
-    new_body = unsafe_random_string(defaults.test_string_length)
+    body = unsafe_random_string(test_string_length)
+    new_body = unsafe_random_string(test_string_length)
     assert new_body != body
 
     create_result = await run_test_command(
@@ -418,15 +425,17 @@ async def test_update_all(
 
 
 async def test_update_body(
-    on_disk_database: Path, run_test_command: CommandRunner
+    on_disk_database: Path,
+    run_test_command: CommandRunner,
+    test_string_length: int,
 ) -> None:
     "if only the body is modified, does all other info stay the same?"
-    url = unsafe_random_string(defaults.test_string_length)
-    short_link = random_short_link(defaults.test_string_length)
-    response_status = int(defaults.test_string_length)
+    url = unsafe_random_string(test_string_length)
+    short_link = random_short_link(test_string_length)
+    response_status = int(test_string_length)
 
-    body = unsafe_random_string(defaults.test_string_length)
-    new_body = unsafe_random_string(defaults.test_string_length)
+    body = unsafe_random_string(test_string_length)
+    new_body = unsafe_random_string(test_string_length)
     assert new_body != body
 
     create_result = await run_test_command(
@@ -478,13 +487,15 @@ async def test_update_body(
 
 
 async def test_update_none(
-    on_disk_database: Path, run_test_command: CommandRunner
+    on_disk_database: Path,
+    run_test_command: CommandRunner,
+    test_string_length: int,
 ) -> None:
     "if nothing is updated, will the same info be returned?"
-    url = unsafe_random_string(defaults.test_string_length)
-    short_link = random_short_link(defaults.test_string_length)
-    response_status = int(defaults.test_string_length)
-    body = unsafe_random_string(defaults.test_string_length)
+    url = unsafe_random_string(test_string_length)
+    short_link = random_short_link(test_string_length)
+    response_status = int(test_string_length)
+    body = unsafe_random_string(test_string_length)
 
     create_result = await run_test_command(
         app,
