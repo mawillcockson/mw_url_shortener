@@ -68,11 +68,11 @@ class DBInterfaceBase(
         create_object_schema: CreateSchemaType,
     ) -> Optional[ObjectSchemaType]:
         object_model = self.model(**create_object_schema.dict())
-        async with opened_resource.begin():
-            try:
+        try:
+            async with opened_resource.begin():
                 opened_resource.add(object_model)
-            except IntegrityError as err:
-                return None
+        except IntegrityError as err:
+            return None
         await opened_resource.refresh(object_model)
         await opened_resource.close()  # .refresh() opens a new session
         return self.schema.from_orm(object_model)
