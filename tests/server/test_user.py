@@ -2,6 +2,7 @@ from fastapi.testclient import TestClient
 
 from mw_url_shortener.schemas.security import AuthorizationHeaders
 from mw_url_shortener.schemas.user import User, UserCreate, UserUpdate
+from mw_url_shortener.server.settings import server_defaults
 from tests.utils import random_password, random_username
 
 
@@ -210,3 +211,58 @@ def test_user_update_non_existent(
         "/v0/user/", headers=authorization_headers, json=update_body
     )
     assert update_result.status_code == 409
+
+
+def test_user_update_authorized_username(
+    test_client: TestClient,
+    authorization_headers: AuthorizationHeaders,
+    test_user: User,
+    test_password: str,
+) -> None:
+    """
+    can the currently authenticated user's username be updated,, will that
+    cause the current token to stop working, and can that new info be used to
+    retrieve a new token?
+    """
+    new_username = random_username()
+    assert new_username != test_user.username
+
+    user_update_schema = UserUpdate(username=new_username)
+    user_update_schema_data = user_update_schema.dict()
+    current_user_data = test_user.dict()
+    update_body = {
+        "current_object_schema": current_user_data,
+        "update_object_schema": user_update_schema_data,
+    }
+    update_result = test_client.put(
+        "/v0/user/", headers=authorization_headers, json=update_body
+    )
+    assert update_result.status_code == 200
+    update_data = update_result.text
+    assert update_data
+    updated_user = User.parse_raw(update_data)
+
+    me_response = test_client.get("/v0/user/me", headers=authorization_headers)
+    assert me_response.status_code == 401
+
+    form_data = {
+        "username": new_username,
+        "password": test_password,
+    }
+    token_response = test_client.post(
+        "/" + server_defaults.oauth2_endpoint, data=form_data
+    )
+    assert token_response.status_code == 200
+    token_response_data = token_response.json()
+    assert token_response_data
+
+    access_token = token_response_data["access_token"]
+    new_authorization_headers = AuthorizationHeaders(
+        Authorization="Bearer" + " " + access_token
+    )
+
+    me_response = test_client.get("/v0/user/me", headers=new_authorization_headers)
+    assert me_response.status_code == 200
+    me_data = me_response.text
+    me = User.parse_raw(me_data)
+    assert me == updated_user
