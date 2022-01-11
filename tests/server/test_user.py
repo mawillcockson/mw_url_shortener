@@ -1,4 +1,7 @@
+from typing import List
+
 from fastapi.testclient import TestClient
+from pydantic import parse_raw_as
 
 from mw_url_shortener.schemas.security import AuthorizationHeaders
 from mw_url_shortener.schemas.user import User, UserCreate, UserUpdate
@@ -22,24 +25,25 @@ def test_user_me(
     me = User.parse_raw(me_data)
 
 
-def test_user_get_by_id(
+def test_user_search_by_id(
     test_client: TestClient,
     authorization_headers: AuthorizationHeaders,
     test_user: User,
 ) -> None:
-    "can a user be retrieved by id?"
+    "can the authenticated user be retrieved by id?"
     params = {"id": test_user.id}
     retrieve_response = test_client.get(
         "/v0/user/", headers=authorization_headers, params=params
     )
     assert retrieve_response.status_code == 200
     retrieve_data = retrieve_response.text
-    retrieved_user = User.parse_raw(retrieve_data)
+    retrieved_users = parse_raw_as(List[User], retrieve_data)
 
-    assert retrieved_user == test_user
+    assert test_user in retrieved_users
+    assert len(retrieved_users) == 1
 
 
-def test_user_get_by_id_non_existent(
+def test_user_search_by_id_non_existent(
     test_client: TestClient,
     authorization_headers: AuthorizationHeaders,
     test_user: User,
@@ -52,7 +56,10 @@ def test_user_get_by_id_non_existent(
     retrieve_response = test_client.get(
         "/v0/user/", headers=authorization_headers, params=params
     )
-    assert retrieve_response.status_code == 404
+    assert retrieve_response.status_code == 200
+    retrieve_data = retrieve_response.text
+    retrieved_users = parse_raw_as(List[User], retrieve_data)
+    assert len(retrieved_users) == 0
 
 
 def test_user_roundtrip(
@@ -79,10 +86,11 @@ def test_user_roundtrip(
         "/v0/user/", headers=authorization_headers, params=params
     )
     assert retrieve_response.status_code == 200
-    retrieve_data = retrieve_response.json()
-    retrieved_user = User.parse_obj(retrieve_data)
+    retrieve_data = retrieve_response.text
+    retrieved_users = parse_raw_as(List[User], retrieve_data)
 
-    assert retrieved_user == created_user
+    assert created_user in retrieved_users
+    assert len(retrieved_users) == 1
 
 
 def test_user_update_full(
@@ -132,10 +140,11 @@ def test_user_update_full(
         "/v0/user/", headers=authorization_headers, params=params
     )
     assert retrieve_response.status_code == 200
-    retrieve_data = retrieve_response.json()
-    retrieved_user = User.parse_obj(retrieve_data)
+    retrieve_data = retrieve_response.text
+    retrieved_users = parse_raw_as(List[User], retrieve_data)
 
-    assert retrieved_user == updated_user
+    assert updated_user in retrieved_users
+    assert len(retrieved_users) == 1
 
 
 def test_user_update_username(
@@ -180,10 +189,11 @@ def test_user_update_username(
         "/v0/user/", headers=authorization_headers, params=params
     )
     assert retrieve_response.status_code == 200
-    retrieve_data = retrieve_response.json()
-    retrieved_user = User.parse_obj(retrieve_data)
+    retrieve_data = retrieve_response.text
+    retrieved_users = parse_raw_as(List[User], retrieve_data)
 
-    assert retrieved_user == updated_user
+    assert updated_user in retrieved_users
+    assert len(retrieved_users) == 1
 
 
 def test_user_update_non_existent(
@@ -325,10 +335,11 @@ def test_user_remove(
         "/v0/user/", headers=authorization_headers, params=params
     )
     assert retrieve_response.status_code == 200
-    retrieve_data = retrieve_response.json()
-    retrieved_user = User.parse_obj(retrieve_data)
+    retrieve_data = retrieve_response.text
+    retrieved_users = parse_raw_as(List[User], retrieve_data)
 
-    assert retrieved_user == created_user
+    assert created_user in retrieved_users
+    assert len(retrieved_users) == 1
 
     remove_response = test_client.delete(
         "/v0/user/", headers=authorization_headers, params=params
@@ -342,4 +353,7 @@ def test_user_remove(
     retrieve_response = test_client.get(
         "/v0/user/", headers=authorization_headers, params=params
     )
-    assert retrieve_response.status_code == 404
+    assert retrieve_response.status_code == 200
+    retrieve_data = retrieve_response.text
+    retrieved_users = parse_raw_as(List[User], retrieve_data)
+    assert len(retrieved_users) == 0

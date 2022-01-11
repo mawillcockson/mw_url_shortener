@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING
+from typing import Optional, List
 
 from fastapi import APIRouter, Depends, HTTPException
 
@@ -9,16 +9,18 @@ from mw_url_shortener.schemas.user import User, UserCreate, UserUpdate
 from ..dependencies import get_async_session, get_current_user
 
 
-async def get_by_id(
-    id: int,
+async def search(
+    skip: int = 0,
+    limit: int = 100,
+    id: Optional[int] = None,
+    username: Optional[str] = None,
     async_session: AsyncSession = Depends(get_async_session),
     current_user: User = Depends(get_current_user),
-) -> User:
-    retrieved_user = await user_interface.get_by_id(async_session, id=id)
-    if retrieved_user is not None:
-        return retrieved_user
-
-    raise HTTPException(status_code=404, detail="could not find user")
+) -> List[User]:
+    retrieved_users = await user_interface.search(
+        async_session, skip=skip, limit=limit, id=id, username=username
+    )
+    return retrieved_users
 
 
 async def create(
@@ -70,7 +72,7 @@ async def remove(
 
 router = APIRouter()
 router.get("/me")(me)
-router.get("/")(get_by_id)
+router.get("/")(search)
 router.post("/")(create)
 router.put("/")(update)
 router.delete("/")(remove)
