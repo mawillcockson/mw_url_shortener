@@ -183,3 +183,30 @@ def test_user_update_username(
     retrieved_user = User.parse_obj(retrieve_data)
 
     assert retrieved_user == updated_user
+
+
+def test_user_update_non_existent(
+    test_client: TestClient,
+    authorization_headers: AuthorizationHeaders,
+    test_user: User,
+) -> None:
+    "will an error be returned for a user update if the user doesn't exist?"
+    username = random_username()
+    assert username != test_user.username
+
+    password = random_password()
+    new_password = random_password()
+    assert new_password != password
+
+    user_schema = User(id=100_000, username=username, password=password)
+    user_update_schema = UserUpdate(password=new_password)
+    user_update_schema_data = user_update_schema.dict()
+    original_user_data = user_schema.dict()
+    update_body = {
+        "current_object_schema": original_user_data,
+        "update_object_schema": user_update_schema_data,
+    }
+    update_result = test_client.put(
+        "/v0/user/", headers=authorization_headers, json=update_body
+    )
+    assert update_result.status_code == 409
