@@ -8,6 +8,13 @@ from tests.utils import random_password, random_username
 def test_user_me(
     test_client: TestClient, authorization_headers: AuthorizationHeaders
 ) -> None:
+    """
+    can the user associated with the jwt be retrieved?
+
+    also
+
+    can the test client be used to interact with a secured endpoint?
+    """
     me_response = test_client.get("/v0/user/me", headers=authorization_headers)
     assert me_response.status_code == 200
     me_data = me_response.text
@@ -19,6 +26,7 @@ def test_user_get_by_id(
     authorization_headers: AuthorizationHeaders,
     test_user: User,
 ) -> None:
+    "can a user be retrieved by id?"
     params = {"id": test_user.id}
     retrieve_response = test_client.get(
         "/v0/user/", headers=authorization_headers, params=params
@@ -35,6 +43,7 @@ def test_user_get_by_id_non_existent(
     authorization_headers: AuthorizationHeaders,
     test_user: User,
 ) -> None:
+    "is an error returned if the user does not exist?"
     id_ = 100_000
     assert id_ != test_user.id
 
@@ -50,6 +59,7 @@ def test_user_roundtrip(
     authorization_headers: AuthorizationHeaders,
     test_user: User,
 ) -> None:
+    "can a user be created and retrieved?"
     username = random_username()
     assert username != test_user.username
 
@@ -79,6 +89,9 @@ def test_user_update_full(
     authorization_headers: AuthorizationHeaders,
     test_user: User,
 ) -> None:
+    """
+    if all the attributes of a user are updated, can the new info be retrieved?
+    """
     username = random_username()
     assert username != test_user.username
 
