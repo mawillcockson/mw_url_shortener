@@ -266,3 +266,80 @@ def test_user_update_authorized_username(
     me_data = me_response.text
     me = User.parse_raw(me_data)
     assert me == updated_user
+
+
+def test_user_remove_authenticated(
+    test_client: TestClient,
+    authorization_headers: AuthorizationHeaders,
+    test_user: User,
+    test_password: str,
+) -> None:
+    """
+    can the authenticated user be removed, and will the authorization headers
+    stop working?
+    """
+    params = {"id": test_user.id}
+    remove_response = test_client.delete(
+        "/v0/user/", headers=authorization_headers, params=params
+    )
+    assert remove_response.status_code == 200
+    remove_data = remove_response.text
+    removed_user = User.parse_raw(remove_data)
+
+    assert removed_user == test_user
+
+    me_response = test_client.get("/v0/user/me", headers=authorization_headers)
+    assert me_response.status_code == 401
+
+    form_data = {
+        "username": test_user.username,
+        "password": test_password,
+    }
+    token_response = test_client.post(
+        "/" + server_defaults.oauth2_endpoint, data=form_data
+    )
+    assert token_response.status_code == 401
+
+
+def test_user_remove(
+    test_client: TestClient,
+    authorization_headers: AuthorizationHeaders,
+    test_user: User,
+) -> None:
+    "can a user be created, retrieved, and removed?"
+    username = random_username()
+    assert username != test_user.username
+
+    password = random_password()
+    user_create_schema = UserCreate(username=username, password=password)
+    create_response = test_client.post(
+        "/v0/user/", headers=authorization_headers, json=user_create_schema.dict()
+    )
+    assert create_response.status_code == 200
+    create_data = create_response.text
+    assert create_data
+    created_user = User.parse_raw(create_data)
+
+    params = {"id": created_user.id}
+    retrieve_response = test_client.get(
+        "/v0/user/", headers=authorization_headers, params=params
+    )
+    assert retrieve_response.status_code == 200
+    retrieve_data = retrieve_response.json()
+    retrieved_user = User.parse_obj(retrieve_data)
+
+    assert retrieved_user == created_user
+
+    remove_response = test_client.delete(
+        "/v0/user/", headers=authorization_headers, params=params
+    )
+    assert remove_response.status_code == 200
+    remove_data = remove_response.text
+    removed_user = User.parse_raw(remove_data)
+
+    assert removed_user == created_user
+
+    retrieve_response = test_client.get(
+        "/v0/user/", headers=authorization_headers, params=params
+    )
+    assert retrieve_response.status_code == 404

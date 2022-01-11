@@ -56,8 +56,21 @@ async def update(
     raise HTTPException(status_code=409, detail="could not update user")
 
 
+async def remove(
+    id: int,
+    async_session: AsyncSession = Depends(get_async_session),
+    current_user: User = Depends(get_current_user),
+) -> User:
+    removed_user = await user_interface.remove_by_id(async_session, id=id)
+    if removed_user is not None:
+        return removed_user
+
+    raise HTTPException(status_code=404, detail="could not remove user")
+
+
 router = APIRouter()
 router.get("/me")(me)
 router.get("/")(get_by_id)
 router.post("/")(create)
 router.put("/")(update)
+router.delete("/")(remove)
