@@ -9,6 +9,14 @@ from mw_url_shortener.database.start import make_sessionmaker
 
 
 @pytest.fixture
+def test_string_length() -> int:
+    "the length of most dynamic strings in the test suite"
+    # use a ridiculous number so things break earlier
+    # not too ridiculous so the tests don't take too long
+    return 100_000
+
+
+@pytest.fixture
 def anyio_backend() -> str:
     "declares the backend to use for all async tests"
     # SQLAlchemy uses a sqlite DBAPI (aiosqlite) that depends upon asyncio
