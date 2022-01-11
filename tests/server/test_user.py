@@ -357,3 +357,21 @@ def test_user_remove(
     retrieve_data = retrieve_response.text
     retrieved_users = parse_raw_as(List[User], retrieve_data)
     assert len(retrieved_users) == 0
+
+
+def test_user_search_by_username(
+    test_client: TestClient,
+    authorization_headers: AuthorizationHeaders,
+    test_user: User,
+) -> None:
+    "can the authenticated user be retrieved by username?"
+    params = {"username": test_user.username}
+    retrieve_response = test_client.get(
+        "/v0/user/", headers=authorization_headers, params=params
+    )
+    assert retrieve_response.status_code == 200
+    retrieve_data = retrieve_response.text
+    retrieved_users = parse_raw_as(List[User], retrieve_data)
+
+    assert test_user in retrieved_users
+    assert len(retrieved_users) == 1
