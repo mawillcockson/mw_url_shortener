@@ -22,27 +22,46 @@ RESPONSE_STATUS_HELP = "HTTP code to respond with (see https://developer.mozilla
 
 def create(
     url: str = typer.Argument(...),
-    short_link: str = typer.Argument(...),
+    short_link: Optional[str] = typer.Argument(None),
     response_status: int = typer.Option(
         defaults.redirect_response_status,
         help=RESPONSE_STATUS_HELP,
     ),
     body: Optional[str] = typer.Option(defaults.redirect_body),
 ) -> None:
+    redirect = get_redirect_interface()
+    resource = get_resource()
+    settings = get_settings()
+    if short_link is None:
+        with open_resource(resource) as opened_resource:
+            short_link = run_sync(
+                redirect.unique_short_link(
+                    opened_resource, short_link_length=settings.short_link_length
+                )
+            )
+
+    # if short_link is STILL None
+    if short_link is None and settings.output_style == OutputStyle.text:
+        typer.echo(
+            "tried a bit and couldn't generate a short link that "
+            "isn't already being used; in the configuration, "
+            "try changing either the short_link_characters a "
+            "lot or the short_link_length a little"
+        )
+
+    if short_link is None:
+        raise typer.Exit(code=1)
+
     redirect_create_schema = RedirectCreate(
         url=url, short_link=short_link, response_status=response_status, body=body
     )
 
-    redirect = get_redirect_interface()
-    resource = get_resource()
     with open_resource(resource) as opened_resource:
         created_redirect = run_sync(
             redirect.create(
                 opened_resource, create_object_schema=redirect_create_schema
             )
         )
-
-    settings = get_settings()
 
     if created_redirect is None and settings.output_style == OutputStyle.text:
         typer.echo(

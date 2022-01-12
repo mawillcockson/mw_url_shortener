@@ -538,3 +538,44 @@ async def test_update_none(
     updated_redirect = Redirect.parse_raw(update_result.stdout)
     assert updated_redirect
     assert updated_redirect == created_redirect
+
+
+async def test_redirect_create_empty_short_link(
+    on_disk_database: Path,
+    run_test_command: CommandRunner,
+    test_string_length: int,
+) -> None:
+    "if the short link is unspecified, will a random one be chosen?"
+    url = unsafe_random_string(test_string_length)
+    response_status = int(test_string_length)
+    body = unsafe_random_string(test_string_length)
+
+    create_result = await run_test_command(
+        app,
+        [
+            "--output-style",
+            OutputStyle.json.value,
+            "local",
+            "--database-path",
+            str(on_disk_database),
+            "redirect",
+            "create",
+            str(url),
+            "--response-status",
+            str(response_status),
+            "--body",
+            str(body),
+        ],
+    )
+
+    assert create_result.exit_code == 0, f"result: {create_result}"
+    created_redirect = Redirect.parse_raw(create_result.stdout)
+    assert created_redirect
+    assert created_redirect.url == url
+    assert hasattr(created_redirect, "short_link")
+    assert len(created_redirect.short_link) == defaults.short_link_length
+    # is the short link only made up of characters from the default character
+    # set?
+    assert set(created_redirect.short_link) <= set(defaults.short_link_characters)
+    assert created_redirect.response_status == response_status
+    assert created_redirect.body == body
