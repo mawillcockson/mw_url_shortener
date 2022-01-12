@@ -23,6 +23,11 @@ RESPONSE_STATUS_HELP = "HTTP code to respond with (see https://developer.mozilla
 def create(
     url: str = typer.Argument(...),
     short_link: Optional[str] = typer.Argument(None),
+    short_link_length: Optional[int] = typer.Option(
+        None,
+        help="the length of a short link if letting the api generate one; "
+        "ignored if a short link is specified",
+    ),
     response_status: int = typer.Option(
         defaults.redirect_response_status,
         help=RESPONSE_STATUS_HELP,
@@ -33,10 +38,12 @@ def create(
     resource = get_resource()
     settings = get_settings()
     if short_link is None:
+        if short_link_length is None:
+            short_link_length = settings.short_link_length
         with open_resource(resource) as opened_resource:
             short_link = run_sync(
                 redirect.unique_short_link(
-                    opened_resource, short_link_length=settings.short_link_length
+                    opened_resource, short_link_length=short_link_length
                 )
             )
 
@@ -46,7 +53,7 @@ def create(
             "tried a bit and couldn't generate a short link that "
             "isn't already being used; in the configuration, "
             "try changing either the short_link_characters a "
-            "lot or the short_link_length a little"
+            "lot, or the short_link_length a little"
         )
 
     if short_link is None:
