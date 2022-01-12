@@ -241,19 +241,19 @@ def update_by_id(
         return
 
     typer.echo(f"successfully updated redirect\nid: {updated_redirect.id}")
-    typer.echo(f"url: {updated_redirect.url}", nl=False)
+    typer.echo(f"url: {old_redirect.url}", nl=False)
     if old_redirect.url != updated_redirect.url:
         typer.echo(f" -> {updated_redirect.url}", nl=False)
     typer.echo("")
-    typer.echo(f"short link: {updated_redirect.short_link}", nl=False)
+    typer.echo(f"short link: {old_redirect.short_link}", nl=False)
     if old_redirect.short_link != updated_redirect.short_link:
         typer.echo(f" -> {updated_redirect.short_link}", nl=False)
     typer.echo("")
-    typer.echo(f"response_status: {updated_redirect.response_status}", nl=False)
+    typer.echo(f"response_status: {old_redirect.response_status}", nl=False)
     if old_redirect.response_status != updated_redirect.response_status:
         typer.echo(f" -> {updated_redirect.response_status}", nl=False)
     typer.echo("")
-    typer.echo(f"body: {updated_redirect.body}", nl=False)
+    typer.echo(f"body: {old_redirect.body}", nl=False)
     if old_redirect.body != updated_redirect.body:
         typer.echo(f" -> {updated_redirect.body}", nl=False)
     typer.echo("")
