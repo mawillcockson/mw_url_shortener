@@ -36,3 +36,12 @@ class RedirectInterface(
         short_link: str,
     ) -> Optional[Redirect]:
         ...
+
+    async def unique_short_link(
+        self,
+        opened_resource: ContravariantOpenedResourceT,
+        /,
+        *,
+        short_link_length: int,
+    ) -> Optional[str]:
+        ...

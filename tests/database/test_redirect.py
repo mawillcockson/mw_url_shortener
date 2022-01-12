@@ -3,6 +3,7 @@ does the database interface behave as expected?
 """
 from re import escape
 from typing import List
+from unittest.mock import Mock, patch
 
 import pytest
 
@@ -727,3 +728,34 @@ async def test_user_search_skip_one(
     )
     assert different_redirect in retrieved_redirects
     assert len(retrieved_redirects) == 1
+
+
+async def test_redirect_default_short_link_collision_avoidance(
+    in_memory_database: AsyncSession,
+) -> None:
+    "will the implementation attempt to pick a unique short link?"
+    short_link = random_short_link(defaults.short_link_length)
+
+    create_redirect_schema = RedirectCreate(short_link=short_link)
+
+    created_redirect = await database_interface.redirect.create(
+        in_memory_database, create_object_schema=create_redirect_schema
+    )
+    assert created_redirect
+
+    same_short_link = Mock()
+    same_short_link.return_value = short_link
+    with patch(
+        "mw_url_shortener.interfaces.database.redirect_interface.random_short_link",
+        new=same_short_link,
+    ):
+        no_short_link = await database_interface.redirect.unique_short_link(
+            in_memory_database, short_link_length=defaults.short_link_length
+        )
+
+    assert no_short_link is None
+
+    unique_short_link = await database_interface.redirect.unique_short_link(
+        in_memory_database, short_link_length=defaults.short_link_length
+    )
+    assert unique_short_link != short_link
