@@ -503,3 +503,227 @@ async def test_search_no_arguments_no_matches(in_memory_database: AsyncSession) 
     """
     redirect_schemas = await database_interface.redirect.search(in_memory_database)
     assert len(redirect_schemas) == 0
+
+
+async def test_search_no_arguments_both(
+    in_memory_database: AsyncSession, test_string_length: int
+) -> None:
+    "will all results be returned if there's no search criteria?"
+    short_link = random_short_link(test_string_length)
+    url = unsafe_random_string(test_string_length)
+    response_status = int(test_string_length)
+    body = unsafe_random_string(test_string_length)
+    create_redirect_schema = RedirectCreate(
+        short_link=short_link, url=url, response_status=response_status, body=body
+    )
+
+    created_redirect = await database_interface.redirect.create(
+        in_memory_database, create_object_schema=create_redirect_schema
+    )
+    assert created_redirect
+
+    new_short_link = random_short_link(test_string_length)
+    assert new_short_link != short_link
+    new_url = unsafe_random_string(test_string_length)
+    assert new_url != url
+    new_response_status = abs(int(test_string_length) - 1)
+    assert new_response_status != response_status
+    new_body = unsafe_random_string(test_string_length)
+    assert new_body != body
+
+    different_redirect_create_schema = RedirectCreate(
+        short_link=new_short_link,
+        url=new_url,
+        response_status=new_response_status,
+        body=new_body,
+    )
+
+    different_redirect = await database_interface.redirect.create(
+        in_memory_database, create_object_schema=different_redirect_create_schema
+    )
+    assert different_redirect
+
+    retrieved_redirects = await database_interface.redirect.search(in_memory_database)
+    assert created_redirect in retrieved_redirects
+    assert different_redirect in retrieved_redirects
+    assert len(retrieved_redirects) == 2
+
+
+async def test_user_search_limit_high(
+    in_memory_database: AsyncSession, test_string_length: int
+) -> None:
+    "if the search limit is high, will all redirects be returned?"
+    short_link = random_short_link(test_string_length)
+    url = unsafe_random_string(test_string_length)
+    response_status = int(test_string_length)
+    body = unsafe_random_string(test_string_length)
+    create_redirect_schema = RedirectCreate(
+        short_link=short_link, url=url, response_status=response_status, body=body
+    )
+
+    created_redirect = await database_interface.redirect.create(
+        in_memory_database, create_object_schema=create_redirect_schema
+    )
+    assert created_redirect
+
+    new_short_link = random_short_link(test_string_length)
+    assert new_short_link != short_link
+    new_url = unsafe_random_string(test_string_length)
+    assert new_url != url
+    new_response_status = abs(int(test_string_length) - 1)
+    assert new_response_status != response_status
+    new_body = unsafe_random_string(test_string_length)
+    assert new_body != body
+
+    different_redirect_create_schema = RedirectCreate(
+        short_link=new_short_link,
+        url=new_url,
+        response_status=new_response_status,
+        body=new_body,
+    )
+
+    different_redirect = await database_interface.redirect.create(
+        in_memory_database, create_object_schema=different_redirect_create_schema
+    )
+    assert different_redirect
+
+    retrieved_redirects = await database_interface.redirect.search(
+        in_memory_database, limit=50
+    )
+    assert created_redirect in retrieved_redirects
+    assert different_redirect in retrieved_redirects
+    assert len(retrieved_redirects) == 2
+
+
+async def test_user_search_limit_one(
+    in_memory_database: AsyncSession, test_string_length: int
+) -> None:
+    "if the search limit is one, will only one redirect be returned?"
+    short_link = random_short_link(test_string_length)
+    url = unsafe_random_string(test_string_length)
+    response_status = int(test_string_length)
+    body = unsafe_random_string(test_string_length)
+    create_redirect_schema = RedirectCreate(
+        short_link=short_link, url=url, response_status=response_status, body=body
+    )
+
+    created_redirect = await database_interface.redirect.create(
+        in_memory_database, create_object_schema=create_redirect_schema
+    )
+    assert created_redirect
+
+    new_short_link = random_short_link(test_string_length)
+    assert new_short_link != short_link
+    new_url = unsafe_random_string(test_string_length)
+    assert new_url != url
+    new_response_status = abs(int(test_string_length) - 1)
+    assert new_response_status != response_status
+    new_body = unsafe_random_string(test_string_length)
+    assert new_body != body
+
+    different_redirect_create_schema = RedirectCreate(
+        short_link=new_short_link,
+        url=new_url,
+        response_status=new_response_status,
+        body=new_body,
+    )
+
+    different_redirect = await database_interface.redirect.create(
+        in_memory_database, create_object_schema=different_redirect_create_schema
+    )
+    assert different_redirect
+
+    retrieved_redirects = await database_interface.redirect.search(
+        in_memory_database, limit=1
+    )
+    assert created_redirect in retrieved_redirects
+    assert len(retrieved_redirects) == 1
+
+
+async def test_user_search_skip_all(
+    in_memory_database: AsyncSession, test_string_length: int
+) -> None:
+    "if the search skip is high, will no results be returned?"
+    short_link = random_short_link(test_string_length)
+    url = unsafe_random_string(test_string_length)
+    response_status = int(test_string_length)
+    body = unsafe_random_string(test_string_length)
+    create_redirect_schema = RedirectCreate(
+        short_link=short_link, url=url, response_status=response_status, body=body
+    )
+
+    created_redirect = await database_interface.redirect.create(
+        in_memory_database, create_object_schema=create_redirect_schema
+    )
+    assert created_redirect
+
+    new_short_link = random_short_link(test_string_length)
+    assert new_short_link != short_link
+    new_url = unsafe_random_string(test_string_length)
+    assert new_url != url
+    new_response_status = abs(int(test_string_length) - 1)
+    assert new_response_status != response_status
+    new_body = unsafe_random_string(test_string_length)
+    assert new_body != body
+
+    different_redirect_create_schema = RedirectCreate(
+        short_link=new_short_link,
+        url=new_url,
+        response_status=new_response_status,
+        body=new_body,
+    )
+
+    different_redirect = await database_interface.redirect.create(
+        in_memory_database, create_object_schema=different_redirect_create_schema
+    )
+    assert different_redirect
+
+    retrieved_redirects = await database_interface.redirect.search(
+        in_memory_database, skip=50
+    )
+    assert not retrieved_redirects
+
+
+async def test_user_search_skip_one(
+    in_memory_database: AsyncSession, test_string_length: int
+) -> None:
+    "if one redirect is skipped, will the second be returned?"
+    short_link = random_short_link(test_string_length)
+    url = unsafe_random_string(test_string_length)
+    response_status = int(test_string_length)
+    body = unsafe_random_string(test_string_length)
+    create_redirect_schema = RedirectCreate(
+        short_link=short_link, url=url, response_status=response_status, body=body
+    )
+
+    created_redirect = await database_interface.redirect.create(
+        in_memory_database, create_object_schema=create_redirect_schema
+    )
+    assert created_redirect
+
+    new_short_link = random_short_link(test_string_length)
+    assert new_short_link != short_link
+    new_url = unsafe_random_string(test_string_length)
+    assert new_url != url
+    new_response_status = abs(int(test_string_length) - 1)
+    assert new_response_status != response_status
+    new_body = unsafe_random_string(test_string_length)
+    assert new_body != body
+
+    different_redirect_create_schema = RedirectCreate(
+        short_link=new_short_link,
+        url=new_url,
+        response_status=new_response_status,
+        body=new_body,
+    )
+
+    different_redirect = await database_interface.redirect.create(
+        in_memory_database, create_object_schema=different_redirect_create_schema
+    )
+    assert different_redirect
+
+    retrieved_redirects = await database_interface.redirect.search(
+        in_memory_database, skip=1
+    )
+    assert different_redirect in retrieved_redirects
+    assert len(retrieved_redirects) == 1
