@@ -5,8 +5,10 @@ from starlette.responses import Response
 
 from mw_url_shortener.database.start import AsyncSession
 from mw_url_shortener.interfaces.database import redirect as redirect_interface
+from mw_url_shortener.schemas.redirect import Redirect, RedirectCreate
+from mw_url_shortener.schemas.user import User
 
-from ..dependencies import get_async_session
+from ..dependencies import get_async_session, get_current_user
 
 
 async def match_redirect(
@@ -37,5 +39,20 @@ async def match_redirect(
     )
 
 
+async def create(
+    create_object_schema: RedirectCreate,
+    async_session: AsyncSession = Depends(get_async_session),
+    current_user: User = Depends(get_current_user),
+) -> Redirect:
+    created_redirect = await redirect_interface.create(
+        async_session, create_object_schema=create_object_schema
+    )
+    if created_redirect is not None:
+        return created_redirect
+
+    raise HTTPException(status_code=409, detail="could not create redirect")
+
+
 router = APIRouter()
 router.get("/match/{short_link:path}")(match_redirect)
+router.post("/")(create)
