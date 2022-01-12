@@ -306,3 +306,118 @@ async def test_search_by_everything(in_memory_database: AsyncSession) -> None:
     )
     assert len(retrieved_users) == 1, str(retrieved_users)
     assert desired_user in retrieved_users
+
+
+async def test_user_search_limit_high(in_memory_database: AsyncSession) -> None:
+    "will setting a higher limit return more users?"
+    username1 = random_username()
+    username2 = random_username()
+    assert username1 != username2
+
+    password = random_password()
+
+    user_create_schema1 = UserCreate(username=username1, password=password)
+    user_created1 = await database_interface.user.create(
+        in_memory_database, create_object_schema=user_create_schema1
+    )
+    assert user_created1
+
+    user_create_schema2 = UserCreate(username=username2, password=password)
+    user_created2 = await database_interface.user.create(
+        in_memory_database, create_object_schema=user_create_schema2
+    )
+    assert user_created2
+
+    retrieved_users = await database_interface.user.search(
+        in_memory_database, skip=0, limit=2
+    )
+    assert user_created1 in retrieved_users
+    assert user_created2 in retrieved_users
+    assert len(retrieved_users) == 2
+
+    retrieved_users = await database_interface.user.search(
+        in_memory_database, skip=0, limit=1
+    )
+    assert user_created1 in retrieved_users
+    assert len(retrieved_users) == 1
+
+
+async def test_user_search_limit_zero(in_memory_database: AsyncSession) -> None:
+    "will any users be returned if the search limit is 0?"
+    username = random_username()
+    password = random_password()
+
+    user_create_schema = UserCreate(username=username, password=password)
+    user_created = await database_interface.user.create(
+        in_memory_database, create_object_schema=user_create_schema
+    )
+    assert user_created
+
+    retrieved_users = await database_interface.user.search(in_memory_database, limit=50)
+    assert user_created in retrieved_users
+    assert len(retrieved_users) == 1
+
+    retrieved_users = await database_interface.user.search(in_memory_database, limit=0)
+    assert user_created not in retrieved_users
+    assert len(retrieved_users) == 0
+
+
+async def test_user_search_skip_all(in_memory_database: AsyncSession) -> None:
+    "if a few users are added, will a high search skip, skip past them?"
+    username1 = random_username()
+    username2 = random_username()
+    assert username1 != username2
+
+    password = random_password()
+
+    user_create_schema1 = UserCreate(username=username1, password=password)
+    user_created1 = await database_interface.user.create(
+        in_memory_database, create_object_schema=user_create_schema1
+    )
+    assert user_created1
+
+    user_create_schema2 = UserCreate(username=username2, password=password)
+    user_created2 = await database_interface.user.create(
+        in_memory_database, create_object_schema=user_create_schema2
+    )
+    assert user_created2
+
+    retrieved_users = await database_interface.user.search(in_memory_database, skip=0)
+    assert user_created1 in retrieved_users
+    assert user_created2 in retrieved_users
+    assert len(retrieved_users) == 2
+
+    retrieved_users = await database_interface.user.search(in_memory_database, skip=50)
+    assert user_created1 not in retrieved_users
+    assert user_created2 not in retrieved_users
+    assert len(retrieved_users) == 0
+
+
+async def test_user_search_skip_one(in_memory_database: AsyncSession) -> None:
+    "can a single search result be skipped?"
+    username1 = random_username()
+    username2 = random_username()
+    assert username1 != username2
+
+    password = random_password()
+
+    user_create_schema1 = UserCreate(username=username1, password=password)
+    user_created1 = await database_interface.user.create(
+        in_memory_database, create_object_schema=user_create_schema1
+    )
+    assert user_created1
+
+    user_create_schema2 = UserCreate(username=username2, password=password)
+    user_created2 = await database_interface.user.create(
+        in_memory_database, create_object_schema=user_create_schema2
+    )
+    assert user_created2
+
+    retrieved_users = await database_interface.user.search(in_memory_database, skip=0)
+    assert user_created1 in retrieved_users
+    assert user_created2 in retrieved_users
+    assert len(retrieved_users) == 2
+
+    retrieved_users = await database_interface.user.search(in_memory_database, skip=1)
+    assert user_created2 in retrieved_users
+    assert len(retrieved_users) == 1
