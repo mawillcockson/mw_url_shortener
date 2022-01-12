@@ -11,7 +11,7 @@ from mw_url_shortener.schemas.user import User
 from ..dependencies import get_async_session, get_current_user
 
 
-async def match_redirect(
+async def match(
     request: Request,
     short_link: str,
     async_session: AsyncSession = Depends(get_async_session),
@@ -54,5 +54,5 @@ async def create(
 
 
 router = APIRouter()
-router.get("/match/{short_link:path}")(match_redirect)
+router.get("/match/{short_link:path}")(match)
 router.post("/")(create)

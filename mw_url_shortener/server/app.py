@@ -70,7 +70,7 @@ def make_fastapi_app(server_settings: "ServerSettings") -> "FastAPI":
 
     from .routes.dependencies.security import oauth2_scheme
     from .routes.v0 import api_router as api_router_v0
-    from .routes.v0.redirect import match_redirect
+    from .routes.v0.redirect import match
     from .routes.v0.security import login_for_access_token
     from .routes.v0.security import router as api_router_v0_security
 
@@ -96,7 +96,7 @@ def make_fastapi_app(server_settings: "ServerSettings") -> "FastAPI":
     app.include_router(api_router_v0, prefix="/v0")
     app.post(f"/{server_settings.oauth2_endpoint}")(login_for_access_token)
     # this must come last so it doesn't overwrite anything
-    app.get("/{short_link:path}")(match_redirect)
+    app.get("/{short_link:path}")(match)
 
     return app
 
