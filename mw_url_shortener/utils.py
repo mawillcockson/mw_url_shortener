@@ -3,12 +3,13 @@ module of utility functions
 
 all of these functions can be loaded independently of the rest of this library
 """
+import math
 import secrets
 import string
-from math import floor
+from math import factorial, floor
 from random import choices, random
 from sys import maxunicode as LARGEST_UNICODE_CODEPOINT
-from typing import List
+from typing import List, Set, Union
 from unicodedata import category as unicode_category
 
 LARGEST_UNICODE_CODEPOINT_PLUS_ONE = LARGEST_UNICODE_CODEPOINT + 1
@@ -94,3 +95,36 @@ def safe_random_string(num_bytes: int) -> str:
         raise ValueError(error_message)
 
     return secrets.token_hex(nbytes=length)
+
+
+def birthday_attack(birthdays: int, people: int) -> float:
+    """
+    what's the probability that <people> number of people will share a
+    birthday, if there are <birthday> number o unique birthdays?
+
+    very slow
+    """
+    # from:
+    # https://en.wikipedia.org/wiki/Birthday_attack#Understanding_the_problem
+    return 1 - (
+        factorial(birthdays)
+        / (factorial(birthdays - people) * math.pow(birthdays, people))
+    )
+
+
+def collision_probability(
+    unique_characters: Union[int, Set[str]], string_length: int, choices: int
+) -> float:
+    """
+    what's the chance two choices are the same if each choice is a permutation
+    of <string_length> number of <unique_characters>?
+
+    very slow
+    """
+    if isinstance(unique_characters, set):
+        number_unique_characters = len(unique_characters)
+    elif isinstance(unique_characters, int):
+        number_unique_characters = unique_characters
+
+    permutations = int(math.pow(number_unique_characters, string_length))
+    return birthday_attack(permutations, choices)
