@@ -6,7 +6,7 @@ from starlette.responses import Response
 
 from mw_url_shortener.database.start import AsyncSession
 from mw_url_shortener.interfaces.database import redirect as redirect_interface
-from mw_url_shortener.schemas.redirect import Redirect, RedirectCreate
+from mw_url_shortener.schemas.redirect import Redirect, RedirectCreate, RedirectUpdate
 from mw_url_shortener.schemas.user import User
 
 from ..dependencies import get_async_session, get_current_user
@@ -79,7 +79,38 @@ async def create(
     raise HTTPException(status_code=409, detail="could not create redirect")
 
 
+async def update(
+    current_object_schema: Redirect,
+    update_object_schema: RedirectUpdate,
+    async_session: AsyncSession = Depends(get_async_session),
+    current_user: User = Depends(get_current_user),
+) -> Redirect:
+    updated_redirect = await redirect_interface.update(
+        async_session,
+        current_object_schema=current_object_schema,
+        update_object_schema=update_object_schema,
+    )
+    if updated_redirect is not None:
+        return updated_redirect
+
+    raise HTTPException(status_code=409, detail="could not update redirect")
+
+
+async def remove(
+    id: int,
+    async_session: AsyncSession = Depends(get_async_session),
+    current_user: User = Depends(get_current_user),
+) -> Redirect:
+    removed_redirect = await redirect_interface.remove_by_id(async_session, id=id)
+    if removed_redirect is not None:
+        return removed_redirect
+
+    raise HTTPException(status_code=404, detail="could not remove redirect")
+
+
 router = APIRouter()
 router.get("/match/{short_link:path}")(match)
 router.post("/")(create)
 router.get("/")(search)
+router.put("/")(update)
+router.delete("/")(remove)
