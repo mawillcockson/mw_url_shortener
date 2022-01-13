@@ -1,3 +1,10 @@
+"""
+the common options and initialization for actions with a local database file,
+accessible through the filesystem
+
+the name for this file is intentionally not "local.py" because `local` is a
+keyword in Python, and importing it would be cumbersome
+"""
 import asyncio
 import sys
 from functools import partial
