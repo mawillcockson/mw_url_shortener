@@ -177,6 +177,57 @@ def test_redirect_update_all(
     assert updated_redirect.body == new_body
 
 
+def test_update_non_existent(
+    test_client: TestClient,
+    authorization_headers: AuthorizationHeaders,
+    test_user: User,
+    test_string_length: int,
+) -> None:
+    "will an error be returned if the specified redirect doesn't exist?"
+    url = unsafe_random_string(test_string_length)
+    new_url = unsafe_random_string(test_string_length)
+    assert new_url != url
+
+    short_link = random_short_link(test_string_length)
+    new_short_link = random_short_link(test_string_length)
+    assert new_short_link != short_link
+
+    response_status = int(test_string_length)
+    new_response_status = int(abs(test_string_length + 1))
+    assert new_response_status != response_status
+
+    body = unsafe_random_string(test_string_length)
+    new_body = unsafe_random_string(test_string_length)
+    assert new_body != body
+
+    non_existent_redirect = Redirect(
+        id=1,
+        url=url,
+        short_link=short_link,
+        response_status=response_status,
+        body=body,
+    )
+
+    update_redirect_schema = RedirectUpdate(
+        url=new_url,
+        short_link=new_short_link,
+        response_status=new_response_status,
+        body=new_body,
+    )
+    non_existent_redirect_data = non_existent_redirect.dict()
+    update_redirect_data = update_redirect_schema.dict()
+    update_data = {
+        "current_object_schema": non_existent_redirect_data,
+        "update_object_schema": update_redirect_data,
+    }
+    update_response = test_client.put(
+        "/v0/redirect/",
+        headers=authorization_headers,
+        json=update_data,
+    )
+    assert update_response.status_code == 409
+
+
 def test_redirect_remove_by_id(
     test_client: TestClient,
     authorization_headers: AuthorizationHeaders,
@@ -213,3 +264,19 @@ def test_redirect_remove_by_id(
     removed_redirect = Redirect.parse_raw(remove_data)
 
     assert removed_redirect == created_redirect
+
+
+def test_redirect_remove_by_id_non_existent(
+    test_client: TestClient,
+    authorization_headers: AuthorizationHeaders,
+    test_user: User,
+) -> None:
+    """
+    will an error be raised if removal is requested for a redirect that doesn't
+    exist?
+    """
+    params = {"id": 1}
+    remove_response = test_client.delete(
+        "/v0/redirect/", headers=authorization_headers, params=params
+    )
+    assert remove_response.status_code == 404
