@@ -18,9 +18,9 @@ from mw_url_shortener.utils import (
 
 def random_username() -> str:
     "creates a random username"
-    return random_printable_string(randint(0, defaults.max_username_length))
+    return random_printable_string(randint(1, defaults.max_username_length))
 
 
 def random_password() -> str:
     "creates a random pssword"
-    return random_printable_string(randint(0, defaults.max_password_length))
+    return random_printable_string(randint(1, defaults.max_password_length))

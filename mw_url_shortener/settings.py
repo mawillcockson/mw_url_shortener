@@ -60,7 +60,6 @@ class Defaults(BaseSettings):
     database_driver: str = "aiosqlite"
     database_url_joiner: str = ":///"
     max_username_length: PositiveInt = 30
-    # NOTE:BUG This should be enforced on the user schemas
     max_password_length: PositiveInt = 128
     # https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#redirection_messages
     # 307 indicates the User Agent (browser) must not change the request method
