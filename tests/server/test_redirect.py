@@ -111,6 +111,23 @@ def test_redirect_search_by_id(
     assert len(retrieved_redirects) == 1
 
 
+def test_redirect_search_non_existent(
+    test_client: TestClient,
+    authorization_headers: AuthorizationHeaders,
+    test_user: User,
+) -> None:
+    "will nothing be returned if no redirect matches search parameters?"
+    params = {"id": 1}
+    search_response = test_client.get(
+        "/v0/redirect/", headers=authorization_headers, params=params
+    )
+    assert search_response.status_code == 200
+    search_data = search_response.text
+    assert search_data
+    retrieved_redirects = parse_raw_as(List[Redirect], search_data)
+    assert not retrieved_redirects
+
+
 def test_redirect_update_all(
     test_client: TestClient,
     authorization_headers: AuthorizationHeaders,
