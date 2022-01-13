@@ -47,6 +47,7 @@ class RedirectDBInterface(
         *,
         skip: int = 0,
         limit: int = 100,
+        id: Optional[int] = None,
         short_link: Optional[str] = None,
         url: Optional[str] = None,
         response_status: Optional[int] = None,
@@ -54,6 +55,8 @@ class RedirectDBInterface(
     ) -> List[Redirect]:
         redirect_schemas: List[Redirect] = []
         query = select(RedirectModel)
+        if id is not None:
+            query = query.where(RedirectModel.id == id)
         if short_link is not None:
             query = query.where(RedirectModel.short_link == short_link)
         if url is not None:

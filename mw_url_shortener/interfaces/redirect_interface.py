@@ -21,6 +21,7 @@ class RedirectInterface(
         *,
         skip: int = 0,
         limit: int = 0,
+        id: Optional[int] = None,
         short_link: Optional[str] = None,
         url: Optional[str] = None,
         response_status: Optional[int] = None,

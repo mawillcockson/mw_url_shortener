@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING
+from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from starlette.responses import Response
@@ -39,6 +39,30 @@ async def match(
     )
 
 
+async def search(
+    skip: int = 0,
+    limit: int = 100,
+    id: Optional[int] = None,
+    short_link: Optional[str] = None,
+    url: Optional[str] = None,
+    response_status: Optional[int] = None,
+    body: Optional[str] = None,
+    async_session: AsyncSession = Depends(get_async_session),
+    current_user: User = Depends(get_current_user),
+) -> List[Redirect]:
+    retrieved_users = await redirect_interface.search(
+        async_session,
+        skip=skip,
+        limit=limit,
+        id=id,
+        short_link=short_link,
+        url=url,
+        response_status=response_status,
+        body=body,
+    )
+    return retrieved_users
+
+
 async def create(
     create_object_schema: RedirectCreate,
     async_session: AsyncSession = Depends(get_async_session),
@@ -56,3 +80,4 @@ async def create(
 router = APIRouter()
 router.get("/match/{short_link:path}")(match)
 router.post("/")(create)
+router.get("/")(search)
