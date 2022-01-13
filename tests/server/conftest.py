@@ -22,9 +22,25 @@ def test_password() -> str:
 
 
 @pytest.fixture
+def test_password_empty_username() -> str:
+    return random_password()
+
+
+@pytest.fixture
 def test_user_schema(test_password: str) -> UserCreate:
     test_username = random_username()
     return UserCreate(username=test_username, password=test_password)
+
+
+@pytest.fixture
+def test_user_schema_empty_username(test_password_empty_username: str) -> UserCreate:
+    return UserCreate(username="", password=test_password_empty_username)
+
+
+@pytest.fixture
+def test_user_schema_empty_password() -> UserCreate:
+    test_username = random_username()
+    return UserCreate(username=test_username, password="")
 
 
 @pytest.fixture
@@ -38,6 +54,44 @@ async def test_user(
     async with async_sessionmaker() as async_session:
         test_user = await database_interface.user.create(
             async_session, create_object_schema=test_user_schema
+        )
+
+    assert test_user
+    return test_user
+
+
+@pytest.fixture
+async def test_user_empty_username(
+    anyio_backend: str,
+    empty_on_disk_database: Path,
+    test_user_schema_empty_username: UserCreate,
+) -> User:
+    assert anyio_backend
+
+    database_url = defaults.database_url_leader + str(empty_on_disk_database)
+    async_sessionmaker = await make_sessionmaker(database_url)
+    async with async_sessionmaker() as async_session:
+        test_user = await database_interface.user.create(
+            async_session, create_object_schema=test_user_schema_empty_username
+        )
+
+    assert test_user
+    return test_user
+
+
+@pytest.fixture
+async def test_user_empty_password(
+    anyio_backend: str,
+    empty_on_disk_database: Path,
+    test_user_schema_empty_password: UserCreate,
+) -> User:
+    assert anyio_backend
+
+    database_url = defaults.database_url_leader + str(empty_on_disk_database)
+    async_sessionmaker = await make_sessionmaker(database_url)
+    async with async_sessionmaker() as async_session:
+        test_user = await database_interface.user.create(
+            async_session, create_object_schema=test_user_schema_empty_password
         )
 
     assert test_user
