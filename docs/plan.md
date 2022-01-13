@@ -1,20 +1,20 @@
 ## Plan
 
-- complete local client
-  - mirror `local` subcommands for `redirect`
-  - make `redirect.body` not nullable (a body of `""` is effectively the same
-    as a null body, except `None` can be used to distinguish an empty
-    parameter)
-  - the cli should be the same, whether working on a local database, or with a remote API
+- the cli should be the same, whether working on a local database, or with a remote API
 - add a server implementing an API
 - either automatically (e.g. apistar) or manually add a remote interface to
   mimic the database interface
 - add remote interface to client
-- separate server into a pip extra
-- add features
+- log api interactions to database
+  - add cli for searching logs
+    - I want to be able to answer "who all has accessed this endpoint, and
+      when?", especially the main redirect matching endpoint
+- release mvp to PyPI
+- add features/[extras](#extras)
 
 
 ### Extras
+- separate server into a pip extra
 - client configuration should be able to be specified through a config file,
   which should be overridden by individual values on the command-line
 - obscure passwords (plain and hashed) with `pydantic.SecretStr` and others
