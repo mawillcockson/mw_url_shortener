@@ -81,6 +81,7 @@ class Defaults(BaseSettings):
     api_current_version: str = "v0"
     api_prefix: str = ""
     oauth2_endpoint: str = "token"
+    user_agent_string: str = f"{APP_NAME}_client/{__version__}"
 
     @property
     def database_url_scheme(self) -> str:

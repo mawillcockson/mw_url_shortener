@@ -18,6 +18,7 @@ from mw_url_shortener.settings import OutputStyle, Settings, defaults
 
 from .common_subcommands import SHOW_CONFIGURATION_COMMAND_NAME, show_configuration
 from .local_subcommand import app as local_app
+from .remote_subcommand import app as remote_app
 
 
 def version(flag: bool) -> None:
@@ -49,6 +50,7 @@ def callback(
 app = typer.Typer(callback=callback)
 app.command(name=SHOW_CONFIGURATION_COMMAND_NAME)(show_configuration)
 app.add_typer(local_app, name="local")
+app.add_typer(remote_app, name="remote")
 
 
 def main() -> None:
