@@ -62,3 +62,15 @@ def reconfigure_dependency_injection(
     inject.clear_and_configure(
         partial(install_configurators, configurators=configurators)
     )
+
+
+def install_binder_callables(
+    binder: "inject.Binder",
+    *,
+    configurators: "Optional[Sequence[inject.BinderCallable]]" = None,
+) -> None:
+    if not configurators:
+        return
+
+    for configurator in configurators:
+        binder.install(configurator)

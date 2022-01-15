@@ -6,14 +6,12 @@ from typing import Optional
 import typer
 from pydantic.json import pydantic_encoder
 
-from mw_url_shortener.dependency_injection import get_settings
-from mw_url_shortener.interfaces import (
-    RedirectInterface,
+from mw_url_shortener.dependency_injection import (
     get_redirect_interface,
     get_resource,
-    open_resource,
-    run_sync,
+    get_settings,
 )
+from mw_url_shortener.interfaces import RedirectInterface, open_resource, run_sync
 from mw_url_shortener.schemas.redirect import RedirectCreate, RedirectUpdate
 from mw_url_shortener.settings import OutputStyle, Settings, defaults
 

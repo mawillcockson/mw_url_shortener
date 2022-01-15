@@ -6,14 +6,12 @@ from typing import Optional
 import typer
 from pydantic.json import pydantic_encoder
 
-from mw_url_shortener.dependency_injection import get_settings
-from mw_url_shortener.interfaces import (
-    UserInterface,
+from mw_url_shortener.dependency_injection import (
     get_resource,
+    get_settings,
     get_user_interface,
-    open_resource,
-    run_sync,
 )
+from mw_url_shortener.interfaces import UserInterface, open_resource, run_sync
 from mw_url_shortener.schemas.user import UserCreate, UserUpdate
 from mw_url_shortener.settings import OutputStyle, Settings
 

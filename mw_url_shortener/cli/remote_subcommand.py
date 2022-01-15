@@ -8,23 +8,19 @@ from http import HTTPStatus
 from pathlib import Path
 from typing import TYPE_CHECKING, Container
 
-import inject
 import typer
 from httpx import AsyncClient, HTTPStatusError, Response
 
 from mw_url_shortener.dependency_injection import (
-    AsyncLoopType,
+    get_async_loop,
     get_settings,
-    reconfigure_dependency_injection,
-)
-from mw_url_shortener.interfaces import (
-    RedirectInterface,
-    UserInterface,
     inject_interface,
     inject_resource,
+    reconfigure_dependency_injection,
 )
+from mw_url_shortener.interfaces import RedirectInterface, UserInterface
 from mw_url_shortener.interfaces import remote as remote_interface
-from mw_url_shortener.interfaces.remote import inject_async_client
+from mw_url_shortener.remote.start import make_async_client
 from mw_url_shortener.schemas.user import Password, UserCreate, Username
 from mw_url_shortener.settings import CliMode, Settings, defaults
 
@@ -177,26 +173,23 @@ def callback(
         base_url=settings.api_base_url,
         headers=headers,
     )
-    loop = inject.instance(AsyncLoopType)
-    async_client_injector = partial(inject_async_client, async_client=async_client)
+    loop = get_async_loop()
     resource_injector = partial(inject_resource, resource=async_client)
 
-    if ctx.invoked_subcommand == "user":
-        interface_injector = partial(
-            inject_interface,
-            interface_type=UserInterface,
-            interface=remote_interface.user,
-        )
+    user_interface_injector = partial(
+        inject_interface,
+        interface_type=UserInterface,
+        interface=remote_interface.user,
+    )
 
-    if ctx.invoked_subcommand == "redirect":
-        interface_injector = partial(
-            inject_interface,
-            interface_type=RedirectInterface,
-            interface=remote_interface.redirect,
-        )
+    redirect_interface_injector = partial(
+        inject_interface,
+        interface_type=RedirectInterface,
+        interface=remote_interface.redirect,
+    )
 
     reconfigure_dependency_injection(
-        [async_client_injector, resource_injector, interface_injector]
+        [resource_injector, user_interface_injector, redirect_interface_injector]
     )
 
 

@@ -51,7 +51,7 @@ def make_fastapi_app(server_settings: "ServerSettings") -> "FastAPI":
 
     import inject
 
-    from mw_url_shortener.interfaces import install_binder_callables
+    from mw_url_shortener.dependency_injection import install_binder_callables
     from mw_url_shortener.server.settings import inject_server_settings
 
     server_settings_injector = partial(

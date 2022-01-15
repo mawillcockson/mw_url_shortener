@@ -13,15 +13,16 @@ from pathlib import Path
 import inject
 import typer
 
-from mw_url_shortener.database.start import inject_async_sessionmaker, make_sessionmaker
+from mw_url_shortener.database.start import make_sessionmaker
 from mw_url_shortener.dependency_injection import (
-    AsyncLoopType,
+    get_async_loop,
     get_settings,
+    inject_interface,
+    inject_resource,
     reconfigure_dependency_injection,
 )
 from mw_url_shortener.interfaces import RedirectInterface, UserInterface
 from mw_url_shortener.interfaces import database as database_interface
-from mw_url_shortener.interfaces import inject_interface, inject_resource
 from mw_url_shortener.settings import CliMode, Settings, defaults
 
 from .common_subcommands import SHOW_CONFIGURATION_COMMAND_NAME, show_configuration
@@ -52,31 +53,26 @@ def callback(
     if ctx.invoked_subcommand == SHOW_CONFIGURATION_COMMAND_NAME:
         return
 
-    loop = inject.instance(AsyncLoopType)
+    loop = get_async_loop()
     async_sessionmaker = asyncio.run_coroutine_threadsafe(
         make_sessionmaker(settings.database_url, echo=log_db_access), loop=loop
     ).result()
-    async_sessionmaker_injector = partial(
-        inject_async_sessionmaker, async_sessionmaker=async_sessionmaker
-    )
     resource_injector = partial(inject_resource, resource=async_sessionmaker)
 
-    if ctx.invoked_subcommand == "user":
-        interface_injector = partial(
-            inject_interface,
-            interface_type=UserInterface,
-            interface=database_interface.user,
-        )
+    user_interface_injector = partial(
+        inject_interface,
+        interface_type=UserInterface,
+        interface=database_interface.user,
+    )
 
-    if ctx.invoked_subcommand == "redirect":
-        interface_injector = partial(
-            inject_interface,
-            interface_type=RedirectInterface,
-            interface=database_interface.redirect,
-        )
+    redirect_interface_injector = partial(
+        inject_interface,
+        interface_type=RedirectInterface,
+        interface=database_interface.redirect,
+    )
 
     reconfigure_dependency_injection(
-        [async_sessionmaker_injector, resource_injector, interface_injector]
+        [resource_injector, user_interface_injector, redirect_interface_injector]
     )
 
 

@@ -9,7 +9,6 @@ import typer
 
 from mw_url_shortener import __version__
 from mw_url_shortener.dependency_injection import (
-    AsyncLoopType,
     get_settings,
     initialize_dependency_injection,
     reconfigure_dependency_injection,
