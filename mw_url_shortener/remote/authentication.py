@@ -95,6 +95,14 @@ class OAuth2PasswordBearerHandler(Auth):
             password=self.password,
         )
 
+        headers: "Dict[str, str]"
+        user_agent: "Optional[str]" = request.headers.get("User-Agent", None)
+        assert isinstance(
+            user_agent, (str, type(None))
+        ), f"expected user-agent to be a str, not '{type(user_agent)}' '{user_agent}'"
+        if user_agent:
+            headers = {"User-Agent": user_agent}
+
         # the authentication lock should be held until self.token is written
         # to, to prevent another call from checking if self.token is None, and
         # starting another refresh_token() that will wait at the auth_lock
@@ -104,6 +112,7 @@ class OAuth2PasswordBearerHandler(Auth):
                 method="POST",
                 url=self.oauth2_endpoint_url,
                 data=cast("Dict[str, str]", form_data),
+                headers=headers,
             )
 
             status_code = token_response.status_code
