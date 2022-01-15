@@ -1,13 +1,16 @@
 import asyncio
 from asyncio import BaseEventLoop as AsyncLoopType
 from functools import partial
-from typing import List, Optional
+from typing import TYPE_CHECKING
 
 import inject
 
 from mw_url_shortener.settings import Settings
 
 from .settings import get_settings, inject_settings
+
+if TYPE_CHECKING:
+    from typing import List, Optional, Sequence
 
 
 def inject_loop(binder: inject.Binder, *, loop: AsyncLoopType) -> None:
@@ -19,14 +22,14 @@ def get_async_loop() -> AsyncLoopType:
 
 
 def install_configurators(
-    binder: inject.Binder, *, configurators: List[inject.BinderCallable]
+    binder: inject.Binder, *, configurators: "List[inject.BinderCallable]"
 ) -> None:
     for configurator in configurators:
         binder.install(configurator)
 
 
 def initialize_dependency_injection(
-    configurators: Optional[List[inject.BinderCallable]] = None,
+    configurators: "Optional[List[inject.BinderCallable]]" = None,
 ) -> None:
     if configurators is None:
         configurators = []
@@ -43,10 +46,10 @@ def initialize_dependency_injection(
 
 
 def reconfigure_dependency_injection(
-    configurators: Optional[List[inject.BinderCallable]] = None,
+    configurators: "Optional[List[inject.BinderCallable]]" = None,
     *,
-    settings: Optional[Settings] = None,
-    loop: Optional[AsyncLoopType] = None
+    settings: "Optional[Settings]" = None,
+    loop: "Optional[AsyncLoopType]" = None,
 ) -> None:
     if configurators is None:
         configurators = []
