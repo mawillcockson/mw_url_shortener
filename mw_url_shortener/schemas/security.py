@@ -16,3 +16,8 @@ class JWTToken(BaseSchema):
 
 class AuthorizationHeaders(TypedDict):
     Authorization: str
+
+
+class OAuth2PasswordRequestFormData(TypedDict):
+    username: str
+    password: str

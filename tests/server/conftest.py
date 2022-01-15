@@ -7,7 +7,11 @@ from fastapi.testclient import TestClient
 
 from mw_url_shortener.database.start import make_sessionmaker
 from mw_url_shortener.interfaces import database as database_interface
-from mw_url_shortener.schemas.security import AuthorizationHeaders
+from mw_url_shortener.schemas.security import (
+    AccessToken,
+    AuthorizationHeaders,
+    OAuth2PasswordRequestFormData,
+)
 from mw_url_shortener.schemas.user import User, UserCreate
 from mw_url_shortener.server.app import make_fastapi_app
 from mw_url_shortener.server.settings import ServerSettings, server_defaults
@@ -66,16 +70,18 @@ def test_client(test_user: User, empty_on_disk_database: Path) -> Iterator[TestC
 def authorization_headers(
     test_client: TestClient, test_user: User, test_password: str
 ) -> AuthorizationHeaders:
-    form_data = {
-        "username": test_user.username,
-        "password": test_password,
-    }
+    form_data = OAuth2PasswordRequestFormData(
+        username=test_user.username,
+        password=test_password,
+    )
     token_response = test_client.post(
         "/" + server_defaults.oauth2_endpoint, data=form_data
     )
     assert token_response.status_code == 200
-    token_response_data = token_response.json()
+    token_response_data = token_response.text
     assert token_response_data
 
-    access_token = token_response_data["access_token"]
-    return AuthorizationHeaders(Authorization="Bearer" + " " + access_token)
+    access_token = AccessToken.parse_raw(token_response_data)
+    return AuthorizationHeaders(
+        Authorization="Bearer" + " " + access_token.access_token
+    )
