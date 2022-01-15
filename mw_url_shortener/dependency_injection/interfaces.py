@@ -3,8 +3,8 @@ from typing import TYPE_CHECKING, cast
 import inject
 
 from mw_url_shortener.interfaces.base import Resource
-from mw_url_shortener.interfaces.user_interface import UserInterface
 from mw_url_shortener.interfaces.redirect_interface import RedirectInterface
+from mw_url_shortener.interfaces.user_interface import UserInterface
 from mw_url_shortener.settings import CliMode
 
 from .settings import get_settings
