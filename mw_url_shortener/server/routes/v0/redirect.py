@@ -45,6 +45,9 @@ async def match(
         async_session, short_link=short_link
     )
     if len(redirect_schemas) != 1:
+        # this could say "too many matching redirects", but this method can be
+        # called by anyone, and I wouldn't want to give that away to someone
+        # who isn't logged in
         raise HTTPException(status_code=404, detail="redirect not found")
 
     redirect_schema = redirect_schemas[0]
