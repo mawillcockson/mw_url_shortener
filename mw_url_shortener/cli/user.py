@@ -52,37 +52,6 @@ username: {created_user.username}"""
     )
 
 
-def get_by_id(id: int = typer.Argument(...)) -> None:
-    if id < 0:
-        typer.echo(f"'id' must be 0 or greater; got '{id}'")
-        raise typer.Exit(code=1)
-
-    user = get_user_interface()
-    resource = get_resource()
-    with open_resource(resource) as opened_resource:
-        retrieved_users = run_sync(user.search(opened_resource, id=id))
-
-    settings = get_settings()
-
-    if not retrieved_users and settings.output_style == OutputStyle.text:
-        typer.echo(f"could not find user with id '{id}'")
-    if not retrieved_users:
-        raise typer.Exit(code=1)
-
-    assert (
-        len(retrieved_users) == 1
-    ), f"got more than one user with the same id: {retrieved_users}"
-    retrieved_user = retrieved_users[0]
-    if settings.output_style == OutputStyle.json:
-        typer.echo(retrieved_user.json())
-        return
-
-    typer.echo(
-        f"""id: {retrieved_user.id}
-username: {retrieved_user.username}"""
-    )
-
-
 def search(
     skip: int = typer.Option(0, help="how many results to skip over"),
     limit: int = typer.Option(100, help="how many results to show at once"),
@@ -227,7 +196,6 @@ def update_by_id(
 
 app = typer.Typer()
 app.command()(create)
-app.command()(get_by_id)
 app.command()(search)
 app.command()(remove_by_id)
 app.command()(check_authentication)

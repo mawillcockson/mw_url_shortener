@@ -57,10 +57,11 @@ async def test_create_redirect_defaults(
     assert settings.database_url.endswith(database_url_end)
     async_sessionmaker = await make_sessionmaker(settings.database_url)
     async with async_sessionmaker() as async_session:
-        retrieved_redirect = await database_interface.redirect.get_by_id(
+        retrieved_redirects = await database_interface.redirect.search(
             async_session, id=created_redirect.id
         )
-    assert retrieved_redirect == created_redirect
+    assert created_redirect in retrieved_redirects
+    assert len(retrieved_redirects) == 1
 
     inject.clear()
 
@@ -104,7 +105,7 @@ async def test_create_redirect(
     assert created_redirect.body == body
 
 
-async def test_get_by_id(
+async def test_search_by_id(
     on_disk_database: Path,
     run_test_command: CommandRunner,
     test_string_length: int,
@@ -147,18 +148,19 @@ async def test_get_by_id(
             "--database-path",
             str(on_disk_database),
             "redirect",
-            "get-by-id",
+            "search",
+            "--id",
             str(created_redirect.id),
         ],
     )
 
     assert result.exit_code == 0, f"search result: {result}"
-    retrieved_redirect = Redirect.parse_raw(result.stdout)
-    assert retrieved_redirect
-    assert retrieved_redirect == created_redirect
+    retrieved_redirects = parse_raw_as(List[Redirect], result.stdout)
+    assert created_redirect in retrieved_redirects
+    assert len(retrieved_redirects) == 1
 
 
-async def test_get_non_existent_redirect(
+async def test_search_non_existent_redirect(
     on_disk_database: Path,
     run_test_command: CommandRunner,
 ) -> None:
@@ -172,7 +174,8 @@ async def test_get_non_existent_redirect(
             "--database-path",
             str(on_disk_database),
             "redirect",
-            "get-by-id",
+            "search",
+            "--id",
             str(1),
         ],
     )

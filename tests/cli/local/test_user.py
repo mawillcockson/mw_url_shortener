@@ -57,15 +57,16 @@ async def test_create_user(
     assert settings.database_url.endswith(database_url_end)
     async_sessionmaker = await make_sessionmaker(settings.database_url)
     async with async_sessionmaker() as async_session:
-        retrieved_user = await database_interface.user.get_by_id(
+        retrieved_users = await database_interface.user.search(
             async_session, id=created_user.id
         )
-    assert retrieved_user == created_user
+    assert created_user in retrieved_users
+    assert len(retrieved_users) == 1
 
     inject.clear()
 
 
-async def test_get_by_id(
+async def test_search_by_id(
     on_disk_database: Path,
     run_test_command: CommandRunner,
 ) -> None:
@@ -103,18 +104,19 @@ async def test_get_by_id(
             "--database-path",
             str(on_disk_database),
             "user",
-            "get-by-id",
+            "search",
+            "--id",
             str(created_user.id),
         ],
     )
 
     assert result.exit_code == 0, f"search result: {result}"
-    retrieved_user = User.parse_raw(result.stdout)
-    assert retrieved_user
-    assert retrieved_user == created_user
+    retrieved_users = parse_raw_as(List[User], result.stdout)
+    assert created_user in retrieved_users
+    assert len(retrieved_users) == 1
 
 
-async def test_get_non_existent_user(
+async def test_search_non_existent_user(
     on_disk_database: Path,
     run_test_command: CommandRunner,
 ) -> None:
@@ -127,7 +129,8 @@ async def test_get_non_existent_user(
             "--database-path",
             str(on_disk_database),
             "user",
-            "get-by-id",
+            "search",
+            "--id",
             str(0),
         ],
     )

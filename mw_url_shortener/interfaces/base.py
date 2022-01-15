@@ -68,12 +68,6 @@ class InterfaceBaseProtocol(
         raise NotImplementedError
 
     @abstractmethod
-    async def get_by_id(
-        self, opened_resource: ContravariantOpenedResourceT, /, *, id: int
-    ) -> Optional[ObjectSchemaType]:
-        raise NotImplementedError
-
-    @abstractmethod
     async def update(
         self,
         opened_resource: ContravariantOpenedResourceT,
