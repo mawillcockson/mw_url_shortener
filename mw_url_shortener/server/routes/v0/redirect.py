@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List, Optional, Dict
 from urllib.parse import quote
 
 from fastapi import APIRouter, Depends, HTTPException, Request
@@ -29,10 +29,12 @@ async def match(
         raise HTTPException(status_code=404, detail="redirect not found")
 
     redirect_schema = redirect_schemas[0]
-    # from:
-    # https://github.com/encode/starlette/blob/a7c5a41396752c39a5a9b688e2dccfaca152a62f/starlette/responses.py#L198
-    url = quote(str(redirect_schema.url), safe=":/%#?=@[]!$&'()*+,;")
-    headers = {"Location": url}
+    headers: "Dict[str, str]" = {}
+    if redirect_schema.url:
+        # from:
+        # https://github.com/encode/starlette/blob/a7c5a41396752c39a5a9b688e2dccfaca152a62f/starlette/responses.py#L198
+        url = quote(str(redirect_schema.url), safe=":/%#?=@[]!$&'()*+,;")
+        headers["Location"] = url
     return Response(
         headers=headers,
         status_code=int(redirect_schema.response_status),
