@@ -77,6 +77,9 @@ class Defaults(BaseSettings):
     output_style: OutputStyle = OutputStyle.text
     cli_mode: Optional[CliMode] = None
     log_db_access: bool = False
+    base_url: Optional[str] = None
+    api_current_version: str = "v0"
+    api_prefix: str = ""
     oauth2_endpoint: str = "token"
 
     @property
@@ -95,6 +98,14 @@ class Defaults(BaseSettings):
     def version(self) -> str:
         "app version should not be modifiable"
         return __version__
+
+    @property
+    def api_base_url(self) -> str:
+        "the base url for accessing all API endpoints"
+        assert self.base_url is not None, "base_url not set"
+        if self.api_prefix:
+            return f"{self.base_url}/{self.api_prefix}"
+        return self.base_url
 
     class Config:
         json_loads = json_loads  # type: ignore
