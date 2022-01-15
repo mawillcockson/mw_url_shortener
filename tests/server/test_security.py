@@ -118,19 +118,19 @@ def test_empty_username() -> None:
     username = ""
     password = random_password()
 
-    with pytest.raises(pydantic.ValidationError):
+    with pytest.raises(pydantic.ValidationError) as error:
         assert not User(id=1, username=username)
     validation_errors = error.value.errors()
     assert len(validation_errors) == 1
     assert validation_errors[0]["type"] == "value_error.any_str.min_length"
 
-    with pytest.raises(pydantic.ValidationError):
+    with pytest.raises(pydantic.ValidationError) as error:
         assert not UserCreate(username=username, password=password)
     validation_errors = error.value.errors()
     assert len(validation_errors) == 1
     assert validation_errors[0]["type"] == "value_error.any_str.min_length"
 
-    with pytest.raises(pydantic.ValidationError):
+    with pytest.raises(pydantic.ValidationError) as error:
         assert not UserUpdate(username=username, password=password)
     validation_errors = error.value.errors()
     assert len(validation_errors) == 1
