@@ -5,6 +5,7 @@ from httpx import AsyncClient, HTTPStatusError, Response
 
 from mw_url_shortener.dependency_injection import get_settings
 from mw_url_shortener.interfaces import remote as remote_interface
+from mw_url_shortener.interfaces.helpers import run_sync
 
 from .authentication import OAuth2PasswordBearerHandler
 
@@ -128,6 +129,21 @@ def make_async_client(
         base_url=settings.api_base_url,
         headers=headers,
     )
+
+def make_async_client_closer(async_client: "AsyncClient") -> "Callable[[], None]":
+    """
+    if AsyncClient is opened and used outside a `with` block, then it's
+    .aclose() method must be await-ed to clean up open connections before the
+    application ends
+
+    this function returns a callable that will do that
+
+    it's meant to be used by click.Context.call_on_close()
+    """
+    def closer() -> None:
+        "closes the wrapped httpx.AsyncClient"
+        run_sync(async_client.aclose())
+    return closer
 
 
 def inject_async_client(
