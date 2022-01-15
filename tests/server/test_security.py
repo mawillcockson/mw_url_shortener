@@ -98,7 +98,7 @@ def test_token_invalid_password(
 def test_empty_password() -> None:
     "will working with a user with an empty password raise an error?"
     username = random_username()
-    password=""
+    password = ""
 
     with pytest.raises(pydantic.ValidationError) as error:
         assert not UserCreate(username=username, password=password)
