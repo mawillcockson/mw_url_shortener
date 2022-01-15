@@ -54,7 +54,6 @@ class ServerDefaults(Defaults):
     )  # hostnames that can be served; requests to different hosts will be responded to with 404s
     jwt_hash_algorithm: str = "HS256"
     jwt_access_token_valid_duration: timedelta = timedelta(minutes=30)
-    oauth2_endpoint: str = "token"
     fast_api_title: str = APP_NAME
     fast_api_description: str = metadata["Description"]
     fast_api_version: str = __version__
