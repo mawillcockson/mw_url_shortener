@@ -13,13 +13,11 @@ from mw_url_shortener.schemas.redirect import (
 )
 from mw_url_shortener.settings import defaults
 
-from ..redirect_interface import RedirectInterface
 from .base import DBInterfaceBase
 
 
 class RedirectDBInterface(
     DBInterfaceBase[Redirect, RedirectCreate, RedirectUpdate],
-    RedirectInterface[AsyncSession],
 ):
     async def get_by_short_link(
         self, opened_resource: AsyncSession, /, *, short_link: str

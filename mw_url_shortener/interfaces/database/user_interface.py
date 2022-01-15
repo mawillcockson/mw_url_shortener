@@ -8,13 +8,10 @@ from mw_url_shortener.database.start import AsyncSession, sessionmaker
 from mw_url_shortener.schemas.user import User, UserCreate, UserUpdate
 from mw_url_shortener.security import hash_password, verify_password
 
-from ..user_interface import UserInterface
 from .base import DBInterfaceBase
 
 
-class UserDBInterface(
-    DBInterfaceBase[User, UserCreate, UserUpdate], UserInterface[AsyncSession]
-):
+class UserDBInterface(DBInterfaceBase[User, UserCreate, UserUpdate]):
     async def get_by_username(
         self, opened_resource: AsyncSession, /, *, username: str
     ) -> Optional[User]:
