@@ -1,30 +1,31 @@
-# mypy: allow_any_expr
-from typing import Any, Dict, List, Optional, Union
+from typing import TYPE_CHECKING, List
 
-from httpx import AsyncClient
 from pydantic import parse_raw_as
 
 from mw_url_shortener.schemas.user import User, UserCreate, UserUpdate
-from mw_url_shortener.security import hash_password, verify_password
 
-from ..user_interface import UserInterface
-from .base import RemoteInterfaceBase
+from .base import Endpoint, RemoteInterfaceBase
+
+if TYPE_CHECKING:
+    from typing import Dict, Optional
+
+    from httpx import AsyncClient
+
+    Params = Dict[str, str]
 
 
-class UserRemoteInterface(
-    RemoteInterfaceBase[User, UserCreate, UserUpdate], UserInterface[AsyncClient]
-):
+class UserRemoteInterface(RemoteInterfaceBase[User, UserCreate, UserUpdate]):
     async def search(
         self,
-        opened_resource: AsyncClient,
+        opened_resource: "AsyncClient",
         /,
         *,
         skip: int = 0,
         limit: int = 100,
-        id: Optional[int] = None,
-        username: Optional[str] = None,
-    ) -> List[User]:
-        params: "Dict[str, str]" = {
+        id: "Optional[int]" = None,
+        username: "Optional[str]" = None,
+    ) -> "List[User]":
+        params: "Params" = {
             "skip": str(skip),
             "limit": str(limit),
         }
@@ -40,5 +41,16 @@ class UserRemoteInterface(
 
         return user_schemas
 
+    async def authenticate(
+        self, opened_resource: "AsyncClient", /, *, username: str, password: str
+    ) -> "Optional[User]":
+        params: "Params" = {"username": username, "password": password}
+        async with opened_resource as client:
+            response = await client.post("/v0/user/check_authentication", params=params)
+        schema_json = response.text
+        if not schema_json:
+            return None
+        return User.parse_raw(schema_json)  # type: ignore
 
-user = UserRemoteInterface(User)
+
+user = UserRemoteInterface(User, Endpoint.user)  # type: ignore

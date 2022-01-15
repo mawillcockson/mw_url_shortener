@@ -7,16 +7,19 @@ from mw_url_shortener.interfaces import (
     UserInterface,
 )
 from mw_url_shortener.interfaces import database as database_interface
+from mw_url_shortener.interfaces import remote as remote_interface
 
 
 def test_user_interface() -> None:
     assert isinstance(database_interface.user, UserInterface)
+    assert isinstance(remote_interface.user, UserInterface)
 
     # for mypy
     def use_user_generic(user: UserInterface[OpenedResourceT]) -> None:
         pass
 
     use_user_generic(database_interface.user)
+    use_user_generic(remote_interface.user)
 
     def use_user_asyncsession(user: UserInterface[AsyncSession]) -> None:
         pass
@@ -26,17 +29,19 @@ def test_user_interface() -> None:
     def use_user_asyncclient(user: UserInterface[AsyncClient]) -> None:
         pass
 
-    # use_user_asyncclient(http_interface.user)
+    use_user_asyncclient(remote_interface.user)
 
 
 def test_redirect_interface() -> None:
     assert isinstance(database_interface.redirect, RedirectInterface)
+    assert isinstance(remote_interface.redirect, RedirectInterface)
 
     # for mypy
     def use_redirect_generic(redirect: RedirectInterface[OpenedResourceT]) -> None:
         pass
 
     use_redirect_generic(database_interface.redirect)
+    use_redirect_generic(remote_interface.redirect)
 
     def use_redirect_asyncsession(redirect: RedirectInterface[AsyncSession]) -> None:
         pass
@@ -46,17 +51,21 @@ def test_redirect_interface() -> None:
     def use_redirect_asyncclient(redirect: RedirectInterface[AsyncClient]) -> None:
         pass
 
-    # use_redirect_asyncclient(http_interface.redirect)
+    use_redirect_asyncclient(remote_interface.redirect)
 
 
 def do_not_run() -> None:
     "for mypy"
-    # reveal_type(database_interface.user.get_by_id)
-    # reveal_type(UserInterface.get_by_id)
+    # reveal_type(database_interface.user.remove_by_id)
+    # reveal_type(remote_interface.user.remove_by_id)
+    # reveal_type(UserInterface.remove_by_id)
     # reveal_type(database_interface.user.update)
+    # reveal_type(remote_interface.user.update)
     # reveal_type(UserInterface.update)
 
-    # reveal_type(database_interface.redirect.get_by_id)
-    # reveal_type(RedirectInterface.get_by_id)
+    # reveal_type(database_interface.redirect.remove_by_id)
+    # reveal_type(remote_interface.redirect.remove_by_id)
+    # reveal_type(RedirectInterface.remove_by_id)
     # reveal_type(database_interface.redirect.update)
+    # reveal_type(remote_interface.redirect.update)
     # reveal_type(RedirectInterface.update)
