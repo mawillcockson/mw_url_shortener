@@ -9,6 +9,19 @@ from mw_url_shortener.schemas.user import User, UserCreate, UserUpdate
 from ..dependencies import get_async_session, get_current_user
 
 
+# NOTE:TEST
+async def check_authentication(
+    username: str,
+    password: str,
+    async_session: AsyncSession = Depends(get_async_session),
+    current_user: User = Depends(get_current_user),
+) -> Optional[User]:
+    authenticated_user = await user_interface.authenticate(
+        async_session, username=username, password=password
+    )
+    return authenticated_user
+
+
 async def search(
     skip: int = 0,
     limit: int = 100,
@@ -71,6 +84,7 @@ async def remove(
 
 
 router = APIRouter()
+router.post("/check_authentication")(check_authentication)
 router.get("/me")(me)
 router.get("/")(search)
 router.post("/")(create)

@@ -8,8 +8,27 @@ from mw_url_shortener.database.start import AsyncSession
 from mw_url_shortener.interfaces.database import redirect as redirect_interface
 from mw_url_shortener.schemas.redirect import Redirect, RedirectCreate, RedirectUpdate
 from mw_url_shortener.schemas.user import User
+from mw_url_shortener.settings import defaults
 
 from ..dependencies import get_async_session, get_current_user
+
+
+# NOTE:TEST in client
+async def unique_short_link(
+    short_link_length: int = defaults.short_link_length,
+    async_session: AsyncSession = Depends(get_async_session),
+) -> Optional[str]:
+    """
+    tries to find a unique short link of the specified length
+
+    if this method returns nothing, it might be time to either
+    significantly change the short_link_characters, or change
+    short_link_length
+    """
+    short_link = await redirect_interface.unique_short_link(
+        async_session, short_link_length=short_link_length
+    )
+    return short_link
 
 
 async def match(
@@ -111,6 +130,7 @@ async def remove(
 
 
 router = APIRouter()
+router.get("/unique_short_link")(unique_short_link)
 router.get("/match/{short_link:path}")(match)
 router.get("/")(search)
 router.post("/")(create)
