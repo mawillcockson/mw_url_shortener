@@ -1,3 +1,4 @@
+from abc import abstractmethod
 from typing import (
     TYPE_CHECKING,
     Generic,
@@ -56,6 +57,7 @@ class InterfaceBaseProtocol(
 ):
     "generic base interface for abstracting database and api access"
 
+    @abstractmethod
     async def create(
         self,
         opened_resource: ContravariantOpenedResourceT,
@@ -63,13 +65,15 @@ class InterfaceBaseProtocol(
         *,
         create_object_schema: ContravariantCreateSchemaType,
     ) -> Optional[ObjectSchemaType]:
-        ...
+        raise NotImplementedError
 
+    @abstractmethod
     async def get_by_id(
         self, opened_resource: ContravariantOpenedResourceT, /, *, id: int
     ) -> Optional[ObjectSchemaType]:
-        ...
+        raise NotImplementedError
 
+    @abstractmethod
     async def update(
         self,
         opened_resource: ContravariantOpenedResourceT,
@@ -78,9 +82,10 @@ class InterfaceBaseProtocol(
         current_object_schema: ObjectSchemaType,
         update_object_schema: ContravariantUpdateSchemaType,
     ) -> Optional[ObjectSchemaType]:
-        ...
+        raise NotImplementedError
 
+    @abstractmethod
     async def remove_by_id(
         self, opened_resource: ContravariantOpenedResourceT, /, *, id: int
     ) -> Optional[ObjectSchemaType]:
-        ...
+        raise NotImplementedError

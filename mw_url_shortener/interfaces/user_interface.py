@@ -1,3 +1,4 @@
+from abc import abstractmethod
 from typing import List, Optional, Protocol, runtime_checkable
 
 from mw_url_shortener.schemas.user import User, UserCreate, UserUpdate
@@ -12,6 +13,7 @@ class UserInterface(
 ):
     "generic user data interface"
 
+    @abstractmethod
     async def search(
         self,
         opened_resource: ContravariantOpenedResourceT,
@@ -22,8 +24,9 @@ class UserInterface(
         id: Optional[int] = None,
         username: Optional[str] = None,
     ) -> List[User]:
-        ...
+        raise NotImplementedError
 
+    @abstractmethod
     async def authenticate(
         self,
         opened_resource: ContravariantOpenedResourceT,
@@ -32,4 +35,4 @@ class UserInterface(
         username: str,
         password: str,
     ) -> Optional[User]:
-        ...
+        raise NotImplementedError

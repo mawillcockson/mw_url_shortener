@@ -1,3 +1,4 @@
+from abc import abstractmethod
 from typing import List, Optional, Protocol, runtime_checkable
 
 from mw_url_shortener.schemas.redirect import Redirect, RedirectCreate, RedirectUpdate
@@ -14,6 +15,7 @@ class RedirectInterface(
 ):
     "generic redirect data interface"
 
+    @abstractmethod
     async def search(
         self,
         opened_resource: ContravariantOpenedResourceT,
@@ -27,8 +29,9 @@ class RedirectInterface(
         response_status: Optional[int] = None,
         body: Optional[str] = None,
     ) -> List[Redirect]:
-        ...
+        raise NotImplementedError
 
+    @abstractmethod
     async def get_by_short_link(
         self,
         opened_resource: ContravariantOpenedResourceT,
@@ -36,8 +39,9 @@ class RedirectInterface(
         *,
         short_link: str,
     ) -> Optional[Redirect]:
-        ...
+        raise NotImplementedError
 
+    @abstractmethod
     async def unique_short_link(
         self,
         opened_resource: ContravariantOpenedResourceT,
@@ -45,4 +49,4 @@ class RedirectInterface(
         *,
         short_link_length: int,
     ) -> Optional[str]:
-        ...
+        raise NotImplementedError
