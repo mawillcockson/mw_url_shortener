@@ -57,9 +57,12 @@ def resource_opener(resource: Resource) -> Iterator[OpenedResource]:
         result = future.result()
         async_exitstack, async_session = result
 
-        yield async_session
-
-        asyncio.run_coroutine_threadsafe(async_exitstack.aclose(), loop=loop).result()
+        try:
+            yield async_session
+        finally:
+            asyncio.run_coroutine_threadsafe(
+                async_exitstack.aclose(), loop=loop
+            ).result()
 
 
 open_resource = contextmanager(resource_opener)
