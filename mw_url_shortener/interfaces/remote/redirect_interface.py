@@ -75,4 +75,4 @@ class RedirectRemoteInterface(
         return short_link
 
 
-redirect = RedirectRemoteInterface(Redirect, Endpoint.remote)  # type: ignore
+redirect = RedirectRemoteInterface(Redirect, Endpoint.redirect)  # type: ignore

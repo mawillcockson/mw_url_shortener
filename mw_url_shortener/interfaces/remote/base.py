@@ -13,7 +13,7 @@ from mw_url_shortener.interfaces.base import (
 
 class Endpoint(Enum):
     user = "user"
-    remote = "remote"
+    redirect = "redirect"
 
 
 class RemoteInterfaceBase(
