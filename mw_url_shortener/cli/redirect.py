@@ -1,4 +1,3 @@
-# mypy: allow_any_expr
 "the 'user' subcommand of the client"
 import json
 from typing import Optional
@@ -155,7 +154,7 @@ def search(
         # pydantic.BaseModels into an object that json.dumps can encode, and
         # can thus be included in other arbitrary data, like a list
         # https://github.com/samuelcolvin/pydantic/issues/951
-        typer.echo(json.dumps(retrieved_redirects, default=pydantic_encoder))
+        typer.echo(json.dumps(retrieved_redirects, default=pydantic_encoder))  # type: ignore
         return
 
     for retrieved_redirect in retrieved_redirects:
