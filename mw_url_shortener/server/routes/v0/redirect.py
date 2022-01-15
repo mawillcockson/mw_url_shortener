@@ -110,7 +110,7 @@ async def remove(
 
 router = APIRouter()
 router.get("/match/{short_link:path}")(match)
-router.post("/")(create)
 router.get("/")(search)
+router.post("/")(create)
 router.put("/")(update)
 router.delete("/")(remove)
