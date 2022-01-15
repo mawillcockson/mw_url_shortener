@@ -36,6 +36,9 @@ class UserUpdate(UserBase):
 class UserInDBBase(UserBase, BaseInDBSchema):
     username: Username
 
+    class Config:
+        extra = Extra.forbid
+
 
 class User(UserInDBBase):
     pass
