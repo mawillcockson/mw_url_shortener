@@ -54,13 +54,10 @@ def resource_opener(resource: "AsyncClient") -> "Iterator[AsyncClient]":
 
 def resource_opener(resource: Resource) -> Iterator[OpenedResource]:
     if isinstance(resource, AsyncClient):
-        async_client = inject.instance(AsyncClient)
-        yield async_client
+        yield resource
 
     else:
-        async_sessionmaker = cast(
-            "sessionmaker[AsyncSession]", inject.instance("sessionmaker[AsyncSession]")
-        )
+        async_sessionmaker = resource
 
         async def get_async_session(
             async_sessionmaker: "sessionmaker[AsyncSession]",
