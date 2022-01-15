@@ -50,10 +50,9 @@ class RemoteInterfaceBase(
         create_object_schema: CreateSchemaType,
     ) -> Optional[ObjectSchemaType]:
         create_schema_json = create_object_schema.json()
-        async with opened_resource as client:
-            response = await client.post(
-                f"/v0/{self.endpoint}/", content=create_schema_json.encode("utf-8")
-            )
+        response = await opened_resource.post(
+            f"/v0/{self.endpoint}/", content=create_schema_json.encode("utf-8")
+        )
         schema_json = response.text
         if not schema_json:
             return None
@@ -85,8 +84,7 @@ class RemoteInterfaceBase(
         self, opened_resource: AsyncClient, /, *, id: int
     ) -> Optional[ObjectSchemaType]:
         params = {"id": id}
-        async with opened_resource as client:
-            response = await client.delete(f"/v0/{self.endpoint}/", params=params)
+        response = await opened_resource.delete(f"/v0/{self.endpoint}/", params=params)
         schema_json = response.text
         if not schema_json:
             return None

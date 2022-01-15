@@ -16,6 +16,7 @@ from mw_url_shortener.dependency_injection import (
 )
 from mw_url_shortener.interfaces import RedirectInterface, UserInterface
 from mw_url_shortener.interfaces import remote as remote_interface
+from mw_url_shortener.interfaces import run_sync
 from mw_url_shortener.remote.start import make_async_client
 from mw_url_shortener.schemas.user import Password, UserCreate, Username
 from mw_url_shortener.settings import CliMode, Settings, defaults
@@ -61,6 +62,8 @@ def callback(
     async_client = make_async_client(
         settings, username=Username(username), password=Password(password)
     )
+    async_client_closer = partial(run_sync, async_client.aclose())
+    ctx.call_on_close(async_client_closer)
     loop = get_async_loop()
     resource_injector = partial(inject_resource, resource=async_client)
 
