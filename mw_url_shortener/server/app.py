@@ -83,7 +83,7 @@ def make_fastapi_app(server_settings: "ServerSettings") -> "FastAPI":
     if not server_settings.show_docs:
         openapi_url: "Optional[str]" = None
     else:
-        openapi_url = "/v0/openapi.json"
+        openapi_url = "/openapi.json"
 
     app = FastAPI(
         title=server_settings.fast_api_title,
