@@ -100,15 +100,20 @@ def get_by_id(id: int = typer.Argument(...)) -> None:
     redirect = get_redirect_interface()
     resource = get_resource()
     with open_resource(resource) as opened_resource:
-        retrieved_redirect = run_sync(redirect.get_by_id(opened_resource, id=id))
+        retrieved_redirects = run_sync(redirect.search(opened_resource, id=id))
 
     settings = get_settings()
 
-    if retrieved_redirect is None and settings.output_style == OutputStyle.text:
+    if not retrieved_redirects and settings.output_style == OutputStyle.text:
         typer.echo(f"could not find redirect with id '{id}'")
 
-    if retrieved_redirect is None:
+    if not retrieved_redirects:
         raise typer.Exit(code=1)
+
+    assert (
+        len(retrieved_redirects) == 1
+    ), f"got more than one user with the same id: {retrieved_redirects}"
+    retrieved_redirect = retrieved_redirects[0]
 
     if settings.output_style == OutputStyle.json:
         typer.echo(retrieved_redirect.json())
@@ -218,14 +223,19 @@ def update_by_id(
     redirect = get_redirect_interface()
     resource = get_resource()
     with open_resource(resource) as opened_resource:
-        old_redirect = run_sync(redirect.get_by_id(opened_resource, id=id))
+        old_redirects = run_sync(redirect.search(opened_resource, id=id))
 
     settings = get_settings()
 
-    if old_redirect is None and settings.output_style == OutputStyle.text:
+    if not old_redirects and settings.output_style == OutputStyle.text:
         typer.echo(f"could not find redirect with id '{id}'")
-    if old_redirect is None:
+    if not old_redirects:
         raise typer.Exit(code=1)
+
+    assert (
+        len(old_redirects) == 1
+    ), f"got more than one redirect with the same id: {old_redirects}"
+    old_redirect = old_redirects[0]
 
     with open_resource(resource) as opened_resource:
         updated_redirect = run_sync(

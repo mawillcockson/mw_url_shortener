@@ -60,15 +60,19 @@ def get_by_id(id: int = typer.Argument(...)) -> None:
     user = get_user_interface()
     resource = get_resource()
     with open_resource(resource) as opened_resource:
-        retrieved_user = run_sync(user.get_by_id(opened_resource, id=id))
+        retrieved_users = run_sync(user.search(opened_resource, id=id))
 
     settings = get_settings()
 
-    if retrieved_user is None and settings.output_style == OutputStyle.text:
+    if not retrieved_users and settings.output_style == OutputStyle.text:
         typer.echo(f"could not find user with id '{id}'")
-    if retrieved_user is None:
+    if not retrieved_users:
         raise typer.Exit(code=1)
 
+    assert (
+        len(retrieved_users) == 1
+    ), f"got more than one user with the same id: {retrieved_users}"
+    retrieved_user = retrieved_users[0]
     if settings.output_style == OutputStyle.json:
         typer.echo(retrieved_user.json())
         return
@@ -183,14 +187,19 @@ def update_by_id(
     user = get_user_interface()
     resource = get_resource()
     with open_resource(resource) as opened_resource:
-        old_user = run_sync(user.get_by_id(opened_resource, id=id))
+        old_users = run_sync(user.search(opened_resource, id=id))
 
     settings = get_settings()
 
-    if old_user is None and settings.output_style == OutputStyle.text:
+    if not old_users and settings.output_style == OutputStyle.text:
         typer.echo(f"could not find user with id '{id}'")
-    if old_user is None:
+    if not old_users:
         raise typer.Exit(code=1)
+
+    assert (
+        len(old_users) == 1
+    ), f"got more than one user with the same id: {old_users}"
+    old_user = old_users[0]
 
     with open_resource(resource) as opened_resource:
         updated_user = run_sync(
