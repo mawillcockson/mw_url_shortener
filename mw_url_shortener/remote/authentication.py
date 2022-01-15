@@ -64,6 +64,12 @@ class OAuth2PasswordBearerHandler(Auth):
         ), f"expected header to be a str, not '{type(header)}': '{header}'"  # type: ignore
         return status_code == 401 and header == "Bearer"
 
+    # NOTE:TEST
+    # - no token, good username+password
+    # - no token, bad username+password
+    # - expired token, good username+password
+    # - expired token, bad username+password
+    # - valid token
     async def async_auth_flow(
         self, request: Request
     ) -> AsyncGenerator[Request, Response]:

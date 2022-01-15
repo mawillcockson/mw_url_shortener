@@ -40,6 +40,7 @@ class UserRemoteInterface(RemoteInterfaceBase[User, UserCreate, UserUpdate]):
 
         return user_schemas
 
+    # NOTE:TEST
     async def authenticate(
         self, opened_resource: "AsyncClient", /, *, username: str, password: str
     ) -> "Optional[User]":
