@@ -27,10 +27,7 @@ if TYPE_CHECKING:
 
 def get_resource(resource_type: "Optional[Type[ResourceT]]" = None) -> "ResourceT":
     if resource_type is None:
-        settings = get_settings()
-        if settings.cli_mode == CliMode.local_database:
-            return cast("ResourceT", inject.instance("sessionmaker[AsyncSession]"))
-        return cast("ResourceT", inject.instance("AsyncClient"))
+        return cast("ResourceT", inject.instance(Resource))
 
     return inject.instance(resource_type)
 
