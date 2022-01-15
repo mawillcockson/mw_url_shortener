@@ -1,4 +1,3 @@
-# mypy: allow_any_expr
 import asyncio
 from asyncio import BaseEventLoop as AsyncLoopType
 from functools import partial
@@ -8,25 +7,15 @@ import inject
 
 from mw_url_shortener.settings import Settings
 
-__all__ = [
-    "inject_settings",
-    "inject_loop",
-    "initialize_dependency_injection",
-    "reconfigure_dependency_injection",
-    "AsyncLoopType",
-]
-
-
-def inject_settings(binder: inject.Binder, *, settings: Settings) -> None:
-    binder.bind(Settings, settings)
-
-
-def get_settings() -> Settings:
-    return inject.instance(Settings)
+from .settings import get_settings, inject_settings
 
 
 def inject_loop(binder: inject.Binder, *, loop: AsyncLoopType) -> None:
     binder.bind(AsyncLoopType, loop)
+
+
+def get_async_loop() -> AsyncLoopType:
+    return inject.instance(AsyncLoopType)
 
 
 def install_configurators(
@@ -43,10 +32,12 @@ def initialize_dependency_injection(
         configurators = []
 
     settings = Settings()
-    configurators.append(partial(inject_settings, settings=settings))
+    settings_injector = partial(inject_settings, settings=settings)
+    configurators.append(settings_injector)
 
     loop = asyncio.get_running_loop()
-    configurators.append(partial(inject_loop, loop=loop))
+    loop_injector = partial(inject_loop, loop=loop)
+    configurators.append(loop_injector)
 
     inject.configure(partial(install_configurators, configurators=configurators))
 
@@ -61,7 +52,7 @@ def reconfigure_dependency_injection(
         configurators = []
 
     if settings is None:
-        settings = inject.instance(Settings)
+        settings = get_settings()
     configurators.append(partial(inject_settings, settings=settings))
 
     if loop is None:
