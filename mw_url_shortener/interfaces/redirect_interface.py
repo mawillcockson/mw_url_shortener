@@ -32,16 +32,6 @@ class RedirectInterface(
         raise NotImplementedError
 
     @abstractmethod
-    async def get_by_short_link(
-        self,
-        opened_resource: ContravariantOpenedResourceT,
-        /,
-        *,
-        short_link: str,
-    ) -> Optional[Redirect]:
-        raise NotImplementedError
-
-    @abstractmethod
     async def unique_short_link(
         self,
         opened_resource: ContravariantOpenedResourceT,
