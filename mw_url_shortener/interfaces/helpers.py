@@ -1,4 +1,3 @@
-# mypy: allow_any_expr
 import asyncio
 from contextlib import AsyncExitStack, contextmanager
 from typing import (
@@ -18,7 +17,7 @@ import inject
 from httpx import AsyncClient
 
 from mw_url_shortener.database.start import AsyncSession, sessionmaker
-from mw_url_shortener.dependency_injection import AsyncLoopType
+from mw_url_shortener.dependency_injection import get_async_loop, get_settings
 from mw_url_shortener.settings import CliMode, Settings
 
 from .base import (
@@ -38,7 +37,7 @@ T = TypeVar("T")
 
 
 def run_sync(coroutine: Awaitable[T]) -> T:
-    loop = inject.instance(AsyncLoopType)
+    loop = get_async_loop()
     return asyncio.run_coroutine_threadsafe(coroutine, loop=loop).result()
 
 
@@ -53,7 +52,7 @@ def resource_opener(resource: "AsyncClient") -> "Iterator[AsyncClient]":
 
 
 def resource_opener(resource: Resource) -> Iterator[OpenedResource]:
-    if isinstance(resource, AsyncClient):
+    if isinstance(resource, AsyncClient):  # type: ignore
         yield resource
 
     else:
@@ -66,7 +65,7 @@ def resource_opener(resource: Resource) -> Iterator[OpenedResource]:
                 async_session = await stack.enter_async_context(async_sessionmaker())
                 return (stack.pop_all(), async_session)
 
-        loop = inject.instance(AsyncLoopType)
+        loop = get_async_loop()
         future = asyncio.run_coroutine_threadsafe(
             get_async_session(async_sessionmaker), loop=loop
         )
@@ -83,7 +82,7 @@ open_resource = contextmanager(resource_opener)
 
 def get_resource(resource_type: Optional[Type[ResourceT]] = None) -> ResourceT:
     if resource_type is None:
-        settings = inject.instance(Settings)
+        settings = get_settings()
         if settings.cli_mode == CliMode.local_database:
             return cast("ResourceT", inject.instance("sessionmaker[AsyncSession]"))
         return cast("ResourceT", inject.instance("AsyncClient"))
