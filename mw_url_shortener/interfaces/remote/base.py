@@ -41,7 +41,9 @@ class RemoteInterfaceBase(
         schema_type = self.schema
         object_schemas = parse_raw_as(List[schema_type], response.text)  # type: ignore
 
-        assert len(object_schemas) == 1, f"got more than one {self.endpoint} with the same id: {object_schemas}"
+        assert (
+            len(object_schemas) == 1
+        ), f"got more than one {self.endpoint} with the same id: {object_schemas}"
 
         object_schema = object_schemas[0]
 

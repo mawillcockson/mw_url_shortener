@@ -165,9 +165,7 @@ def update_by_id(
     if not old_users:
         raise typer.Exit(code=1)
 
-    assert (
-        len(old_users) == 1
-    ), f"got more than one user with the same id: {old_users}"
+    assert len(old_users) == 1, f"got more than one user with the same id: {old_users}"
     old_user = old_users[0]
 
     with open_resource(resource) as opened_resource:

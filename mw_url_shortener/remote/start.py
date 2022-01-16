@@ -130,6 +130,7 @@ def make_async_client(
         headers=headers,
     )
 
+
 def make_async_client_closer(async_client: "AsyncClient") -> "Callable[[], None]":
     """
     if AsyncClient is opened and used outside a `with` block, then it's
@@ -140,9 +141,11 @@ def make_async_client_closer(async_client: "AsyncClient") -> "Callable[[], None]
 
     it's meant to be used by click.Context.call_on_close()
     """
+
     def closer() -> None:
         "closes the wrapped httpx.AsyncClient"
         run_sync(async_client.aclose())
+
     return closer
 
 
