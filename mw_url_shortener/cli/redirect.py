@@ -97,6 +97,7 @@ def search(
     limit: int = typer.Option(
         100, help="how many results to show at once (default 100)"
     ),
+    id: Optional[int] = typer.Option(None),
     url: Optional[str] = typer.Option(None),
     short_link: Optional[str] = typer.Option(None),
     response_status: Optional[int] = typer.Option(None, help=RESPONSE_STATUS_HELP),
@@ -110,6 +111,7 @@ def search(
                 opened_resource,
                 skip=skip,
                 limit=limit,
+                id=id,
                 url=url,
                 short_link=short_link,
                 response_status=response_status,
