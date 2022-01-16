@@ -135,7 +135,9 @@ async def test_search_non_existent_user(
         ],
     )
 
-    assert result.exit_code == 1, f"search result: {result}"
+    assert result.exit_code == 0, f"search result: {result}"
+    users_schema = parse_raw_as(List[User], result.stdout)
+    assert not users_schema
 
 
 async def test_search_by_username(

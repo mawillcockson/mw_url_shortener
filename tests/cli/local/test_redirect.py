@@ -180,7 +180,11 @@ async def test_search_non_existent_redirect(
         ],
     )
 
-    assert result.exit_code == 1, f"search result: {result}"
+    assert result.exit_code == 0, f"search result: {result}"
+    redirects_json = result.stdout
+    assert redirects_json
+    redirects_schema = parse_raw_as(List[Redirect], redirects_json)
+    assert not redirects_schema
 
 
 async def test_search_by_body(
