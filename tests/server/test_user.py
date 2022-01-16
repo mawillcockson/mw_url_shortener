@@ -206,11 +206,9 @@ def test_user_update_non_existent(
     assert username != test_user.username
 
     password = random_password()
-    new_password = random_password()
-    assert new_password != password
 
-    user_schema = User(id=100_000, username=username, password=password)
-    user_update_schema = UserUpdate(password=new_password)
+    user_schema = User(id=100_000, username=username)
+    user_update_schema = UserUpdate(password=password)
     user_update_schema_data = user_update_schema.dict()
     original_user_data = user_schema.dict()
     update_body = {
