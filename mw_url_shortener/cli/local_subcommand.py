@@ -40,6 +40,7 @@ def callback(
         return
 
     settings = get_settings()
+    # important, but mainly used in the test suite
     settings.cli_mode = CliMode.local_database
     settings.database_path = database_path
     settings.log_db_access = log_db_access

@@ -46,6 +46,7 @@ def callback(
     ), "username and password must be valid"
 
     settings = get_settings()
+    # important, but mainly used in the test suite
     settings.cli_mode = CliMode.remote_api
     settings.base_url = base_url
 
