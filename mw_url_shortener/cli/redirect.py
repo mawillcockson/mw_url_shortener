@@ -128,6 +128,10 @@ def search(
         typer.echo(json.dumps(retrieved_redirects, default=pydantic_encoder))  # type: ignore
         return
 
+    if not retrieved_redirects:
+        typer.echo("no redirects match search parameters")
+        return
+
     for retrieved_redirect in retrieved_redirects:
         typer.echo(
             f"""id: {retrieved_redirect.id}

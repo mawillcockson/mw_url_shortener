@@ -76,6 +76,10 @@ def search(
         typer.echo(json.dumps(retrieved_users, default=pydantic_encoder))  # type: ignore
         return
 
+    if not retrieved_users:
+        typer.echo("no users match search parameters")
+        return
+
     for retrieved_user in retrieved_users:
         typer.echo(
             f"""id: {retrieved_user.id}
