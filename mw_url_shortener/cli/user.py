@@ -55,13 +55,16 @@ username: {created_user.username}"""
 def search(
     skip: int = typer.Option(0, help="how many results to skip over"),
     limit: int = typer.Option(100, help="how many results to show at once"),
+    id: Optional[int] = typer.Option(None),
     username: Optional[str] = typer.Option(None),
 ) -> None:
     user = get_user_interface()
     resource = get_resource()
     with open_resource(resource) as opened_resource:
         retrieved_users = run_sync(
-            user.search(opened_resource, skip=skip, limit=limit, username=username)
+            user.search(
+                opened_resource, skip=skip, limit=limit, id=id, username=username
+            )
         )
 
     settings = get_settings()
