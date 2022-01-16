@@ -64,6 +64,7 @@ addopts = "--cov=mw_url_shortener --strict-markers"
 empty_parameter_set_mark = "fail_at_collect"
 log_cli = true
 timeout = 120
+markers = ["local", "remote"]
 
 [tool.isort]
 profile = "black"

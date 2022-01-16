@@ -15,6 +15,8 @@ from mw_url_shortener.interfaces import database as database_interface
 from mw_url_shortener.schemas.user import User
 from mw_url_shortener.settings import OutputStyle, Settings
 from tests.utils import random_password, random_username
+from mw_url_shortener.server.settings import ServerSettings
+from mw_url_shortener.settings import CliMode
 
 from .conftest import CommandRunner
 
@@ -30,11 +32,6 @@ async def test_create_user(
     result = await run_test_command(
         app,
         [
-            "--output-style",
-            OutputStyle.json.value,
-            "local",
-            "--database-path",
-            str(on_disk_database),
             "user",
             "create",
             "--username",
@@ -54,8 +51,19 @@ async def test_create_user(
     # being used
     settings = inject.instance(Settings)
     database_url_end = settings.database_url_joiner + str(on_disk_database)
-    assert settings.database_url.endswith(database_url_end)
-    async_sessionmaker = await make_sessionmaker(settings.database_url)
+
+    if settings.cli_mode == CliMode.local_database:
+        assert settings.database_url.endswith(database_url_end) or server_settings
+        async_sessionmaker = await make_sessionmaker(settings.database_url)
+
+    elif settings.cli_mode == CliMode.remote_api:
+        server_settings = inject.instance(ServerSettings)
+        assert server_settings.database_url.endswith(database_url_end)
+        async_sessionmaker = await make_sessionmaker(server_settings.database_url)
+
+    else:
+        assert not f"unknown cli mode: {settings.cli_mode}"
+
     async with async_sessionmaker() as async_session:
         retrieved_users = await database_interface.user.search(
             async_session, id=created_user.id
