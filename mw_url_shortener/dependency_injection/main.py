@@ -5,12 +5,17 @@ from typing import TYPE_CHECKING
 
 import inject
 
+from mw_url_shortener.interfaces.redirect_interface import RedirectInterface
+from mw_url_shortener.interfaces.user_interface import UserInterface
 from mw_url_shortener.settings import Settings
 
+from .interfaces import inject_interface, inject_resource
 from .settings import get_settings, inject_settings
 
 if TYPE_CHECKING:
     from typing import List, Optional, Sequence
+
+    from mw_url_shortener.interfaces.base import OpenedResourceT, ResourceT
 
 
 def inject_loop(binder: inject.Binder, *, loop: AsyncLoopType) -> None:
@@ -46,34 +51,50 @@ def initialize_dependency_injection(
 
 
 def reconfigure_dependency_injection(
-    configurators: "Optional[List[inject.BinderCallable]]" = None,
-    *,
+    resource: "ResourceT",
+    user_interface: "UserInterface[OpenedResourceT]",
+    redirect_interface: "RedirectInterface[OpenedResourceT]",
     settings: "Optional[Settings]" = None,
     loop: "Optional[AsyncLoopType]" = None,
+    configurators: "Optional[List[inject.BinderCallable]]" = None,
 ) -> None:
-    if configurators is None:
-        configurators = []
-
     if settings is None:
         settings = get_settings()
-    configurators.append(partial(inject_settings, settings=settings))
+    settings_injector = partial(inject_settings, settings=settings)
 
     if loop is None:
         loop = inject.instance(AsyncLoopType)
-    configurators.append(partial(inject_loop, loop=loop))
+    loop_injector = partial(inject_loop, loop=loop)
 
-    inject.clear_and_configure(
-        partial(install_configurators, configurators=configurators)
+    resource_injector = partial(inject_resource, resource=resource)
+
+    user_interface_injector = partial(
+        inject_interface,
+        interface_type=UserInterface,
+        interface=user_interface,
     )
 
+    redirect_interface_injector = partial(
+        inject_interface,
+        interface_type=RedirectInterface,
+        interface=redirect_interface,
+    )
 
-def install_binder_callables(
-    binder: "inject.Binder",
-    *,
-    configurators: "Optional[Sequence[inject.BinderCallable]]" = None,
-) -> None:
-    if not configurators:
-        return
+    if configurators is None:
+        configurators = []
 
-    for configurator in configurators:
-        binder.install(configurator)
+    configurators.extend(
+        [
+            loop_injector,
+            settings_injector,
+            resource_injector,
+            user_interface_injector,
+            redirect_interface_injector,
+        ]
+    )
+    inject.clear_and_configure(
+        partial(
+            install_configurators,
+            configurators=configurators,
+        )
+    )

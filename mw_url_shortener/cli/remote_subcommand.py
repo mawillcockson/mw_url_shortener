@@ -2,23 +2,17 @@
 the common options and initialization for actions with a remote api
 """
 import sys
-from functools import partial
-from pathlib import Path
 
 import typer
 
 from mw_url_shortener.dependency_injection import (
-    get_async_loop,
     get_settings,
-    inject_interface,
-    inject_resource,
     reconfigure_dependency_injection,
 )
-from mw_url_shortener.interfaces import RedirectInterface, UserInterface
 from mw_url_shortener.interfaces import remote as remote_interface
 from mw_url_shortener.remote.start import make_async_client, make_async_client_closer
 from mw_url_shortener.schemas.user import Password, UserCreate, Username
-from mw_url_shortener.settings import CliMode, Settings, defaults
+from mw_url_shortener.settings import CliMode
 
 from .common_subcommands import SHOW_CONFIGURATION_COMMAND_NAME, show_configuration
 from .redirect import app as redirect_app
@@ -61,25 +55,14 @@ def callback(
     async_client = make_async_client(
         settings, username=Username(username), password=Password(password)
     )
+
     async_client_closer = make_async_client_closer(async_client)
     ctx.call_on_close(async_client_closer)
-    loop = get_async_loop()
-    resource_injector = partial(inject_resource, resource=async_client)
-
-    user_interface_injector = partial(
-        inject_interface,
-        interface_type=UserInterface,
-        interface=remote_interface.user,
-    )
-
-    redirect_interface_injector = partial(
-        inject_interface,
-        interface_type=RedirectInterface,
-        interface=remote_interface.redirect,
-    )
 
     reconfigure_dependency_injection(
-        [resource_injector, user_interface_injector, redirect_interface_injector]
+        resource=async_client,
+        user_interface=remote_interface.user,
+        redirect_interface=remote_interface.redirect,
     )
 
 

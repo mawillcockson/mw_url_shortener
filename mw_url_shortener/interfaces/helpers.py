@@ -1,11 +1,12 @@
 import asyncio
+from asyncio import BaseEventLoop as AsyncLoopType
 from contextlib import AsyncExitStack, contextmanager
 from typing import Awaitable, Iterator, Tuple, TypeVar, overload
 
+import inject
 from httpx import AsyncClient
 
 from mw_url_shortener.database.start import AsyncSession, sessionmaker
-from mw_url_shortener.dependency_injection.main import get_async_loop
 
 from .base import (
     ContravariantCreateSchemaType,
@@ -22,7 +23,9 @@ T = TypeVar("T")
 
 
 def run_sync(coroutine: Awaitable[T]) -> T:
-    loop = get_async_loop()
+    # cannot mw_url_shortener.dependency_injection.main.get_async_loop because of a circular import
+    # loop = get_async_loop()
+    loop = inject.instance(AsyncLoopType)
     return asyncio.run_coroutine_threadsafe(coroutine, loop=loop).result()
 
 
@@ -50,7 +53,7 @@ def resource_opener(resource: Resource) -> Iterator[OpenedResource]:
                 async_session = await stack.enter_async_context(async_sessionmaker())
                 return (stack.pop_all(), async_session)
 
-        loop = get_async_loop()
+        loop = inject.instance(AsyncLoopType)
         future = asyncio.run_coroutine_threadsafe(
             get_async_session(async_sessionmaker), loop=loop
         )

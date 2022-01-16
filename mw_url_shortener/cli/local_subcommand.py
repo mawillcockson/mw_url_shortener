@@ -5,25 +5,19 @@ accessible through the filesystem
 the name for this file is intentionally not "local.py" because `local` is a
 keyword in Python, and importing it would be cumbersome
 """
-import asyncio
 import sys
-from functools import partial
 from pathlib import Path
 
-import inject
 import typer
 
 from mw_url_shortener.database.start import make_sessionmaker
 from mw_url_shortener.dependency_injection import (
-    get_async_loop,
     get_settings,
-    inject_interface,
-    inject_resource,
     reconfigure_dependency_injection,
 )
-from mw_url_shortener.interfaces import RedirectInterface, UserInterface
 from mw_url_shortener.interfaces import database as database_interface
-from mw_url_shortener.settings import CliMode, Settings, defaults
+from mw_url_shortener.interfaces import run_sync
+from mw_url_shortener.settings import CliMode, defaults
 
 from .common_subcommands import SHOW_CONFIGURATION_COMMAND_NAME, show_configuration
 from .redirect import app as redirect_app
@@ -53,26 +47,14 @@ def callback(
     if ctx.invoked_subcommand == SHOW_CONFIGURATION_COMMAND_NAME:
         return
 
-    loop = get_async_loop()
-    async_sessionmaker = asyncio.run_coroutine_threadsafe(
-        make_sessionmaker(settings.database_url, echo=log_db_access), loop=loop
-    ).result()
-    resource_injector = partial(inject_resource, resource=async_sessionmaker)
-
-    user_interface_injector = partial(
-        inject_interface,
-        interface_type=UserInterface,
-        interface=database_interface.user,
-    )
-
-    redirect_interface_injector = partial(
-        inject_interface,
-        interface_type=RedirectInterface,
-        interface=database_interface.redirect,
+    async_sessionmaker = run_sync(
+        make_sessionmaker(settings.database_url, echo=log_db_access)
     )
 
     reconfigure_dependency_injection(
-        [resource_injector, user_interface_injector, redirect_interface_injector]
+        resource=async_sessionmaker,
+        user_interface=database_interface.user,
+        redirect_interface=database_interface.redirect,
     )
 
 
