@@ -38,7 +38,7 @@ async def test_create_user(
             "--password",
             test_password,
         ],
-        False,
+        clear_injection=False,
     )
 
     assert result.exit_code == 0, f"result: {result}"

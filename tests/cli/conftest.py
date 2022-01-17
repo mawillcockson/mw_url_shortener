@@ -122,7 +122,6 @@ class CommandRunner(Protocol):
         arguments: List[str],
         clear_injection: bool = True,
         add_default_parameters: bool = True,
-        /,
     ) -> Awaitable[Result]:
         raise NotImplementedError
 
