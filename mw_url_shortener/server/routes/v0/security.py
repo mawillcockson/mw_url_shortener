@@ -3,11 +3,11 @@ from datetime import datetime
 
 from fastapi import APIRouter, Depends
 from fastapi.security import OAuth2PasswordRequestForm
-from jose import jwt
 
 from mw_url_shortener.database.start import AsyncSession
 from mw_url_shortener.interfaces.database import user as user_interface
 from mw_url_shortener.schemas.security import AccessToken
+from mw_url_shortener.security import make_jwt_token
 from mw_url_shortener.server.settings import ServerSettings
 
 from ..dependencies import credentials_exception, get_async_session, get_server_settings
@@ -25,16 +25,13 @@ async def login_for_access_token(
     )
     if authenticated_user is None:
         raise credentials_exception
-    expiration_date = (
-        datetime.utcnow() + server_settings.jwt_access_token_valid_duration
-    )
-    token_data = {"sub": authenticated_user.username, "exp": expiration_date}
-    encoded_token: str = jwt.encode(
-        token_data,
-        server_settings.jwt_secret_key,
+    access_token = make_jwt_token(
+        username=authenticated_user.username,
+        token_valid_duration=server_settings.jwt_access_token_valid_duration,
+        jwt_secret_key=server_settings.jwt_secret_key,
         algorithm=server_settings.jwt_hash_algorithm,
     )
-    return AccessToken(access_token=encoded_token)
+    return access_token
 
 
 router = APIRouter()
