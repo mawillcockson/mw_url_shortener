@@ -13,10 +13,9 @@ from mw_url_shortener.cli.entry_point import app
 from mw_url_shortener.database.start import AsyncSession, make_sessionmaker
 from mw_url_shortener.interfaces import database as database_interface
 from mw_url_shortener.schemas.user import User
-from mw_url_shortener.settings import OutputStyle, Settings
-from tests.utils import random_password, random_username
 from mw_url_shortener.server.settings import ServerSettings
-from mw_url_shortener.settings import CliMode
+from mw_url_shortener.settings import CliMode, OutputStyle, Settings
+from tests.utils import random_password, random_username
 
 from .conftest import CommandRunner
 

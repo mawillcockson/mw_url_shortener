@@ -11,7 +11,10 @@ from pytest import CaptureFixture
 from typer import Typer
 from typer.testing import CliRunner
 
-from mw_url_shortener.dependency_injection import initialize_dependency_injection, reconfigure_dependency_injection
+from mw_url_shortener.dependency_injection import (
+    initialize_dependency_injection,
+    reconfigure_dependency_injection,
+)
 from mw_url_shortener.remote.start import make_async_client
 from mw_url_shortener.server.settings import ServerSettings, inject_server_settings
 from mw_url_shortener.settings import OutputStyle
