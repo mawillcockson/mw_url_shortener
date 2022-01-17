@@ -3,23 +3,25 @@ import pydantic
 import pytest
 from fastapi.testclient import TestClient
 
+from mw_url_shortener.schemas.security import AccessToken, make_authorization_headers
 from mw_url_shortener.schemas.user import User, UserCreate, UserUpdate
 from mw_url_shortener.server.settings import server_defaults
 from tests.utils import random_password, random_username
 
 
-def test_token(test_client: TestClient, test_user: User, test_password: str) -> None:
+def test_retrieve_token(
+    test_client: TestClient, test_user: User, test_password: str
+) -> None:
     form_data = {
         "username": test_user.username,
         "password": test_password,
     }
-    token_response = test_client.post(
-        "/" + server_defaults.oauth2_endpoint, data=form_data
-    )
+    token_response = test_client.post("/v0/security/token", data=form_data)
     assert token_response.status_code == 200
-    token_response_data = token_response.json()
+    token_response_data = token_response.text
     assert token_response_data
-    assert "access_token" in token_response_data
+    access_token = AccessToken.parse_raw(token_response_data)
+    assert access_token.access_token
 
 
 def test_authenticate(
@@ -29,19 +31,18 @@ def test_authenticate(
         "username": test_user.username,
         "password": test_password,
     }
-    token_response = test_client.post(
-        "/" + server_defaults.oauth2_endpoint, data=form_data
-    )
+    token_response = test_client.post("/v0/security/token", data=form_data)
     assert token_response.status_code == 200
-    token_response_data = token_response.json()
+    token_response_data = token_response.text
     assert token_response_data
 
-    access_token = token_response_data["access_token"]
-    headers = {"Authorization": "Bearer" + " " + access_token}
+    access_token = AccessToken.parse_raw(token_response_data)
+    headers = make_authorization_headers(token=access_token.access_token)
     me_response = test_client.get("/v0/user/me", headers=headers)
     assert me_response.status_code == 200
-    me_data = me_response.json()
-    me = User.parse_obj(me_data)
+    me_data = me_response.text
+    assert me_data
+    me = User.parse_raw(me_data)
     assert me
     assert me == test_user
 
@@ -59,7 +60,7 @@ def test_token_invalid_user(
         "username": invalid_username,
         "password": invalid_password,
     }
-    response = test_client.post("/" + server_defaults.oauth2_endpoint, data=form_data)
+    response = test_client.post("/v0/security/token", data=form_data)
     assert response.status_code == 401
 
 
@@ -73,7 +74,7 @@ def test_token_invalid_password(
         "username": test_user.username,
         "password": invalid_password,
     }
-    response = test_client.post("/" + server_defaults.oauth2_endpoint, data=form_data)
+    response = test_client.post("/v0/security/token", data=form_data)
     assert response.status_code == 401
 
 
