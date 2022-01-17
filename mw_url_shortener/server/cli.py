@@ -61,6 +61,8 @@ cannot import hypercorn: {err}"""
 
     from functools import partial
 
+    from .settings import ServerSettings
+
     server_settings = ServerSettings(
         jwt_secret_key=jwt_secret_key, database_path=database_path, show_docs=show_docs
     )
