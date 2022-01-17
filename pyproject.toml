@@ -58,6 +58,7 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.pytest.ini_options]
 minversion = "6.2.0" # First version to have easily accessible types
+# --strict-markers catches things like @pytest.mark.parameterize (should be "parametrize")
 addopts = "--cov=mw_url_shortener --strict-markers"
 # I don't plan on leaving parametersets empty
 # https://docs.pytest.org/en/stable/reference.html#confval-empty_parameter_set_mark
