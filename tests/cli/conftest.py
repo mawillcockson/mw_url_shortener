@@ -121,6 +121,7 @@ class CommandRunner(Protocol):
         raise NotImplementedError
 
 
+# explained in docs/async_architecture.md
 @pytest.fixture(
     params=[
         pytest.param("local", marks=pytest.mark.local),

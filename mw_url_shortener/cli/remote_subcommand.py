@@ -6,11 +6,14 @@ import sys
 import typer
 
 from mw_url_shortener.dependency_injection import (
-    get_settings,
-    reconfigure_dependency_injection,
+    reconfigure_dependency_injection,  # this must be imported at the top-level for the run_test_command test fixture
 )
+from mw_url_shortener.dependency_injection import get_settings
 from mw_url_shortener.interfaces import remote as remote_interface
-from mw_url_shortener.remote.start import make_async_client, make_async_client_closer
+from mw_url_shortener.remote.start import (
+    make_async_client,  # this must be imported at the top-level for the run_test_command test fixture
+)
+from mw_url_shortener.remote.start import make_async_client_closer
 from mw_url_shortener.schemas.user import Password, UserCreate, Username
 from mw_url_shortener.settings import CliMode
 
