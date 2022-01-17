@@ -64,3 +64,7 @@
     - the interface would have to raise custom errors, and an interface handler
       would have to be added to convert them, but it would be worth it,
       probably
+- improve error handling and messages of cli in both `json` and `text` output
+  styles (`json` currently outputs not messages, in the hopes that any tools
+  that use it will fail, even if they're not watching for the exit code, making
+  debugging harder)
