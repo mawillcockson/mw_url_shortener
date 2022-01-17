@@ -52,7 +52,7 @@ async def test_create_user(
     database_url_end = settings.database_url_joiner + str(on_disk_database)
 
     if settings.cli_mode == CliMode.local_database:
-        assert settings.database_url.endswith(database_url_end) or server_settings
+        assert settings.database_url.endswith(database_url_end)
         async_sessionmaker = await make_sessionmaker(settings.database_url)
 
     elif settings.cli_mode == CliMode.remote_api:
