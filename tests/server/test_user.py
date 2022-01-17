@@ -3,7 +3,10 @@ from typing import List
 from fastapi.testclient import TestClient
 from pydantic import parse_raw_as
 
-from mw_url_shortener.schemas.security import AuthorizationHeaders
+from mw_url_shortener.schemas.security import (
+    AuthorizationHeaders,
+    make_authorization_headers,
+)
 from mw_url_shortener.schemas.user import User, UserCreate, UserUpdate
 from mw_url_shortener.server.settings import server_defaults
 from tests.utils import random_password, random_username
@@ -265,9 +268,7 @@ def test_user_update_authorized_username(
     assert token_response_data
 
     access_token = token_response_data["access_token"]
-    new_authorization_headers = AuthorizationHeaders(
-        Authorization="Bearer" + " " + access_token
-    )
+    new_authorization_headers = make_authorization_headers(token=access_token)
 
     me_response = test_client.get("/v0/user/me", headers=new_authorization_headers)
     assert me_response.status_code == 200

@@ -11,6 +11,7 @@ from mw_url_shortener.schemas.security import (
     AccessToken,
     AuthorizationHeaders,
     OAuth2PasswordRequestFormData,
+    make_authorization_headers,
 )
 from mw_url_shortener.schemas.user import User, UserCreate
 from mw_url_shortener.server.app import make_fastapi_app
@@ -82,6 +83,4 @@ def authorization_headers(
     assert token_response_data
 
     access_token = AccessToken.parse_raw(token_response_data)
-    return AuthorizationHeaders(
-        Authorization="Bearer" + " " + access_token.access_token
-    )
+    return make_authorization_headers(token=access_token.access_token)

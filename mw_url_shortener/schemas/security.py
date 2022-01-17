@@ -21,3 +21,7 @@ class AuthorizationHeaders(TypedDict):
 class OAuth2PasswordRequestFormData(TypedDict):
     username: str
     password: str
+
+
+def make_authorization_headers(token: str) -> AuthorizationHeaders:
+    return AuthorizationHeaders(Authorization="Bearer" + " " + token)

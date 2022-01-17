@@ -18,6 +18,7 @@ from mw_url_shortener.schemas.security import (
     AccessToken,
     AuthorizationHeaders,
     OAuth2PasswordRequestFormData,
+    make_authorization_headers,
 )
 from mw_url_shortener.schemas.user import Password, Username
 
@@ -51,7 +52,7 @@ class OAuth2PasswordBearerHandler(Auth):
     @property
     def authorization_headers(self) -> AuthorizationHeaders:
         assert self.token is not None, "missing authentication token"
-        return AuthorizationHeaders(Authorization="Bearer" + " " + self.token)
+        return make_authorization_headers(token=self.token)
 
     def need_authentication(self, response: Response) -> bool:
         status_code = response.status_code
