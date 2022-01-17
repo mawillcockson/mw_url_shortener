@@ -2,7 +2,7 @@
 """
 all of the authentication and authorization helper functions
 """
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import cast
 
 from jose import jwt
@@ -28,10 +28,9 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 
 
 def make_jwt_token(
-    username: str, token_valid_duration: timedelta, jwt_secret_key: str, algorithm: str
+    username: str, token_expiration: datetime, jwt_secret_key: str, algorithm: str
 ) -> AccessToken:
-    expiration_date = datetime.utcnow() + token_valid_duration
-    token_data = {"sub": username, "exp": expiration_date}
+    token_data = {"sub": username, "exp": token_expiration}
     encoded_token: str = jwt.encode(
         token_data,
         jwt_secret_key,

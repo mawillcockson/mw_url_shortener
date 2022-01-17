@@ -1,4 +1,3 @@
-# mypy: allow_any_expr
 from datetime import datetime
 
 from fastapi import APIRouter, Depends
@@ -25,9 +24,12 @@ async def login_for_access_token(
     )
     if authenticated_user is None:
         raise credentials_exception
+    expiration_date = (
+        datetime.utcnow() + server_settings.jwt_access_token_valid_duration
+    )
     access_token = make_jwt_token(
         username=authenticated_user.username,
-        token_valid_duration=server_settings.jwt_access_token_valid_duration,
+        token_expiration=expiration_date,
         jwt_secret_key=server_settings.jwt_secret_key,
         algorithm=server_settings.jwt_hash_algorithm,
     )
