@@ -21,6 +21,9 @@ from mw_url_shortener.settings import OutputStyle
 from tests.server.conftest import *  # need these fixtures
 
 if TYPE_CHECKING:
+    from asyncio import BaseEventLoop as AsyncLoopType
+    from typing import Optional
+
     from _pytest.fixtures import SubRequest
     from fastapi.testclient import TestClient
     from httpx import AsyncClient
