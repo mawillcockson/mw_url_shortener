@@ -7,7 +7,7 @@ import typer
 
 from mw_url_shortener import APP_NAME
 
-from .settings import ServerSettings, inject_server_settings, server_defaults
+from .settings import server_defaults, server_settings_attribute_env_names
 
 if TYPE_CHECKING:
     from typing import Dict, Iterable, List
@@ -15,25 +15,13 @@ if TYPE_CHECKING:
     EnvPatch = Dict[str, str]
 
 
-def uppercase_all(names: "Iterable[str]") -> "List[str]":
-    return list(map(str.upper, names))
-
-
 def make_env_patch(names: "Iterable[str]", value: str) -> "EnvPatch":
     return {name: value for name in names}
 
 
-server_settings_schema = ServerSettings.schema()
-server_settings_schema_properties = server_settings_schema["properties"]
-database_path_env_names = uppercase_all(
-    server_settings_schema_properties["database_path"]["env_names"]
-)
-jwt_secret_key_env_names = uppercase_all(
-    server_settings_schema_properties["jwt_secret_key"]["env_names"]
-)
-show_docs_env_names = uppercase_all(
-    server_settings_schema_properties["show_docs"]["env_names"]
-)
+database_path_env_names = server_settings_attribute_env_names("database_path")
+jwt_secret_key_env_names = server_settings_attribute_env_names("jwt_secret_key")
+show_docs_env_names = server_settings_attribute_env_names("show_docs")
 
 
 def callback(

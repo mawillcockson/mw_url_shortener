@@ -4,6 +4,7 @@ server settings
 """
 from datetime import timedelta
 from pathlib import Path
+from pprint import pformat
 from typing import TYPE_CHECKING, List, Optional
 
 from pydantic import AnyUrl, ConstrainedStr, Extra, NonNegativeInt, PositiveInt
@@ -11,6 +12,7 @@ from pydantic import AnyUrl, ConstrainedStr, Extra, NonNegativeInt, PositiveInt
 from mw_url_shortener import APP_NAME, __version__, metadata
 from mw_url_shortener.schemas.base import BaseSchema
 from mw_url_shortener.settings import Defaults, Settings
+from mw_url_shortener.utils import uppercase_all
 
 if TYPE_CHECKING:
     import inject
@@ -88,3 +90,20 @@ def inject_server_settings(
     if not server_settings:
         server_settings = ServerSettings()
     binder.bind(ServerSettings, server_settings)
+
+
+def server_settings_attribute_env_names(attribute_name: str) -> "List[str]":
+    server_settings_schema = ServerSettings.schema()
+    server_settings_schema_properties = server_settings_schema["properties"]
+    if attribute_name not in server_settings_schema_properties:
+        raise AttributeError(
+            f"cannot find '{attribute_name}' in ServerSettings:\n"
+            + pformat(server_settings_schema)
+        )
+    attribute_schema = server_settings_schema_properties[attribute_name]
+    if "env_names" not in attribute_schema or not attribute_schema["env_names"]:
+        raise ValueError(
+            f"no environment variable names configured for 'ServerSettings.{attribute_name}':\n"
+            + pformat(attribute_schema)
+        )
+    return uppercase_all(attribute_schema["env_names"])

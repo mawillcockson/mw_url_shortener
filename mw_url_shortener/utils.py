@@ -9,13 +9,20 @@ import string
 from math import factorial, floor
 from random import choices, random
 from sys import maxunicode as LARGEST_UNICODE_CODEPOINT
-from typing import List, Set, Union
+from typing import TYPE_CHECKING
 from unicodedata import category as unicode_category
+
+if TYPE_CHECKING:
+    from typing import Iterable, List, Set, Union
 
 LARGEST_UNICODE_CODEPOINT_PLUS_ONE = LARGEST_UNICODE_CODEPOINT + 1
 
 
-def unsafe_random_unicode_codepoints(length: int) -> List[int]:
+def uppercase_all(names: "Iterable[str]") -> "List[str]":
+    return list(map(str.upper, names))
+
+
+def unsafe_random_unicode_codepoints(length: int) -> "List[int]":
     """
     returns `length` random integers in the range [0, maxunicode]
 
@@ -113,7 +120,7 @@ def birthday_attack(birthdays: int, people: int) -> float:
 
 
 def collision_probability(
-    unique_characters: Union[int, Set[str]], string_length: int, choices: int
+    unique_characters: "Union[int, Set[str]]", string_length: int, choices: int
 ) -> float:
     """
     what's the chance two choices are the same if each choice is a permutation
