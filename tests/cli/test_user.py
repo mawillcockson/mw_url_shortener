@@ -74,7 +74,6 @@ async def test_create_user(
 
 
 async def test_search_by_id(
-    on_disk_database: Path,
     run_test_command: CommandRunner,
 ) -> None:
     "can a user be retrieved by id?"
@@ -84,11 +83,6 @@ async def test_search_by_id(
     create_result = await run_test_command(
         app,
         [
-            "--output-style",
-            OutputStyle.json.value,
-            "local",
-            "--database-path",
-            str(on_disk_database),
             "user",
             "create",
             "--username",
@@ -105,11 +99,6 @@ async def test_search_by_id(
     result = await run_test_command(
         app,
         [
-            "--output-style",
-            OutputStyle.json.value,
-            "local",
-            "--database-path",
-            str(on_disk_database),
             "user",
             "search",
             "--id",
@@ -124,21 +113,16 @@ async def test_search_by_id(
 
 
 async def test_search_non_existent_user(
-    on_disk_database: Path,
     run_test_command: CommandRunner,
 ) -> None:
+    "will a search for a non-existent user result in an error?"
     result = await run_test_command(
         app,
         [
-            "--output-style",
-            OutputStyle.json.value,
-            "local",
-            "--database-path",
-            str(on_disk_database),
             "user",
             "search",
             "--id",
-            str(0),
+            str(100_000),
         ],
     )
 
@@ -148,10 +132,9 @@ async def test_search_non_existent_user(
 
 
 async def test_search_by_username(
-    on_disk_database: Path,
     run_test_command: CommandRunner,
 ) -> None:
-    "can a specific user be retrieved?"
+    "can a specific user be retrieved by username only?"
     username = random_username()
     other_username = random_username()
     assert username != other_username
@@ -161,11 +144,6 @@ async def test_search_by_username(
     first_create_result = await run_test_command(
         app,
         [
-            "--output-style",
-            OutputStyle.json.value,
-            "local",
-            "--database-path",
-            str(on_disk_database),
             "user",
             "create",
             "--username",
@@ -183,11 +161,6 @@ async def test_search_by_username(
     other_create_result = await run_test_command(
         app,
         [
-            "--output-style",
-            OutputStyle.json.value,
-            "local",
-            "--database-path",
-            str(on_disk_database),
             "user",
             "create",
             "--username",
@@ -205,11 +178,6 @@ async def test_search_by_username(
     search_result = await run_test_command(
         app,
         [
-            "--output-style",
-            OutputStyle.json.value,
-            "local",
-            "--database-path",
-            str(on_disk_database),
             "user",
             "search",
             "--username",
@@ -223,21 +191,15 @@ async def test_search_by_username(
 
 
 async def test_remove_by_id(
-    on_disk_database: Path,
     run_test_command: CommandRunner,
 ) -> None:
-    "can a user be retrieved by id?"
+    "can a user be removed by id?"
     test_username = random_username()
     test_password = random_password()
 
     create_result = await run_test_command(
         app,
         [
-            "--output-style",
-            OutputStyle.json.value,
-            "local",
-            "--database-path",
-            str(on_disk_database),
             "user",
             "create",
             "--username",
@@ -251,32 +213,55 @@ async def test_remove_by_id(
     created_user = User.parse_raw(create_result.stdout)
     assert created_user
 
-    result = await run_test_command(
+    remove_result = await run_test_command(
         app,
         [
-            "--output-style",
-            OutputStyle.json.value,
-            "local",
-            "--database-path",
-            str(on_disk_database),
             "user",
             "remove-by-id",
             str(created_user.id),
         ],
     )
 
-    assert result.exit_code == 0, f"search result: {result}"
-    removed_user = User.parse_raw(result.stdout)
+    assert remove_result.exit_code == 0, f"search remove_result: {remove_result}"
+    removed_user = User.parse_raw(remove_result.stdout)
     assert removed_user
     assert removed_user == created_user
 
+    # attempts to retrieve the user should return nothing
 
-async def test_authentication(
-    on_disk_database: Path, run_test_command: CommandRunner
-) -> None:
+    id_search_result = await run_test_command(
+        app,
+        [
+            "user",
+            "search",
+            "--id",
+            str(created_user.id),
+        ],
+    )
+    assert id_search_result.exit_code == 0, f"id search: {id_search_result}"
+    empty_list = parse_raw_as(List[User], id_search_result.stdout)
+    assert not empty_list
+
+    username_search_result = await run_test_command(
+        app,
+        [
+            "user",
+            "search",
+            "--username",
+            test_username,
+        ],
+    )
+    assert (
+        username_search_result.exit_code == 0
+    ), f"username search: {username_search_result}"
+    empty_list = parse_raw_as(List[User], username_search_result.stdout)
+    assert not empty_list
+
+
+async def test_check_authentication(run_test_command: CommandRunner) -> None:
     """
-    if a user is in the database, does the cli correctly identify if the info
-    matches?
+    if a user is in the database, does the cli confirm that the correct info
+    would result in successful authentication attempts with the api?
     """
     test_username = random_username()
     test_password = random_password()
@@ -284,11 +269,6 @@ async def test_authentication(
     create_result = await run_test_command(
         app,
         [
-            "--output-style",
-            OutputStyle.json.value,
-            "local",
-            "--database-path",
-            str(on_disk_database),
             "user",
             "create",
             "--username",
@@ -305,11 +285,6 @@ async def test_authentication(
     result = await run_test_command(
         app,
         [
-            "--output-style",
-            OutputStyle.json.value,
-            "local",
-            "--database-path",
-            str(on_disk_database),
             "user",
             "check-authentication",
             "--username",
@@ -325,12 +300,10 @@ async def test_authentication(
     assert valid_user == created_user
 
 
-async def test_authentication_invalid_info(
-    on_disk_database: Path, run_test_command: CommandRunner
-) -> None:
+async def test_authentication_invalid_info(run_test_command: CommandRunner) -> None:
     """
-    if a user is in the database, does the cli correctly identify if the info
-    matches?
+    if a user is in the database, does the cli confirm that the incorrect info
+    would be rejected in authentication attempts with the api?
     """
     test_username = random_username()
 
@@ -341,11 +314,6 @@ async def test_authentication_invalid_info(
     create_result = await run_test_command(
         app,
         [
-            "--output-style",
-            OutputStyle.json.value,
-            "local",
-            "--database-path",
-            str(on_disk_database),
             "user",
             "create",
             "--username",
@@ -362,11 +330,6 @@ async def test_authentication_invalid_info(
     result = await run_test_command(
         app,
         [
-            "--output-style",
-            OutputStyle.json.value,
-            "local",
-            "--database-path",
-            str(on_disk_database),
             "user",
             "check-authentication",
             "--username",
@@ -379,9 +342,7 @@ async def test_authentication_invalid_info(
     assert result.exit_code == 1, f"search result: {result}"
 
 
-async def test_update_all(
-    on_disk_database: Path, run_test_command: CommandRunner
-) -> None:
+async def test_update_all(run_test_command: CommandRunner) -> None:
     "can all user info be modified?"
     username = random_username()
     new_username = random_username()
@@ -394,11 +355,6 @@ async def test_update_all(
     create_result = await run_test_command(
         app,
         [
-            "--output-style",
-            OutputStyle.json.value,
-            "local",
-            "--database-path",
-            str(on_disk_database),
             "user",
             "create",
             "--username",
@@ -415,11 +371,6 @@ async def test_update_all(
     update_result = await run_test_command(
         app,
         [
-            "--output-style",
-            OutputStyle.json.value,
-            "local",
-            "--database-path",
-            str(on_disk_database),
             "user",
             "update-by-id",
             str(created_user.id),
@@ -435,14 +386,10 @@ async def test_update_all(
     assert updated_user
     assert updated_user.username == new_username
 
+    # ensure the old info would be rejected
     authentication_failure_result = await run_test_command(
         app,
         [
-            "--output-style",
-            OutputStyle.json.value,
-            "local",
-            "--database-path",
-            str(on_disk_database),
             "user",
             "check-authentication",
             "--username",
@@ -454,16 +401,11 @@ async def test_update_all(
 
     assert (
         authentication_failure_result.exit_code == 1
-    ), f"bad authentication success: {authentication_failure_result}"
+    ), f"expected authentication to fail, not: {authentication_failure_result}"
 
     authentication_failure_result2 = await run_test_command(
         app,
         [
-            "--output-style",
-            OutputStyle.json.value,
-            "local",
-            "--database-path",
-            str(on_disk_database),
             "user",
             "check-authentication",
             "--username",
@@ -477,14 +419,11 @@ async def test_update_all(
         authentication_failure_result2.exit_code == 1
     ), f"bad authentication success: {authentication_failure_result2}"
 
+    # will the correct info succeed?
+
     authentication_result = await run_test_command(
         app,
         [
-            "--output-style",
-            OutputStyle.json.value,
-            "local",
-            "--database-path",
-            str(on_disk_database),
             "user",
             "check-authentication",
             "--username",
@@ -496,15 +435,13 @@ async def test_update_all(
 
     assert (
         authentication_result.exit_code == 0
-    ), f"authentication failure: {authentication_result}"
+    ), f"expected authentication success: {authentication_result}"
     authenticated_user = User.parse_raw(authentication_result.stdout)
     assert authenticated_user
     assert authenticated_user == updated_user
 
 
-async def test_update_password(
-    on_disk_database: Path, run_test_command: CommandRunner
-) -> None:
+async def test_update_password(run_test_command: CommandRunner) -> None:
     "if only the password is updated, does all other info remain the same?"
     username = random_username()
 
@@ -515,11 +452,6 @@ async def test_update_password(
     create_result = await run_test_command(
         app,
         [
-            "--output-style",
-            OutputStyle.json.value,
-            "local",
-            "--database-path",
-            str(on_disk_database),
             "user",
             "create",
             "--username",
@@ -536,11 +468,6 @@ async def test_update_password(
     update_result = await run_test_command(
         app,
         [
-            "--output-style",
-            OutputStyle.json.value,
-            "local",
-            "--database-path",
-            str(on_disk_database),
             "user",
             "update-by-id",
             str(created_user.id),
@@ -557,11 +484,6 @@ async def test_update_password(
     authentication_failure_result = await run_test_command(
         app,
         [
-            "--output-style",
-            OutputStyle.json.value,
-            "local",
-            "--database-path",
-            str(on_disk_database),
             "user",
             "check-authentication",
             "--username",
@@ -578,11 +500,6 @@ async def test_update_password(
     authentication_result = await run_test_command(
         app,
         [
-            "--output-style",
-            OutputStyle.json.value,
-            "local",
-            "--database-path",
-            str(on_disk_database),
             "user",
             "check-authentication",
             "--username",
@@ -610,11 +527,6 @@ async def test_update_none(
     create_result = await run_test_command(
         app,
         [
-            "--output-style",
-            OutputStyle.json.value,
-            "local",
-            "--database-path",
-            str(on_disk_database),
             "user",
             "create",
             "--username",
@@ -631,11 +543,6 @@ async def test_update_none(
     update_result = await run_test_command(
         app,
         [
-            "--output-style",
-            OutputStyle.json.value,
-            "local",
-            "--database-path",
-            str(on_disk_database),
             "user",
             "update-by-id",
             str(created_user.id),
@@ -650,11 +557,6 @@ async def test_update_none(
     authentication_result = await run_test_command(
         app,
         [
-            "--output-style",
-            OutputStyle.json.value,
-            "local",
-            "--database-path",
-            str(on_disk_database),
             "user",
             "check-authentication",
             "--username",
