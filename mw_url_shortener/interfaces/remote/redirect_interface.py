@@ -72,7 +72,7 @@ class RedirectRemoteInterface(
         response = await opened_resource.get(
             "/v0/redirect/unique_short_link", params=params
         )
-        short_link = response.text
+        short_link = parse_raw_as(str, response.text)
         if not short_link:
             return None
         return short_link
