@@ -114,10 +114,13 @@ def raise_for_non_200_or_401(
 
 
 async def utf8_for_json(response: Response) -> None:
-    content_type_header = response.headers.get("Content-Type", None)
+    content_type_header: bytes = response.headers.get("Content-Type", None)
     if not content_type_header:
         return
-    content_type_value, _ = parse_options_header(content_type_header)
+    parsed_content_type: "Tuple[bytes, Dict[bytes, bytes]]" = parse_options_header(
+        content_type_header
+    )
+    content_type_value: bytes = parsed_content_type[0]
     if content_type_value != b"application/json":
         return
     response.encoding = "utf-8"
