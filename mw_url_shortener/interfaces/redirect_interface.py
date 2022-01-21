@@ -37,6 +37,6 @@ class RedirectInterface(
         opened_resource: ContravariantOpenedResourceT,
         /,
         *,
-        short_link_length: int,
+        short_link_length: Optional[int],
     ) -> Optional[str]:
         raise NotImplementedError

@@ -57,7 +57,7 @@ class RedirectRemoteInterface(
         opened_resource: AsyncClient,
         /,
         *,
-        short_link_length: int = defaults.short_link_length,
+        short_link_length: Optional[int] = defaults.short_link_length,
     ) -> Optional[str]:
         """
         tries to find a unique short link of the specified length
@@ -66,7 +66,9 @@ class RedirectRemoteInterface(
         significantly change the short_link_characters, or change
         short_link_length
         """
-        params: Dict[str, str] = {"short_link_length": str(short_link_length)}
+        params: Dict[str, str] = {}
+        if isinstance(short_link_length, int):
+            params.update({"short_link_length": str(short_link_length)})
         response = await opened_resource.get(
             "/v0/redirect/unique_short_link", params=params
         )

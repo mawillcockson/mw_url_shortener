@@ -76,7 +76,7 @@ class RedirectDBInterface(
         opened_resource: AsyncSession,
         /,
         *,
-        short_link_length: int = defaults.short_link_length,
+        short_link_length: Optional[int] = defaults.short_link_length,
     ) -> Optional[str]:
         """
         tries to find a unique short link of the specified length
@@ -85,6 +85,9 @@ class RedirectDBInterface(
         significantly change the short_link_characters, or change
         short_link_length
         """
+        if not isinstance(short_link_length, int):
+            short_link_length = defaults.short_link_length
+        assert short_link_length >= 1, "short_link_length must be a positive integer"
         potential_short_links: List[str] = []
         for _ in range(5):
             potential_short_links.append(random_short_link(short_link_length))
