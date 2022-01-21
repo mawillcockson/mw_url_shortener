@@ -51,7 +51,6 @@ class RedirectRemoteInterface(
 
         return redirect_schemas
 
-    # NOTE:TEST
     async def unique_short_link(
         self,
         opened_resource: AsyncClient,

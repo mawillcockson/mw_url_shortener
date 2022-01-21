@@ -9,7 +9,6 @@ from mw_url_shortener.schemas.user import User, UserCreate, UserUpdate
 from ..dependencies import get_async_session, get_current_user
 
 
-# NOTE:TEST
 async def check_authentication(
     username: str,
     password: str,
