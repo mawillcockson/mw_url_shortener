@@ -65,7 +65,7 @@ addopts = "--cov=mw_url_shortener --strict-markers"
 # https://docs.pytest.org/en/stable/reference.html#confval-empty_parameter_set_mark
 empty_parameter_set_mark = "fail_at_collect"
 log_cli = true
-timeout = 120
+timeout = 240
 markers = ["local", "remote"]
 
 [tool.isort]
