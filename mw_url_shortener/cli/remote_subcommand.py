@@ -53,9 +53,6 @@ def callback(
     settings.cli_mode = CliMode.remote_api
     settings.base_url = base_url
 
-    if ctx.invoked_subcommand == SHOW_CONFIGURATION_COMMAND_NAME:
-        return
-
     async_client = make_async_client(
         settings, username=Username(username), password=Password(password)
     )
