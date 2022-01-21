@@ -243,8 +243,48 @@ def update_by_id(
     typer.echo("")
 
 
+def unique_short_link(short_link_length: Optional[int] = typer.Option(None)) -> None:
+    """
+    tries to find a unique short link of the specified length
+
+    if this method returns nothing, it might be time to either
+    significantly change the short_link_characters, or change
+    short_link_length
+    """
+    settings = get_settings()
+    if short_link_length is None:
+        short_link_length = settings.short_link_length
+
+    redirect = get_redirect_interface()
+    resource = get_resource()
+    with open_resource(resource) as opened_resource:
+        short_link = run_sync(
+            redirect.unique_short_link(
+                opened_resource, short_link_length=short_link_length
+            )
+        )
+
+    if short_link is None and settings.output_style == OutputStyle.text:
+        typer.echo(
+            "no short link returned\n\n"
+            "this probably means that either the short_link_length in the "
+            "configuration needs to be changed a little, or the "
+            "short_link_characters needs to be changed a lot"
+        )
+
+    if short_link is None:
+        raise typer.Exit(code=1)
+
+    if settings.output_style == OutputStyle.json:
+        typer.echo(json.dumps(short_link))
+        return
+
+    typer.echo(f"unused short link: {short_link}")
+
+
 app = typer.Typer()
 app.command()(create)
 app.command()(search)
 app.command()(remove_by_id)
 app.command()(update_by_id)
+app.command()(unique_short_link)

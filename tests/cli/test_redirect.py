@@ -536,3 +536,40 @@ async def test_redirect_create_empty_short_link_with_length(
     assert set(created_redirect.short_link) <= set(defaults.short_link_characters)
     assert created_redirect.response_status == response_status
     assert created_redirect.body == body
+
+
+async def test_unique_short_link_default(run_test_command: CommandRunner) -> None:
+    "can a unique short link be retrieved using the default short_link_length?"
+    result = await run_test_command(app, ["redirect", "unique-short-link"])
+    assert result.exit_code == 0, f"result: {result}"
+    unique_short_link = parse_raw_as(str, result.stdout)
+    assert unique_short_link
+    assert len(unique_short_link) == defaults.short_link_length
+    assert set(unique_short_link).issubset(set(defaults.short_link_characters))
+
+    search_result = await run_test_command(app, ["redirect", "search"])
+    assert search_result.exit_code == 0, f"search_result: {search_result}"
+    redirects = parse_raw_as(List[Redirect], search_result.stdout)
+    for redirect in redirects:
+        assert redirect.short_link != unique_short_link
+
+
+async def test_unique_short_link(
+    run_test_command: CommandRunner, test_string_length: int
+) -> None:
+    "can a unique short link be retrieced using a custom length?"
+    short_link_length = test_string_length
+    result = await run_test_command(
+        app,
+        [
+            "redirect",
+            "unique-short-link",
+            "--short-link-length",
+            str(short_link_length),
+        ],
+    )
+    assert result.exit_code == 0, f"result: {result}"
+    unique_short_link = parse_raw_as(str, result.stdout)
+    assert unique_short_link
+    assert len(unique_short_link) == short_link_length
+    assert set(unique_short_link).issubset(set(defaults.short_link_characters))

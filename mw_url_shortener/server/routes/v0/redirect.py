@@ -13,7 +13,6 @@ from mw_url_shortener.settings import defaults
 from ..dependencies import get_async_session, get_current_user
 
 
-# NOTE:TEST in client
 async def unique_short_link(
     short_link_length: int = defaults.short_link_length,
     async_session: AsyncSession = Depends(get_async_session),
