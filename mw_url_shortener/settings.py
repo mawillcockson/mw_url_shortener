@@ -65,6 +65,7 @@ class Defaults(BaseSettings):
     # 307 indicates the User Agent (browser) must not change the request method
     redirect_response_status: PositiveInt = 307
     redirect_url: str = "https://google.com"
+    # NOTE:BUG not currently implemented
     redirect_case_sensitive: bool = False
     short_link_characters: str = ascii_lowercase + digits
     # this website lists the formulae for different types of combinations and
@@ -79,6 +80,7 @@ class Defaults(BaseSettings):
     log_db_access: bool = False
     base_url: Optional[str] = None
     api_current_version: str = "v0"
+    # NOTE:BUG::api_prefix not currently implemented
     api_prefix: str = ""
     oauth2_endpoint: str = "token"
     user_agent_string: str = f"{APP_NAME}_client/{__version__}"
