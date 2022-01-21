@@ -45,6 +45,7 @@ def callback(
     settings.database_path = database_path
     settings.log_db_access = log_db_access
 
+    # should not try to access the database when showing the configuration
     if ctx.invoked_subcommand == SHOW_CONFIGURATION_COMMAND_NAME:
         return
 
