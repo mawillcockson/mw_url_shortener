@@ -2,6 +2,7 @@ from http import HTTPStatus
 from typing import TYPE_CHECKING, Container
 
 from httpx import AsyncClient, HTTPStatusError, Response
+from multipart.multipart import parse_options_header
 
 from mw_url_shortener.dependency_injection import get_settings
 from mw_url_shortener.interfaces import remote as remote_interface
@@ -112,11 +113,21 @@ def raise_for_non_200_or_401(
     return raiser
 
 
+async def utf8_for_json(response: Response) -> None:
+    content_type_header = response.headers.get("Content-Type", None)
+    if not content_type_header:
+        return
+    content_type_value, _ = parse_options_header(content_type_header)
+    if content_type_value != b"application/json":
+        return
+    response.encoding = "utf-8"
+
+
 def make_async_client(
     settings: "Settings", username: "Username", password: "Password"
 ) -> AsyncClient:
     raiser = raise_for_non_200_or_401(settings)
-    event_hooks: "Dict[str, List[EventHook]]" = {"response": [raiser]}
+    event_hooks: "Dict[str, List[EventHook]]" = {"response": [raiser, utf8_for_json]}
     headers = {"User-Agent": settings.user_agent_string}
     return AsyncClient(
         auth=OAuth2PasswordBearerHandler(
