@@ -14,7 +14,8 @@ from mw_url_shortener.database.start import AsyncSession, make_sessionmaker
 from mw_url_shortener.dependency_injection import get_settings
 from mw_url_shortener.interfaces import database as database_interface
 from mw_url_shortener.schemas.redirect import Redirect, random_short_link
-from mw_url_shortener.settings import OutputStyle, Settings, defaults
+from mw_url_shortener.server.settings import ServerSettings
+from mw_url_shortener.settings import CliMode, OutputStyle, Settings, defaults
 from mw_url_shortener.utils import unsafe_random_string
 
 from .conftest import CommandRunner
@@ -32,11 +33,6 @@ async def test_create_redirect_defaults(
     result = await run_test_command(
         app,
         [
-            "--output-style",
-            OutputStyle.json.value,
-            "local",
-            "--database-path",
-            str(on_disk_database),
             "redirect",
             "create",
             url,
@@ -54,8 +50,19 @@ async def test_create_redirect_defaults(
     # being used
     settings = get_settings()
     database_url_end = settings.database_url_joiner + str(on_disk_database)
-    assert settings.database_url.endswith(database_url_end)
-    async_sessionmaker = await make_sessionmaker(settings.database_url)
+
+    if settings.cli_mode == CliMode.local_database:
+        assert settings.database_url.endswith(database_url_end)
+        async_sessionmaker = await make_sessionmaker(settings.database_url)
+
+    elif settings.cli_mode == CliMode.remote_api:
+        server_settings = inject.instance(ServerSettings)
+        assert server_settings.database_url.endswith(database_url_end)
+        async_sessionmaker = await make_sessionmaker(server_settings.database_url)
+
+    else:
+        assert not f"unknown cli mode: {settings.cli_mode}"
+
     async with async_sessionmaker() as async_session:
         retrieved_redirects = await database_interface.redirect.search(
             async_session, id=created_redirect.id
@@ -67,7 +74,6 @@ async def test_create_redirect_defaults(
 
 
 async def test_create_redirect(
-    on_disk_database: Path,
     run_test_command: CommandRunner,
     test_string_length: int,
 ) -> None:
@@ -80,11 +86,6 @@ async def test_create_redirect(
     result = await run_test_command(
         app,
         [
-            "--output-style",
-            OutputStyle.json.value,
-            "local",
-            "--database-path",
-            str(on_disk_database),
             "redirect",
             "create",
             str(url),
@@ -106,7 +107,6 @@ async def test_create_redirect(
 
 
 async def test_search_by_id(
-    on_disk_database: Path,
     run_test_command: CommandRunner,
     test_string_length: int,
 ) -> None:
@@ -119,11 +119,6 @@ async def test_search_by_id(
     create_result = await run_test_command(
         app,
         [
-            "--output-style",
-            OutputStyle.json.value,
-            "local",
-            "--database-path",
-            str(on_disk_database),
             "redirect",
             "create",
             str(url),
@@ -142,11 +137,6 @@ async def test_search_by_id(
     result = await run_test_command(
         app,
         [
-            "--output-style",
-            OutputStyle.json.value,
-            "local",
-            "--database-path",
-            str(on_disk_database),
             "redirect",
             "search",
             "--id",
@@ -161,18 +151,12 @@ async def test_search_by_id(
 
 
 async def test_search_non_existent_redirect(
-    on_disk_database: Path,
     run_test_command: CommandRunner,
 ) -> None:
     "does the app exit with an error if there's no redirect to retrieve?"
     result = await run_test_command(
         app,
         [
-            "--output-style",
-            OutputStyle.json.value,
-            "local",
-            "--database-path",
-            str(on_disk_database),
             "redirect",
             "search",
             "--id",
@@ -188,7 +172,6 @@ async def test_search_non_existent_redirect(
 
 
 async def test_search_by_body(
-    on_disk_database: Path,
     run_test_command: CommandRunner,
     test_string_length: int,
 ) -> None:
@@ -209,11 +192,6 @@ async def test_search_by_body(
     first_desired_result = await run_test_command(
         app,
         [
-            "--output-style",
-            OutputStyle.json.value,
-            "local",
-            "--database-path",
-            str(on_disk_database),
             "redirect",
             "create",
             str(url),
@@ -233,11 +211,6 @@ async def test_search_by_body(
     second_desired_result = await run_test_command(
         app,
         [
-            "--output-style",
-            OutputStyle.json.value,
-            "local",
-            "--database-path",
-            str(on_disk_database),
             "redirect",
             "create",
             str(url),
@@ -257,11 +230,6 @@ async def test_search_by_body(
     other_create_result = await run_test_command(
         app,
         [
-            "--output-style",
-            OutputStyle.json.value,
-            "local",
-            "--database-path",
-            str(on_disk_database),
             "redirect",
             "create",
             str(url),
@@ -281,11 +249,6 @@ async def test_search_by_body(
     search_result = await run_test_command(
         app,
         [
-            "--output-style",
-            OutputStyle.json.value,
-            "local",
-            "--database-path",
-            str(on_disk_database),
             "redirect",
             "search",
             "--body",
@@ -302,7 +265,6 @@ async def test_search_by_body(
 
 
 async def test_remove_by_id(
-    on_disk_database: Path,
     run_test_command: CommandRunner,
     test_string_length: int,
 ) -> None:
@@ -315,11 +277,6 @@ async def test_remove_by_id(
     create_result = await run_test_command(
         app,
         [
-            "--output-style",
-            OutputStyle.json.value,
-            "local",
-            "--database-path",
-            str(on_disk_database),
             "redirect",
             "create",
             str(url),
@@ -338,11 +295,6 @@ async def test_remove_by_id(
     result = await run_test_command(
         app,
         [
-            "--output-style",
-            OutputStyle.json.value,
-            "local",
-            "--database-path",
-            str(on_disk_database),
             "redirect",
             "remove-by-id",
             str(created_redirect.id),
@@ -356,7 +308,6 @@ async def test_remove_by_id(
 
 
 async def test_update_all(
-    on_disk_database: Path,
     run_test_command: CommandRunner,
     test_string_length: int,
 ) -> None:
@@ -380,11 +331,6 @@ async def test_update_all(
     create_result = await run_test_command(
         app,
         [
-            "--output-style",
-            OutputStyle.json.value,
-            "local",
-            "--database-path",
-            str(on_disk_database),
             "redirect",
             "create",
             str(url),
@@ -403,11 +349,6 @@ async def test_update_all(
     update_result = await run_test_command(
         app,
         [
-            "--output-style",
-            OutputStyle.json.value,
-            "local",
-            "--database-path",
-            str(on_disk_database),
             "redirect",
             "update-by-id",
             str(created_redirect.id),
@@ -432,7 +373,6 @@ async def test_update_all(
 
 
 async def test_update_body(
-    on_disk_database: Path,
     run_test_command: CommandRunner,
     test_string_length: int,
 ) -> None:
@@ -448,11 +388,6 @@ async def test_update_body(
     create_result = await run_test_command(
         app,
         [
-            "--output-style",
-            OutputStyle.json.value,
-            "local",
-            "--database-path",
-            str(on_disk_database),
             "redirect",
             "create",
             str(url),
@@ -471,11 +406,6 @@ async def test_update_body(
     update_result = await run_test_command(
         app,
         [
-            "--output-style",
-            OutputStyle.json.value,
-            "local",
-            "--database-path",
-            str(on_disk_database),
             "redirect",
             "update-by-id",
             str(created_redirect.id),
@@ -494,7 +424,6 @@ async def test_update_body(
 
 
 async def test_update_none(
-    on_disk_database: Path,
     run_test_command: CommandRunner,
     test_string_length: int,
 ) -> None:
@@ -507,11 +436,6 @@ async def test_update_none(
     create_result = await run_test_command(
         app,
         [
-            "--output-style",
-            OutputStyle.json.value,
-            "local",
-            "--database-path",
-            str(on_disk_database),
             "redirect",
             "create",
             str(url),
@@ -530,11 +454,6 @@ async def test_update_none(
     update_result = await run_test_command(
         app,
         [
-            "--output-style",
-            OutputStyle.json.value,
-            "local",
-            "--database-path",
-            str(on_disk_database),
             "redirect",
             "update-by-id",
             str(created_redirect.id),
@@ -548,7 +467,6 @@ async def test_update_none(
 
 
 async def test_redirect_create_empty_short_link(
-    on_disk_database: Path,
     run_test_command: CommandRunner,
     test_string_length: int,
 ) -> None:
@@ -560,11 +478,6 @@ async def test_redirect_create_empty_short_link(
     create_result = await run_test_command(
         app,
         [
-            "--output-style",
-            OutputStyle.json.value,
-            "local",
-            "--database-path",
-            str(on_disk_database),
             "redirect",
             "create",
             str(url),
@@ -589,7 +502,6 @@ async def test_redirect_create_empty_short_link(
 
 
 async def test_redirect_create_empty_short_link_with_length(
-    on_disk_database: Path,
     run_test_command: CommandRunner,
     test_string_length: int,
 ) -> None:
@@ -601,11 +513,6 @@ async def test_redirect_create_empty_short_link_with_length(
     create_result = await run_test_command(
         app,
         [
-            "--output-style",
-            OutputStyle.json.value,
-            "local",
-            "--database-path",
-            str(on_disk_database),
             "redirect",
             "create",
             str(url),
