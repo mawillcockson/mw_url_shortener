@@ -226,3 +226,42 @@ async def run_test_command(
                 inject.clear()
 
     return runner
+
+
+@pytest.fixture
+async def run_basic_test_command(
+    anyio_backend: str,
+    request: "SubRequest",
+    capsys: CaptureFixture[str],
+    cli_test_client: CliRunner,
+    on_disk_database: Path,
+) -> CommandRunner:
+    inject.clear()
+
+    async def runner(
+        app: Typer,
+        arguments: List[str],
+        clear_injection: bool = True,
+        add_default_parameters: bool = False,
+    ) -> Result:
+        assert (
+            not add_default_parameters
+        ), f"basic command doesn't add default parameters"
+
+        test_command = partial(cli_test_client.invoke, app, arguments)
+
+        try:
+            initialize_dependency_injection()
+
+            with capsys.disabled():
+                result = await asyncio.get_running_loop().run_in_executor(
+                    None, test_command
+                )
+
+            return result
+
+        finally:
+            if clear_injection:
+                inject.clear()
+
+    return runner
