@@ -600,6 +600,17 @@ python-versions = ">=3.6"
 diagrams = ["jinja2", "railroad-diagrams"]
 
 [[package]]
+name = "pysnooper"
+version = "1.1.0"
+description = "A poor man's debugger for Python."
+category = "dev"
+optional = false
+python-versions = "*"
+
+[package.extras]
+tests = ["pytest"]
+
+[[package]]
 name = "pytest"
 version = "6.2.5"
 description = "pytest: simple powerful testing with Python"
@@ -945,7 +956,7 @@ h11 = ">=0.9.0,<1"
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.10.0,<3.11"
-content-hash = "c4a987fbd2231d8bac306eeb3228973c52e85ceedbc98df779f71d7241388946"
+content-hash = "709b4179e689854c292c9a0c521a06fdab681326924ff9e54b3f7082b0fbc80b"
 
 [metadata.files]
 aiosqlite = [
@@ -1425,6 +1436,10 @@ pylint = [
 pyparsing = [
     {file = "pyparsing-3.0.6-py3-none-any.whl", hash = "sha256:04ff808a5b90911829c55c4e26f75fa5ca8a2f5f36aa3a51f68e27033341d3e4"},
     {file = "pyparsing-3.0.6.tar.gz", hash = "sha256:d9bdec0013ef1eb5a84ab39a3b3868911598afa494f5faa038647101504e2b81"},
+]
+pysnooper = [
+    {file = "PySnooper-1.1.0-py2.py3-none-any.whl", hash = "sha256:985c0dddf701e1d69d25534ffd45fc02f2877b58bcb5788fb017077c65896bfa"},
+    {file = "PySnooper-1.1.0.tar.gz", hash = "sha256:0fa932ad396d2bac089d4b1f94f0ce49cde4140ee64ddd24a4065fadea10fcc9"},
 ]
 pytest = [
     {file = "pytest-6.2.5-py3-none-any.whl", hash = "sha256:7310f8d27bc79ced999e760ca304d69f6ba6c6649c0b60fb0e04a4a77cacc134"},
