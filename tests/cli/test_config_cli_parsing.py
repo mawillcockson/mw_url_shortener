@@ -112,8 +112,8 @@ async def test_remote(run_basic_test_command: CommandRunner) -> None:
     returned_settings = FlexibleSettings.parse_raw(result.stdout)
     assert returned_settings.base_url == base_url
     assert returned_settings.api_base_url == base_url + "/" + api_prefix + "/"
-    assert returned_settings.username == username
-    assert returned_settings.password == password
+    assert returned_settings.username == username  # type: ignore
+    assert returned_settings.password == password  # type: ignore
 
     settings = get_settings()
     assert not hasattr(settings, "password"), f"could risk storing password"
