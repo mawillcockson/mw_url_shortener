@@ -80,10 +80,22 @@ def make_fastapi_app(server_settings: "ServerSettings") -> "FastAPI":
         login_for_access_token
     )
 
+    if server_settings.api_prefix and not server_settings.api_prefix.endswith("/"):
+        server_settings.api_prefix = server_settings.api_prefix + "/"
+    if server_settings.root_path:
+        if not server_settings.root_path.startswith("/"):
+            server_settings.root_path = "/" + server_settings.root_path
+        if not server_settings.root_path.endswith("/"):
+            server_settings.root_path = server_settings.root_path + "/"
+
     if not server_settings.show_docs:
         openapi_url: "Optional[str]" = None
+        docs_url: "Optional[str]" = None
+        redoc_url: "Optional[str]" = None
     else:
-        openapi_url = "/openapi.json"
+        openapi_url = f"/{server_settings.api_prefix}openapi.json"
+        docs_url = f"/{server_settings.api_prefix}docs"
+        redoc_url = f"/{server_settings.api_prefix}redoc"
 
     app = FastAPI(
         title=server_settings.fast_api_title,
@@ -92,9 +104,14 @@ def make_fastapi_app(server_settings: "ServerSettings") -> "FastAPI":
         terms_of_service=server_settings.fast_api_terms_of_service,
         license_info=server_settings.fast_api_license_info.dict(),
         openapi_url=openapi_url,
+        docs_url=docs_url,
+        redoc_url=redoc_url,
+        root_path=server_settings.root_path,
     )
-    app.include_router(api_router_v0, prefix="/v0")
-    app.post(f"/{server_settings.oauth2_endpoint}")(login_for_access_token)
+    app.include_router(api_router_v0, prefix=f"/{server_settings.api_prefix}v0")
+    app.post(f"/{server_settings.api_prefix}{server_settings.oauth2_endpoint}")(
+        login_for_access_token
+    )
     # this must come last so it doesn't overwrite anything
     app.get("/{short_link:path}")(match)
 

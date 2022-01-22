@@ -36,7 +36,7 @@ class ServerDefaults(Defaults):
     loglevel: str = "info"
     debug: bool = False
     include_server_header: bool = False
-    root_path: str = ""  # https://example.com/{root_path}/v0/api/user/me
+    root_path: str = ""  # https://example.com/{root_path}/{api_prefix}/v0/api/user/me
     insecure_bind_ip_address: str = "[::]"
     insecure_bind_port: str = "8080"
     # h11_max_incomplete_size  # the max HTTP/2 request line + headers size in bytes

@@ -80,7 +80,6 @@ class Defaults(BaseSettings):
     log_db_access: bool = False
     base_url: Optional[str] = None
     api_current_version: str = "v0"
-    # NOTE:BUG::api_prefix not currently implemented
     api_prefix: str = ""
     oauth2_endpoint: str = "token"
     user_agent_string: str = f"{APP_NAME}_client/{__version__}"
