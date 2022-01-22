@@ -8,6 +8,7 @@ import inject
 
 from mw_url_shortener.cli.entry_point import app
 from mw_url_shortener.dependency_injection.settings import get_settings
+from mw_url_shortener.schemas.redirect import random_short_link
 from mw_url_shortener.settings import FlexibleSettings, OutputStyle, Settings, defaults
 from tests.utils import random_password, random_username
 
@@ -83,6 +84,7 @@ async def test_remote(run_basic_test_command: CommandRunner) -> None:
     parameters?
     """
     base_url = "http://does-not-matter"
+    api_prefix = random_short_link(10)
     username = random_username()
     password = random_password()
 
@@ -94,6 +96,8 @@ async def test_remote(run_basic_test_command: CommandRunner) -> None:
             "remote",
             "--base-url",
             base_url,
+            "--api-prefix",
+            api_prefix,
             "--username",
             username,
             "--password",
@@ -107,8 +111,7 @@ async def test_remote(run_basic_test_command: CommandRunner) -> None:
 
     returned_settings = FlexibleSettings.parse_raw(result.stdout)
     assert returned_settings.base_url == base_url
-    # NOTE:BUG::api_prefix not currently implemented
-    # assert returned_settings.api_base_url == base_url + "/" + api_prefix
+    assert returned_settings.api_base_url == base_url + "/" + api_prefix + "/"
     assert returned_settings.username == username
     assert returned_settings.password == password
 

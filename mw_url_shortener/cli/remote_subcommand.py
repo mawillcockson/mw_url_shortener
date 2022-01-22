@@ -15,7 +15,7 @@ from mw_url_shortener.remote.start import (
 )
 from mw_url_shortener.remote.start import make_async_client_closer
 from mw_url_shortener.schemas.user import Password, UserCreate, Username
-from mw_url_shortener.settings import CliMode
+from mw_url_shortener.settings import CliMode, defaults
 
 from .common_subcommands import SHOW_CONFIGURATION_COMMAND_NAME, show_configuration
 from .redirect import app as redirect_app
@@ -29,6 +29,9 @@ def callback(
         help="the first part of the URL of the API, "
         "or everything before the /openapi.json part "
         "(https://example.org/all/part/of/base/url/openapi.json)",
+    ),
+    api_prefix: str = typer.Option(
+        defaults.api_prefix, help="should match the setting on the server"
     ),
     # NOTE:FEAT it would be nice not to have to enter this if just using --help or --show-completion
     username: str = typer.Option(..., prompt=True),
@@ -52,6 +55,7 @@ def callback(
     # important, but mainly used in the test suite
     settings.cli_mode = CliMode.remote_api
     settings.base_url = base_url
+    settings.api_prefix = api_prefix
 
     async_client = make_async_client(
         settings, username=Username(username), password=Password(password)

@@ -112,8 +112,8 @@ class Defaults(BaseSettings):
             api_prefix = self.api_prefix
             if not api_prefix.endswith("/"):
                 api_prefix += "/"
-            return f"{self.base_url}{self.api_prefix}"
-        return self.base_url
+            return f"{base_url}{api_prefix}"
+        return base_url
 
     class Config:
         json_loads = json_loads  # type: ignore
