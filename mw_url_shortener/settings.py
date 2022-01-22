@@ -105,8 +105,14 @@ class Defaults(BaseSettings):
     def api_base_url(self) -> str:
         "the base url for accessing all API endpoints"
         assert self.base_url is not None, "base_url not set"
+        base_url = self.base_url
+        if not base_url.endswith("/"):
+            base_url += "/"
         if self.api_prefix:
-            return f"{self.base_url}/{self.api_prefix}"
+            api_prefix = self.api_prefix
+            if not api_prefix.endswith("/"):
+                api_prefix += "/"
+            return f"{self.base_url}{self.api_prefix}"
         return self.base_url
 
     class Config:
