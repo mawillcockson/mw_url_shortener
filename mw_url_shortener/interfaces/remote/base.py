@@ -36,7 +36,7 @@ class RemoteInterfaceBase(
         self, opened_resource: AsyncClient, /, *, id: int
     ) -> Optional[ObjectSchemaType]:
         params = {"id": id}
-        response = await opened_resource.get(f"/v0/{self.endpoint}/", params=params)
+        response = await opened_resource.get(f"v0/{self.endpoint}/", params=params)
 
         schema_type = self.schema
         object_schemas = parse_raw_as(List[schema_type], response.text)  # type: ignore
@@ -58,7 +58,7 @@ class RemoteInterfaceBase(
     ) -> Optional[ObjectSchemaType]:
         create_schema_json = create_object_schema.json()
         response = await opened_resource.post(
-            f"/v0/{self.endpoint}/", content=create_schema_json.encode("utf-8")
+            f"v0/{self.endpoint}/", content=create_schema_json.encode("utf-8")
         )
         schema_json = response.text
         if not schema_json:
@@ -86,7 +86,7 @@ class RemoteInterfaceBase(
             "}"
         )
         response = await opened_resource.put(
-            f"/v0/{self.endpoint}/", content=update_body.encode("utf-8")
+            f"v0/{self.endpoint}/", content=update_body.encode("utf-8")
         )
         schema_json = response.text
         return self.schema.parse_raw(schema_json)
@@ -95,7 +95,7 @@ class RemoteInterfaceBase(
         self, opened_resource: AsyncClient, /, *, id: int
     ) -> Optional[ObjectSchemaType]:
         params = {"id": id}
-        response = await opened_resource.delete(f"/v0/{self.endpoint}/", params=params)
+        response = await opened_resource.delete(f"v0/{self.endpoint}/", params=params)
         schema_json = response.text
         if not schema_json:
             return None

@@ -43,7 +43,7 @@ class OAuth2PasswordBearerHandler(Auth):
         username: Optional[Username] = None,
         password: Optional[Password] = None,
     ):
-        self.oauth2_endpoint_url = f"{settings.api_base_url}/v0/security/token"
+        self.oauth2_endpoint_url = f"{settings.api_base_url}v0/security/token"
         self.token = token
         self.username = username
         self.password = password

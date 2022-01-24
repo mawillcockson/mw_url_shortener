@@ -106,14 +106,12 @@ class Defaults(BaseSettings):
         "the base url for accessing all API endpoints"
         assert self.base_url is not None, "base_url not set"
         base_url = self.base_url
-        if not base_url.endswith("/"):
+        if base_url and not base_url.endswith("/"):
             base_url += "/"
-        if self.api_prefix:
-            api_prefix = self.api_prefix
-            if not api_prefix.endswith("/"):
-                api_prefix += "/"
-            return f"{base_url}{api_prefix}"
-        return base_url
+        api_prefix = self.api_prefix
+        if api_prefix and not api_prefix.endswith("/"):
+            api_prefix += "/"
+        return f"{base_url}{api_prefix}"
 
     class Config:
         json_loads = json_loads  # type: ignore

@@ -45,7 +45,7 @@ class RedirectRemoteInterface(
         if body is not None:
             params["body"] = str(body)
 
-        response = await opened_resource.get("/v0/redirect/", params=params)
+        response = await opened_resource.get("v0/redirect/", params=params)
 
         redirect_schemas = parse_raw_as(List[Redirect], response.text)
 
@@ -69,7 +69,7 @@ class RedirectRemoteInterface(
         if isinstance(short_link_length, int):
             params.update({"short_link_length": str(short_link_length)})
         response = await opened_resource.get(
-            "/v0/redirect/unique_short_link", params=params
+            "v0/redirect/unique_short_link", params=params
         )
         short_link = parse_raw_as(str, response.text)
         if not short_link:

@@ -40,18 +40,26 @@ class AnyStatusCode(Container[int]):
 
 class OkStatus:
     standard_acceptable = [200, 401]
+    # settings.api_base_url will always end in a `/`, so these should be
+    # relative to make combining them easier and straightforward.
+    # It also mimicks the httpx way of merging urls, where the relative part in
+    # client.get("relative_path") is always lstrip-ped of `/` and base_url
+    # always has the character appended:
+    # https://github.com/encode/httpx/blob/0.21.3/httpx/_client.py#L370-L383
     acceptable_status_codes: "StatusMap" = {
-        ("GET", "/v0/user/me"): standard_acceptable,
-        ("GET", "/v0/user/"): standard_acceptable,
-        ("POST", "/v0/user/"): standard_acceptable,
-        ("PUT", "/v0/user/"): standard_acceptable,
-        ("DELETE", "/v0/user/"): standard_acceptable,
-        ("GET", "/v0/redirect/match/"): AnyStatusCode(),
-        ("GET", "/v0/redirect/"): standard_acceptable,
-        ("POST", "/v0/redirect/"): standard_acceptable,
-        ("PUT", "/v0/redirect/"): standard_acceptable,
-        ("DELETE", "/v0/redirect/"): standard_acceptable,
-        ("POST", "/v0/security/token"): [200],
+        ("POST", "v0/user/check_authentication"): standard_acceptable,
+        ("GET", "v0/user/me"): standard_acceptable,
+        ("GET", "v0/user/"): standard_acceptable,
+        ("POST", "v0/user/"): standard_acceptable,
+        ("PUT", "v0/user/"): standard_acceptable,
+        ("DELETE", "v0/user/"): standard_acceptable,
+        ("GET", "v0/redirect/unique_short_link"): standard_acceptable,
+        ("GET", "v0/redirect/match/"): AnyStatusCode(),
+        ("GET", "v0/redirect/"): standard_acceptable,
+        ("POST", "v0/redirect/"): standard_acceptable,
+        ("PUT", "v0/redirect/"): standard_acceptable,
+        ("DELETE", "v0/redirect/"): standard_acceptable,
+        ("POST", "v0/security/token"): [200],
     }
 
     def __init__(self, settings: "Optional[Settings]" = None):

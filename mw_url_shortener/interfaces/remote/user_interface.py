@@ -34,7 +34,7 @@ class UserRemoteInterface(RemoteInterfaceBase[User, UserCreate, UserUpdate]):
         if username is not None:
             params["username"] = username
 
-        response = await opened_resource.get("/v0/user/", params=params)
+        response = await opened_resource.get("v0/user/", params=params)
 
         user_schemas = parse_raw_as(List[User], response.text)
 
@@ -45,7 +45,7 @@ class UserRemoteInterface(RemoteInterfaceBase[User, UserCreate, UserUpdate]):
     ) -> "Optional[User]":
         params: "Params" = {"username": username, "password": password}
         response = await opened_resource.post(
-            "/v0/user/check_authentication", params=params
+            "v0/user/check_authentication", params=params
         )
         schema_json = response.text
         if not schema_json:
