@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 import inject
 import typer
 
-from mw_url_shortener.dependency_injection.remote_interface import get_async_client
+from mw_url_shortener.dependency_injection.remote import get_async_client
 from mw_url_shortener.dependency_injection.settings import get_settings
 from mw_url_shortener.remote.authentication import OAuth2PasswordBearerHandler
 from mw_url_shortener.settings import CliMode, FlexibleSettings, OutputStyle, Settings
