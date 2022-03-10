@@ -16,6 +16,7 @@ if TYPE_CHECKING:
     from typing import List, Optional, Sequence
 
     from mw_url_shortener.interfaces.base import OpenedResourceT, ResourceT
+    from mw_url_shortener.remote.start import AsyncClient
 
 
 def inject_loop(binder: inject.Binder, *, loop: AsyncLoopType) -> None:
@@ -58,6 +59,9 @@ def reconfigure_dependency_injection(
     loop: "Optional[AsyncLoopType]" = None,
     configurators: "Optional[List[inject.BinderCallable]]" = None,
 ) -> None:
+    if configurators is None:
+        configurators = []
+
     if settings is None:
         settings = get_settings()
     settings_injector = partial(inject_settings, settings=settings)
@@ -67,6 +71,19 @@ def reconfigure_dependency_injection(
     loop_injector = partial(inject_loop, loop=loop)
 
     resource_injector = partial(inject_resource, resource=resource)
+
+    if hasattr(resource, "post"):  # httpx.AsyncClient
+
+        def async_client_injector(binder: "inject.Binder") -> None:
+            binder.bind("AsyncClient", resource)
+
+        configurators.append(async_client_injector)
+    else:  # sqlalchemy.orm.sessionmaker
+
+        def sessionmaker_injector(binder: "inject.Binder") -> None:
+            binder.bind("sessionmaker[AsyncSession]", resource)
+
+        configurators.append(sessionmaker_injector)
 
     user_interface_injector = partial(
         inject_interface,
@@ -79,9 +96,6 @@ def reconfigure_dependency_injection(
         interface_type=RedirectInterface,
         interface=redirect_interface,
     )
-
-    if configurators is None:
-        configurators = []
 
     configurators.extend(
         [

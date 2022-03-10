@@ -1,7 +1,8 @@
 from http import HTTPStatus
 from typing import TYPE_CHECKING, Container
 
-from httpx import AsyncClient, HTTPStatusError, Response
+from httpx import AsyncClient as AsyncClient
+from httpx import HTTPStatusError, Response
 from multipart.multipart import parse_options_header
 
 from mw_url_shortener.dependency_injection import get_settings
