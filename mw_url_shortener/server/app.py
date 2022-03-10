@@ -112,8 +112,24 @@ def make_fastapi_app(server_settings: "ServerSettings") -> "FastAPI":
     app.post(f"/{server_settings.api_prefix}{server_settings.oauth2_endpoint}")(
         login_for_access_token
     )
-    # this must come last so it doesn't overwrite anything
+    # since this matches almost every GET request, it should come last so that
+    # other, more specific endpoints are matched first
     app.get("/{short_link:path}")(match)
+
+    from asgi_correlation_id import CorrelationIdMiddleware
+
+    from mw_url_shortener.schemas.log import CORRELATION_ID_HEADER_NAME
+
+    # NOTE:BUG if multiple requests have a header named
+    # CORRELATION_ID_HEADER_NAME with the same value, there could be some
+    # confusion in the logs as to which log entries correspond to which request
+    # Ideally, a new middleware would be created that doesn't read any headers,
+    # and always creates a new correlation id for each incoming request.
+    app.add_middleware(
+        CorrelationIdMiddleware,
+        header_name=CORRELATION_ID_HEADER_NAME,
+        validate_header_as_uuid=False,
+    )
 
     return app
 
