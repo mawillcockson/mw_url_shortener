@@ -83,6 +83,8 @@ class Defaults(BaseSettings):
     api_prefix: str = ""
     oauth2_endpoint: str = "token"
     user_agent_string: str = f"{APP_NAME}_client/{__version__}"
+    # From: https://sqlite.org/security.html#untrusted_sql_inputs
+    log_message_max_length: PositiveInt = 1_000_000
 
     @property
     def database_url_scheme(self) -> str:
