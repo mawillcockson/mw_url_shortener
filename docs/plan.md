@@ -68,3 +68,6 @@
   styles (`json` currently outputs not messages, in the hopes that any tools
   that use it will fail, even if they're not watching for the exit code, making
   debugging harder)
+- enable json input via pipe, selected through command-line flag, to make
+  describing HTTP client parameters to match against, or log search parameters,
+  easier to specify
