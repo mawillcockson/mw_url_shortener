@@ -1,3 +1,29 @@
+"""
+I want to be able to log the request body, especially for non-matching
+requests.
+
+One easy way I can think of doing this so that ALL requests are handled, is by
+adding a middleware that logs every request.
+
+Unfortunately, the request body can't be read multiple times. This makes sense:
+the request body is only sent by the client when an endpoing or middleware
+tries to read it, and it's streamed directly to the part of the code that needs
+it. This means even large request bodies can be handled without using a lot of
+memory.
+
+This also means the request body isn't stored by Starlette, so can't be
+automatically read multiple times.
+
+The middleware could keep a list of which endpoints use the request body in
+which contexts, but I don't think that'd be maintainable.
+
+Also, it looks like the BaseHTTPMiddleware can't be used without making
+background tasks hang in some specific circumstances, and while I neither
+encounter those circumstances, nor use background tasks, it's another reason to
+not use a middleware, or at least not the one Starlette provides and describes
+in their docs.
+https://github.com/encode/starlette/issues/919
+"""
 import asyncio
 import inspect
 from pprint import pformat
@@ -45,13 +71,16 @@ class LogMiddleware(BaseHTTPMiddleware):
 
         response = await call_next(request)
 
+        # hangs
+        # print(f"---body: {await request.body()}---")
+
         print(f"response: {pformat(vars(response))}")
         print_methods(response)
         return response
 
 
 async def root(request: "StarletteRequest") -> "StarletteResponse":
-    print(f"body: {request.body()}")
+    print(f"---body: {await request.body()}---")
     return StarletteResponse(content=b"hello")
 
 
@@ -59,7 +88,24 @@ middleware = [
     Middleware(LogMiddleware),
 ]
 
-app = Starlette(routes=[Route("/", root)], middleware=middleware)
+all_methods = {
+    "GET",
+    "HEAD",
+    "POST",
+    "PUT",
+    "DELETE",
+    "CONNECT",
+    "OPTIONS",
+    "TRACE",
+    "PATCH",
+    "CUSTOM",
+}
+
+routes = [
+    Route("/", root, methods=all_methods),
+]
+
+app = Starlette(routes=routes, middleware=middleware)
 
 
 async def main() -> None:
