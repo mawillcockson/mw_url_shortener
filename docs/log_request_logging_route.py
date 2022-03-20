@@ -37,6 +37,10 @@ async def root() -> str:
     return "hello"
 
 
+async def exception() -> str:
+    raise Exception("uh oh!")
+
+
 class LoggingAPIRoute(APIRoute):
     def get_route_handler(
         self,
@@ -49,14 +53,21 @@ class LoggingAPIRoute(APIRoute):
             body = await request.body()
             global NUMBER_OF_LOGS
             NUMBER_OF_LOGS += 1
-            return await original_route_handler(request)
+            try:
+                return await original_route_handler(request)
+            except:
+                print("ENDPOINT EXCEPTION")
+                raise
 
         return log_request_handler
 
 
 app = FastAPI()
+# Setting the route class must come before adding any routes in  order for the
+# custom route class to be used
 app.router.route_class = LoggingAPIRoute
 app.get("/")(root)
+app.get("/exception")(exception)
 
 
 async def logging_http_exception_handler(
@@ -94,8 +105,12 @@ async def main() -> None:
         response = await client.send(non_http_verb_request)  # 3
         response = await client.head("/")  # 4
         response = await client.post("/")  # 5
+        try:
+            response = await client.get("/exception")  # 6
+        except Exception as error:
+            pass
         global NUMBER_OF_LOGS
-        print(f"NUMBER_OF_LOGS: {NUMBER_OF_LOGS} == 5 -> {NUMBER_OF_LOGS == 5}")
+        print(f"NUMBER_OF_LOGS: {NUMBER_OF_LOGS} == 6 -> {NUMBER_OF_LOGS == 6}")
 
 
 if __name__ == "__main__":
