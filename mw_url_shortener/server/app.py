@@ -116,6 +116,10 @@ def make_fastapi_app(server_settings: "ServerSettings") -> "FastAPI":
     # other, more specific endpoints are matched first
     app.get("/{short_link:path}")(match)
 
+    from .middlewares import LogMiddleware
+
+    app.add_middleware(LogMiddleware)
+
     from asgi_correlation_id import CorrelationIdMiddleware
 
     from mw_url_shortener.schemas.log import CORRELATION_ID_HEADER_NAME
