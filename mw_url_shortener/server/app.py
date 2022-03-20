@@ -108,6 +108,21 @@ def make_fastapi_app(server_settings: "ServerSettings") -> "FastAPI":
         redoc_url=redoc_url,
         root_path=server_settings.root_path,
     )
+
+    from .logging import (
+        HTTPException,
+        LoggingAPIRoute,
+        RequestValidationError,
+        custom_request_validation_exception_handler,
+        logging_http_exception_handler,
+    )
+
+    app.router.route_class = LoggingAPIRoute
+    app.exception_handler(HTTPException)(logging_http_exception_handler)
+    app.exception_handler(RequestValidationError)(
+        custom_request_validation_exception_handler
+    )
+
     app.include_router(api_router_v0, prefix=f"/{server_settings.api_prefix}v0")
     app.post(f"/{server_settings.api_prefix}{server_settings.oauth2_endpoint}")(
         login_for_access_token
@@ -115,10 +130,6 @@ def make_fastapi_app(server_settings: "ServerSettings") -> "FastAPI":
     # since this matches almost every GET request, it should come last so that
     # other, more specific endpoints are matched first
     app.get("/{short_link:path}")(match)
-
-    from .middlewares import LogMiddleware
-
-    app.add_middleware(LogMiddleware)
 
     from asgi_correlation_id import CorrelationIdMiddleware
 
