@@ -430,3 +430,105 @@ If SQLite doesn't support a native way to log database manipulations to the data
 For instance, an `audit` table, where each row is an atomic action that the app takes (e.g. "create redirect", "modify redirect"), and it associates that with either an API user or "`cli`".
 
 I think this would be useful later.
+
+This is actually now a requirement for me, since I would like to be able to log all data from all incoming requests and outgoing responses.
+
+In fact, in relation to the idea of augmenting the server with a plugin framework, I think the base configuration of the server would be to log every request, and then plugins could register endpoints to handle, and choose whether or not to log them.
+
+I do want to explicitly prevent some information from being logged:
+
+- the body and some headers of authentication endpoint requests and responses
+- the `Authentication: Bearer token` header
+
+There were a few approaches I considered:
+
+#### log in database interface
+
+Seems straightforward: since all the rest of the code has only one set of
+interfaces within which to interact with the database, it could be as simple as
+logging inside those interface methods, or even doing some clever
+`__getattribute__` manipulation to log each method call.
+
+There's a few downsides:
+
+The current interface takes an opened database connection. Either that opened
+connection needs to be passed to the log method, or a subtransaction should be
+started by the log method.
+
+It turns out that [subtransactions in SQLAlchemy use SQL
+`SAVEPOINTS`,](https://docs.sqlalchemy.org/en/14/orm/session_api.html#sqlalchemy.orm.Session.begin_nested)
+and [SQLite does not commit data when a `RELEASE SAVEPOINT` is
+issued.](https://sqlite.org/lang_savepoint.html) Data is only committed when
+the outermost "real" transaction is committed.
+
+So if log records are being pushed to the database in a subtransaction, if
+the outer transaction of trying to insert, for instance, a user with a
+duplicate username fails, the subtransaction log will also be rolled back.
+
+In some cases this might be preferable, but there's no way to prevent it with this setup.
+
+Instead, it might be preferable to log to a file instead of the database.
+
+One of the things I want to be able to do with logging to the database is quickly find a log record matching a particular set of criteria.
+
+If the logs are in the database, it's in theory easy to find that entry.
+Currently, the logs are being saved as JSON data, though, so unless [SQLite's
+JSON features turn out to be easy to use and
+helpful,](https://www.sqlite.org/json1.html) there wouldn't be much difference
+to storing the JSON objects as lines in a file instead of in the database.
+
+There could also be a manual or periodic process of reading the log file into the database.
+
+The other challenge with logging inside the database interface methods is
+getting the context of the request. That data would probably have to be passed
+into the logging function, or made available through
+[`ContextVars`.](https://docs.python.org/3/library/contextvars.html)
+
+#### log manually
+
+The other option is to push the point where the log methods are called further
+from the database. This would mean logging would have to be added:
+
+- in the server route class and error functions
+- in the cli "local" interface subcommand callback
+
+The upside of this is that the context would be much more readily available,
+instead of having to be passed in through the database interface methods. There
+would be a lot more surface are to cover, but I think logging could be
+implemented in the strategic places mentioned above in order to reduce the
+number of calling sites.
+
+If any other methods are added, small changes would have to be made to the
+logging anyways, so it would only be a bit of extra work to do it this way.
+
+This could also have the advantage of, compared to logging in the database
+interface, having to pass in less context. For instance, with logging in the
+authentication endpoints, the logging method would have to have the context
+that this is an authentication endpoint, so that the `Authentication:` header
+is not logged.
+
+If logging were performed manually, the context that this is a request going
+to/from an authentication endpoint would be more readily available, and that
+context would not have to be opaquely passed through to the database interface.
+
+Logging manually will still have to be done, anyways, because requests to
+non-existent endpoints would not trigger any interaction with the database, but
+would still have to be logged.
+
+#### Current approach
+
+I think logging to a file initially, would be best, with either logging to the
+database added as an additional sink to which log records are duplicated, or a
+periodic or on-demand process that adds the entries from the log file to the
+database.
+
+The database may not always be accessible, and it would be nice to be able to
+log things like database errors to a reliable place.
+
+I also think logging should be done at the point at which the context is
+available, as it would make clearer the coupling between where the context
+comes from.
+
+This seems like an okay place to start:
+
+<https://github.com/snok/asgi-correlation-id/blob/791ea1c6e43a3e8ff1698ed22d0965a75b7b1041/README.md#setting-up-logging-from-scratch>
