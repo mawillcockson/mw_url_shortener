@@ -532,3 +532,38 @@ comes from.
 This seems like an okay place to start:
 
 <https://github.com/snok/asgi-correlation-id/blob/791ea1c6e43a3e8ff1698ed22d0965a75b7b1041/README.md#setting-up-logging-from-scratch>
+
+I think it should be okay to using the standard python logging framework, and
+add some handlers, formatters, and filters to do what I want.
+
+I do think only the server events should be logged to the database, since
+that's really what I want to be able to read back and save into perpetuity.
+
+I think it would be okay to duplicate them to a log file, sort of as insurance
+for if something goes wrong, and a request somehow breaks logging to the
+database.
+
+I think it should be fine to do it all in the same thread, scheduling the an
+async Future or something to handle the database logging, understanding that
+it'll be sent to the database only after the blocking logging call finishes, so
+the output can't be checked.
+
+If I'm going with this level of complexity, I might as well see if it's
+possible to use the QueueHandler to do everything in a separate thread, and use
+the `asyncio.loop.run_in_executor()` interface I'm already familiar with.
+
+This could lead to deadlocks if the async code calls a function that waits for
+the logging call to finish, and the logging call adds a future to the currently
+hung event loop, and waits for that to finish. But I don't think that'll be
+likely, as the logging call will be non-blocking.
+
+I think there should also be a job that runs when the server first starts up
+that reads the previous log file, filtering for all the events that were logged
+to file but weren't logged to the database, and adds them one by one. This
+should be made easier by having a UUID with every event that's from the server.
+
+This should also be available as a cli command.
+
+As for the cli, I think logging should be sent to the database only if the
+`Settings.cli_mode` is `local`. If it's remote, there's no local database to
+send the logs to.
