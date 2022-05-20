@@ -39,6 +39,12 @@ def configure_logging() -> None:
                     "class": "logging.handlers.QueueListener",
                     "queue": queue,
                     "respect_handler_level": False,
+                    # have to instantiate this class a different way:
+                    # https://rob-blackbourn.medium.com/how-to-use-python-logging-queuehandler-with-dictconfig-1e8b1284e27a
+                    # Or don't use QueueHandler right now, implement the simple
+                    # case, eat the latency, measure and profile performance
+                    # impact of logging, then re-evaluate how to make logging
+                    # async
                     "handlers": ["cfg://handlers.stdout"],
                 },
             },
