@@ -26,14 +26,28 @@ CreateSchemaType = TypeVar("CreateSchemaType", bound=BaseSchema)
 UpdateSchemaType = TypeVar("UpdateSchemaType", bound=BaseSchema)
 
 
-class InterfaceBase(
-    Generic[OpenedResourceT, ObjectSchemaType, CreateSchemaType, UpdateSchemaType]
+class ImmutableInterfaceBase(
+    Generic[OpenedResourceT, ObjectSchemaType, CreateSchemaType]
 ):
     """
-    generic base interface for concrete implementations of database and api
-    access
+    generic immutable base interface for concrete implementations of database
+    and api interactions
     """
 
+
+class InterfaceBase(
+    ImmutableInterfaceBase[OpenedResourceT, ObjectSchemaType, CreateSchemaType],
+    Generic[OpenedResourceT, ObjectSchemaType, CreateSchemaType, UpdateSchemaType],
+):
+    """
+    generic mutable base interface for concrete implementations of database and
+    api access
+    """
+
+
+CovariantObjectSchemaType = TypeVar(
+    "CovariantObjectSchemaType", bound=BaseSchema, covariant=True
+)
 
 ContravariantOpenedResourceT = TypeVar(
     "ContravariantOpenedResourceT", "AsyncSession", "AsyncClient", contravariant=True
@@ -47,25 +61,48 @@ ContravariantUpdateSchemaType = TypeVar(
 
 
 @runtime_checkable
-class InterfaceBaseProtocol(
+class ImmutableInterfaceBaseProtocol(
     Protocol[
         ContravariantOpenedResourceT,
-        ObjectSchemaType,
+        CovariantObjectSchemaType,
         ContravariantCreateSchemaType,
-        ContravariantUpdateSchemaType,
     ]
 ):
-    "generic base interface for abstracting database and api access"
+    """
+    generic immutable base interface for abstracting database and api
+    interactions
+    """
 
     @abstractmethod
     async def create(
         self,
-        opened_resource: ContravariantOpenedResourceT,
+        opened_resource: OpenedResourceT,
         /,
         *,
-        create_object_schema: ContravariantCreateSchemaType,
-    ) -> Optional[ObjectSchemaType]:
+        create_object_schema: CreateSchemaType,
+    ) -> Optional[CovariantObjectSchemaType]:
         raise NotImplementedError
+
+    @abstractmethod
+    async def remove_by_id(
+        self, opened_resource: OpenedResourceT, /, *, id: int
+    ) -> Optional[CovariantObjectSchemaType]:
+        raise NotImplementedError
+
+
+@runtime_checkable
+class InterfaceBaseProtocol(
+    ImmutableInterfaceBaseProtocol[
+        ContravariantOpenedResourceT, ObjectSchemaType, CreateSchemaType
+    ],
+    Protocol[
+        ContravariantOpenedResourceT,
+        ObjectSchemaType,
+        CreateSchemaType,
+        ContravariantUpdateSchemaType,
+    ],
+):
+    "generic base interface for abstracting database and api access"
 
     @abstractmethod
     async def update(
@@ -75,11 +112,5 @@ class InterfaceBaseProtocol(
         *,
         current_object_schema: ObjectSchemaType,
         update_object_schema: ContravariantUpdateSchemaType,
-    ) -> Optional[ObjectSchemaType]:
-        raise NotImplementedError
-
-    @abstractmethod
-    async def remove_by_id(
-        self, opened_resource: ContravariantOpenedResourceT, /, *, id: int
     ) -> Optional[ObjectSchemaType]:
         raise NotImplementedError
