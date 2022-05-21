@@ -2,6 +2,7 @@ from httpx import AsyncClient
 
 from mw_url_shortener.database.start import AsyncSession
 from mw_url_shortener.interfaces import (
+    LogInterface,
     OpenedResourceT,
     RedirectInterface,
     UserInterface,
@@ -52,6 +53,28 @@ def test_redirect_interface() -> None:
         pass
 
     use_redirect_asyncclient(remote_interface.redirect)
+
+
+def test_log_interface() -> None:
+    assert isinstance(database_interface.log, LogInterface)
+    assert isinstance(remote_interface.log, LogInterface)
+
+    # for mypy
+    def use_log_generic(log: LogInterface[OpenedResourceT]) -> None:
+        pass
+
+    use_log_generic(database_interface.log)
+    use_log_generic(remote_interface.log)
+
+    def use_log_asyncsession(log: LogInterface[AsyncSession]) -> None:
+        pass
+
+    use_log_asyncsession(database_interface.log)
+
+    def use_log_asyncclient(log: LogInterface[AsyncClient]) -> None:
+        pass
+
+    use_log_asyncclient(remote_interface.log)
 
 
 def do_not_run() -> None:
