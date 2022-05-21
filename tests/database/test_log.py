@@ -3,12 +3,7 @@ does the database interface for logs behave as expected?
 """
 from mw_url_shortener.database.start import AsyncSession
 from mw_url_shortener.interfaces.database import log as log_interface
-from mw_url_shortener.schemas.log import (
-    EventType,
-    Log,
-    LogCreate,
-    RedirectCreateEvent,
-)
+from mw_url_shortener.schemas.log import EventType, Log, LogCreate, RedirectCreateEvent
 from mw_url_shortener.schemas.redirect import Redirect, RedirectCreate
 
 
